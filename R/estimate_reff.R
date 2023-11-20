@@ -1,3 +1,10 @@
+#' Estimate R_effective
+#'
+#' @param infection_timeseries
+#' @param generation_interval_mass_fxns
+#'
+#' @return greta array for reff
+#' @export
 estimate_reff <- function (infection_timeseries,
                            generation_interval_mass_fxns) {
 

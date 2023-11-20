@@ -16,13 +16,16 @@
 #' @param effect_type options include c('infections', 'growth_rate',
 #'        'growth_rate_derivative')
 #'
+#' @importFrom greta lognormal normal
+#' @importFrom greta.gp gp mat52
+#'
 #' @return greta arrays for infection timeseries
 #' @export
 create_infection_timeseries <- function (n_days_infection,
                                          n_jurisdictions = 1,
                                          effect_type = c('infections',
                                                          'growth_rate',
-                                                         'growth_rate_derivative')) {
+                                                         'growth_rate_deriv')) {
 
   # kernel hyperparams
   gp_lengthscale <- greta::lognormal(0, 3) #inverse_gamma(187/9,1157/18)
@@ -39,13 +42,13 @@ create_infection_timeseries <- function (n_days_infection,
 
   # compute infections from gp
   # prior for initial num. of infections on log scale
-  inits <- lognormal(0, 1, dim = ncol(gp))
+  inits <- greta::lognormal(0, 1, dim = ncol(gp))
 
   f <- function (inits, gp, type) {
     switch (type,
             infections = infections(inits, gp),
             growth_rate = growth_rate(inits, gp),
-            growth_rate_derivative = growth_rate_derivative(inits, gp))
+            growth_rate_deriv = growth_rate_deriv(inits, gp))
   }
 
   infection_timeseries <- f(inits, gp, effect_type)
@@ -66,9 +69,11 @@ create_infection_timeseries <- function (n_days_infection,
 #' @param inits prior for initial num. of infections on log scale
 #' @param z gaussian process
 #'
+#' @importFrom greta sweep
+#'
 #' @return infection timeseries
 infections <- function (inits, z) {
-  exp(sweep(z, 2, inits, FUN = '+'))
+  exp(greta::sweep(z, 2, inits, FUN = '+'))
 }
 
 #' Effect type "growth_rate" formula for infection timeseries
@@ -76,21 +81,25 @@ infections <- function (inits, z) {
 #' @param inits prior for initial num. of infections on log scale
 #' @param z gaussian process
 #'
+#' @importFrom greta apply sweep
+#'
 #' @return infection timeseries
 growth_rate <- function (inits, z) {
   log_rt <- z
-  exp(sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))
+  exp(greta::sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))
 }
 
-#' Effect type "growth_rate_derivative" formula for infection timeseries
+#' Effect type "growth_rate_deriv" formula for infection timeseries
 #'
 #' @param inits prior for initial num. of infections on log scale
 #' @param z gaussian process
 #'
+#' @importFrom greta apply sweep
+#'
 #' @return infection timeseries
-growth_rate_derivative <- function (inits, z) {
+growth_rate_deriv <- function (inits, z) {
   log_rt_diff <- z
   log_rt <- greta::apply(log_rt_diff, 2, 'cumsum')
-  exp(sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))
+  exp(greta::sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))
 }
 
