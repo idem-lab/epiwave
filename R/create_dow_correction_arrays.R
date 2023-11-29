@@ -27,6 +27,7 @@ create_dow_correction_arrays <- function (infection_dates,
     )
   )
 
+  #### these bits in this function, the other bits in the observ. model
   # prior for dweek correction
   dow_alpha <- greta::normal(1, 1,
                              truncation = c(0, Inf),
