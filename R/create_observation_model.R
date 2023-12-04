@@ -1,47 +1,56 @@
 #' Create observation model
 #'
+#' @description
+#' A short description...
+#'
+#'
 #' @param infection_timeseries
-#' @param infection_delay_distribution
-#' @param timevarying_proportion
+#' @param delay_distribution
+#' @param proportion_observed
 #' @param count_data
+#' @param dow_model
 #' @param data_id optional name label identifying data type for greta arrays
+#'
+#' @importFrom greta %*%
 #'
 #' @return
 #' @export
 create_observation_model <- function (infection_timeseries,
-                                      infection_delay_distribution,
-                                      timevarying_proportion, # long format dataframes/matrices
-                                      count_data, # specific data type
-                                      data_id) {
+                                      delay_distribution,
+                                      proportion_observed,
+                                      count_data,
+                                      dow_model = NULL,
+                                      data_id = NULL) {
+
+  # add if statements to check that infection_days is long enough to cover
+  # the right period
 
   case_mat <- data_to_matrix(count_data, 'count')
+  # delay_mat <- data_to_matrix(delay_distribution)
+  prop_mat <- data_to_matrix(proportion_observed, 'prop')
 
-  valid_mat <- count_data
-  valid_mat[is.na(count_data)] <- FALSE
-  valid_mat[!is.na(count_data)] <- TRUE
+  infection_days <- as.Date(rownames(prop_mat))
 
-  delay_mat <- data_to_matrix(infection_delay_distribution, 'delay')
-  prop_mat <- data_to_matrix(timevarying_proportion, 'prop')
+  ## check for correct dow arrays
+  if (!is.null(dow_model)) {
+    dow_correction <- implement_day_of_week(infection_days, dow_model)
+    prop_mat <- prop_mat * dow_correction
+  }
 
   n_jurisdictions <- ncol(infection_timeseries)
-
-  ext_data_idx <- infection_timeseries_dates %in%
-    rownames(infection_delay_distribution)
-  infection_timeseries_ext_data <- infection_timeseries[ext_data_idx, ]
-
-  n_ext_dates <- nrow(infection_timeseries_ext_data)
+  n_dates <- nrow(infection_timeseries)
 
   convolution_matrices <- lapply(1:n_jurisdictions, function(x)
-    get_convolution_matrix(infection_delay_distribution[, x],
-                           n_ext_dates))
+    get_convolution_matrix(delay_distribution[, x],
+                           n_dates))
 
   # compute expected cases of the same length
   # note not all of these dates would have been observed
   expected_cases <- do.call(
     cbind,
     lapply(1:n_jurisdictions, function(x) {
-      convolution_matrices[[x]] %*% infection_timeseries_ext_data[, x] *
-        timevarying_proportion[, x]
+      convolution_matrices[[x]] %*% infection_timeseries[, x] *
+        prop_mat[, x]
     }))
 
   # here index expected cases to data that is brought in.
@@ -76,7 +85,7 @@ create_observation_model <- function (infection_timeseries,
   #     valid_idx <- which(valid_mat,arr.ind = FALSE)
   # }
 
-  data_idx <- rownames(infection_delay_distribution) %in%
+  data_idx <- infection_days %in%
     rownames(case_mat)
   expected_cases_idx <- expected_cases[data_idx, ]
 
@@ -95,11 +104,15 @@ create_observation_model <- function (infection_timeseries,
   size <- 1 / sqrt(sqrt_inv_size)
   prob <- 1 / (1 + expected_cases_idx / size)
 
+  valid_mat <- case_mat
+  valid_mat[is.na(case_mat)] <- FALSE
+  valid_mat[!is.na(case_mat)] <- TRUE
   valid_idx <- as.logical(as.numeric(valid_mat))
 
   case_mat_array <- greta::as_data(
     as.numeric(case_mat)[valid_idx])
 
+  #
   greta::distribution(case_mat_array) <- greta::negative_binomial(
     size[valid_idx],
     prob[valid_idx])
