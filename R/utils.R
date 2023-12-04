@@ -25,7 +25,6 @@ get_convolution_matrix <- function (mass_functions, n) {
     # apply the single mass function
     message("using a single mass function for all time points!")
     con_mat <- matrix(mass_functions(day_diff), n, n)
-
   }
 
   if (length(mass_functions) == n) {
@@ -35,8 +34,33 @@ get_convolution_matrix <- function (mass_functions, n) {
       mapply(function(f, x) do.call(f, list(x)),
              mass_functions,
              day_diff)), n, n)
-
   }
 
   return(con_mat)
+}
+
+#' Create module of greta arrays
+#'
+#' @description Sets up a named list of greta arrays.
+#'
+#' @return Named list
+module <- function (..., sort = TRUE) {
+
+  dots <- list(...)
+  names <- names(dots)
+  cl <- match.call()
+  nm <- as.character(as.list(cl)[-1])
+  if (is.null(names)) {
+    names(dots) <- nm
+  }
+  else {
+    blank_names <- names == ""
+    names[blank_names] <- nm[blank_names]
+    names(dots) <- names
+  }
+  if (sort) {
+    dots <- dots[order(names(dots))]
+  }
+  dots
+
 }
