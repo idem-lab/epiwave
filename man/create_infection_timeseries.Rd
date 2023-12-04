@@ -22,14 +22,14 @@ create_infection_timeseries(
 greta arrays for infection timeseries
 }
 \description{
-WIP function to compute the # of infections per day, given a
-log-scaled initial # of infections and a time-varying random effect
+Compute the number of infections per day, given a
+log-scaled initial number of infections and a time-varying random effect
 controlling the trend of infections over time. The random effect is defined
-as a Gaussian Process (GP), and can be applied to the infection # through
-three different formulations. (see vignette for details here or something).
-Note that this random effect over time is not explicitly specified as an
+as a Gaussian Process (GP), and can be applied to the infection number
+through three different formulations.
+
+This random effect over time is not explicitly specified as an
 epidemiologically defined quantity like the growth rate or the reproduction
-number. Rather, these quantities are to be calculated from posterior samples.
-The function uses an uninformative prior for the initial # of infections ---
-currently there are no plans to make this an input param.
+number. Rather, these quantities are calculated from posterior samples.
+The function uses an uninformative prior for the initial number of infections.
 }

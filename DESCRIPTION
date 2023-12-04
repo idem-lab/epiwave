@@ -1,15 +1,18 @@
 Package: lowerGPreff
-Title: What the Package Does (One Line, Title Case)
+Title: Estimate epidemiological parameters by modelling new infections as a 
+    gaussian process over time
 Version: 0.0.0.9000
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: What the package does (one paragraph).  non discrete renewal. infection as non param of time. 
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Suggests: R.rsp
+VignetteBuilder: R.rsp
 Imports:
   greta,
   greta.gp,

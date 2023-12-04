@@ -10,8 +10,8 @@ estimate_reff(infection_timeseries, generation_interval_mass_fxns)
 \item{generation_interval_mass_fxns}{}
 }
 \value{
-greta array for reff
+greta arrays for infectiousness and $R_eff$
 }
 \description{
-Estimate R_effective
+A short description...
 }

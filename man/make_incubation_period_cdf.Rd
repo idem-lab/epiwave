@@ -4,9 +4,7 @@
 \alias{make_incubation_period_cdf}
 \title{Make incubation period cumulative density function}
 \usage{
-make_incubation_period_cdf(
-  strain = c("Omicron", "WT", "Alpha", "Beta/Gamma", "Delta")
-)
+make_incubation_period_cdf(strain = c("Omicron", "Delta"))
 }
 \arguments{
 \item{strain}{}
@@ -15,9 +13,9 @@ make_incubation_period_cdf(
 cumulative density function for incubation period
 }
 \description{
-Note that in using incubation period for modelling we should
-not treat it as time-varying (due to changes in the dominant variant).
-Maybe through vignette or some other documentation we should make it clear
-that this is not a time-varying biological quantity and the change in
-dominant variant should be modelled separately)
+Define cumulative density function of incubation period.
+Parameters for different COVID-19 strains estimated from
+https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2022.27.6.2200042.
+This is not a time-varying biological quantity - any changes in the
+dominant variant should be modelled separately.
 }

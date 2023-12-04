@@ -6,15 +6,16 @@
 \usage{
 create_observation_model(
   infection_timeseries,
-  infection_delay_distribution,
-  timevarying_proportion,
+  delay_distribution,
+  proportion_observed,
   count_data,
-  data_id
+  dow_model = NULL,
+  data_id = NULL
 )
 }
 \arguments{
 \item{data_id}{optional name label identifying data type for greta arrays}
 }
 \description{
-Create observation model
+A short description...
 }
