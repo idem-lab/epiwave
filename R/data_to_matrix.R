@@ -4,27 +4,18 @@
 #' @param extra_col for column name
 #'
 #' @return matrix form
+#'
+#' @export
 data_to_matrix <- function (long_data, extra_col) {
 
-  ## make jurisdiction an argument option
-  ## and test with only one
-
   wide_data <- long_data |>
-    dplyr::group_by(date, jurisdictions) |>
-    dplyr::summarise(extra_col = dplyr::n()) |>
     tidyr::pivot_wider(id_cols = date,
-                       names_from = jurisdictions,
+                       names_from = jurisdiction,
                        values_from = !!extra_col,
-                       values_fn = sum,
-                       values_fill = 0) |>
-
-  # if date gap exists, fill
-
+                       values_fill = NA) |> # assuming rows with 0 cases are explicit
     fill_date_gaps() |>
-    tibble::column_to_rownames(var = date) |>
-    data.frame()
-
-  wide_data[is.na(wide_data)] <- 0
+    tibble::column_to_rownames(var = 'date') |>
+    as.matrix()
 
   wide_data
 }
@@ -34,8 +25,11 @@ data_to_matrix <- function (long_data, extra_col) {
 #' @param df
 #'
 #' @return
+#'
+#' @export
 fill_date_gaps <- function (df) {
 
+  if (class(df$date) != 'Date') df$date <- as.Date(df$date)
   date_sequence <- data.frame(
     date = seq(min(df$date),
                max(df$date),
