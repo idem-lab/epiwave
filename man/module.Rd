@@ -12,3 +12,4 @@ Named list
 \description{
 Sets up a named list of greta arrays.
 }
+\keyword{internal}

@@ -10,5 +10,5 @@ make_ecdf(y, x)
 \item{x}{}
 }
 \description{
-convert a vector fo cumulative probabilities into an ecdf object
+convert a vector of cumulative probabilities into an ecdf object
 }

@@ -88,7 +88,7 @@ construct_delays <- function (ecdf1,
 
 #' Make empirical cumulative distribution function
 #'
-#' @description convert a vector fo cumulative probabilities into an ecdf object
+#' @description convert a vector of cumulative probabilities into an ecdf object
 #'
 #' @param y
 #' @param x
