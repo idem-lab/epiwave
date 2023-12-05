@@ -1,6 +1,16 @@
 #' Estimate R_effective
 #'
-#' @description A short description...
+#' @description Calculate a timeseries of effective reproduction number, given a
+#'   timeseries of infections, and the generation interval distribution. This
+#'   function first convolves infections into infectiousness using the
+#'   generation interval distribution. This weights each infectious individual
+#'   by their relative infectivity profile for each day post infection. Then,
+#'   infection timeseries is divided by the infectiousness timeseries to
+#'   calculate instantaneous reproduction number. This is a well established
+#'   approach consistent with classical discrete renewal models, however note
+#'   that the generation interval distribution acts as a proxy for infectivity
+#'   profile distribution here, and should the serial interval distribution be
+#'   available, it should be used instead.
 #'
 #'
 #' @param infection_timeseries
