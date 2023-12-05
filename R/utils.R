@@ -94,7 +94,7 @@ data_to_matrix <- function (long_data, extra_col) {
 #' @return
 fill_date_gaps <- function (df) {
 
-  if (class(df$date) != 'Date') df$date <- as.Date(df$date)
+  if (!is(df$date, 'Date')) df$date <- as.Date(df$date)
   date_sequence <- data.frame(
     date = seq(min(df$date),
                max(df$date),
