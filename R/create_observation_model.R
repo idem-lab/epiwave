@@ -1,7 +1,20 @@
 #' Create observation model
 #'
-#' @description
-#' A short description...
+#' @description This function constructs the observation model and defines
+#'   likelihood over the observational data (e.g. cases, hospital
+#'   admissions...). It first begets a timeseries of expected observations from
+#'   a timeseries of new infections, the infection-to-observation delay
+#'   distribution(s), and the proportion of infections to be observed.
+#'   Specifically, the model uses the delay distribution(s) to convolve the
+#'   infection timeseries into the expected observation timeseries, thus
+#'   accounting for the probability of observation over time-since-infection. An
+#'   additional multiplication by observation proportion is applied to the
+#'   convolved timeseries, to adjust for effects such as case ascertainment.
+#'   Optionally, a day-of-week effect may be included in the convolution process
+#'   to introduce weekly periodicity. The expected observation timeseries is
+#'   treated as the mean of a negative binomial distribution from which the data
+#'   is observed, thus allowing us to define likelihood over the data, and link
+#'   the data to the unknown infection timeseries.
 #'
 #'
 #' @param infection_timeseries

@@ -1,4 +1,14 @@
-#' Make generation interval density
+#' @description  Make generation interval density following data from the
+#'   literature. This function requires inputs of mean and sd estimates of the
+#'   generation interval on the log scale, and outputs a GI distribution in the
+#'   bespoke pmf format used by this package. By default this function expects
+#'   input relevant to COVID-19, specifically, samples provided by Nishiura et
+#'   al 2020 (https://doi.org/10.1016/j.ijid.2020.02.060). This estimation is
+#'   for serial interval, not generation interval, since the latter was
+#'   difficult to observe at the time of the Nishiura publication. However,
+#'   comparison against more recent household studies shows the Nishiura
+#'   estimates still accurrately reflect our current understanding of likely
+#'   COVID GI.
 #'
 #' @param gi_distribution_data
 #'
