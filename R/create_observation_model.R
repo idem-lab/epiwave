@@ -1,32 +1,33 @@
 #' Create observation model
 #'
 #' @description This function constructs the observation model and defines
-#'   likelihood over the observational data (e.g. cases, hospital
-#'   admissions...). It first begets a timeseries of expected observations from
-#'   a timeseries of new infections, the infection-to-observation delay
-#'   distribution(s), and the proportion of infections to be observed.
-#'   Specifically, the model uses the delay distribution(s) to convolve the
-#'   infection timeseries into the expected observation timeseries, thus
-#'   accounting for the probability of observation over time-since-infection. An
-#'   additional multiplication by observation proportion is applied to the
-#'   convolved timeseries, to adjust for effects such as case ascertainment.
-#'   Optionally, a day-of-week effect may be included in the convolution process
-#'   to introduce weekly periodicity. The expected observation timeseries is
-#'   treated as the mean of a negative binomial distribution from which the data
-#'   is observed, thus allowing us to define likelihood over the data, and link
-#'   the data to the unknown infection timeseries.
+#'  likelihood over the observational data (e.g. cases, hospital
+#'  admissions...). It first begets a timeseries of expected observations from
+#'  a timeseries of new infections, the infection-to-observation delay
+#'  distribution(s), and the proportion of infections to be observed.
+#'  Specifically, the model uses the delay distribution(s) to convolve the
+#'  infection timeseries into the expected observation timeseries, thus
+#'  accounting for the probability of observation over time-since-infection. An
+#'  additional multiplication by observation proportion is applied to the
+#'  convolved timeseries, to adjust for effects such as case ascertainment.
+#'  Optionally, a day-of-week effect may be included in the convolution process
+#'  to introduce weekly periodicity. The expected observation timeseries is
+#'  treated as the mean of a negative binomial distribution from which the data
+#'  is observed, thus allowing us to define likelihood over the data, and link
+#'  the data to the unknown infection timeseries.
 #'
-#'
-#' @param infection_timeseries
-#' @param delay_distribution
-#' @param proportion_observed
-#' @param count_data
+#' @param infection_timeseries greta array of infection timeseries
+#' @param delay_distribution distribution of delays, covering length of
+#'  infection timeseries, including incubation period, if applicable
+#' @param proportion_observed long form data, for all dates of infection
+#'  timeseries, of expected proportions of infections observed in count data
+#' @param count_data long form data of counts of notifications
 #' @param dow_model optional module of greta arrays defining day-of-week model
 #' @param data_id optional name label identifying data type for greta arrays
 #'
-#' @importFrom greta %*%
+#' @importFrom greta %*% as_data negative_binomial normal sweep zeros
 #'
-#' @return
+#' @return greta arrays of observation model
 #' @export
 create_observation_model <- function (infection_timeseries,
                                       delay_distribution,
@@ -62,15 +63,20 @@ create_observation_model <- function (infection_timeseries,
 
   # compute expected cases of the same length
   # note not all of these dates would have been observed
+  # compute expected cases of the same length
+  # note not all of these dates would have been observed
+  expected_cases_list <- lapply(
+    1:n_jurisdictions,
+    function(x) {
+      convolution_matrices[[x]] %*% infection_timeseries[, x] * prop_mat[, x]
+    })
+
   expected_cases <- do.call(
     cbind,
-    lapply(1:n_jurisdictions, function(x) {
-      convolution_matrices[[x]] %*% infection_timeseries[, x] *
-        prop_mat[, x]
-    }))
+    expected_cases_list
+  )
 
-  data_idx <- infection_days %in%
-    rownames(case_mat)
+  data_idx <- infection_days %in% rownames(case_mat)
   expected_cases_idx <- expected_cases[data_idx, ]
 
   n_days <- nrow(case_mat)

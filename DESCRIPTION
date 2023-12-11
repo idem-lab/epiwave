@@ -13,7 +13,10 @@ RoxygenNote: 7.2.3
 Suggests: R.rsp
 VignetteBuilder: R.rsp
 Imports:
+    dplyr,
     greta,
     greta.gp,
     magrittr,
-    stats
+    stats,
+    tibble,
+    tidyr

@@ -7,7 +7,7 @@
 make_incubation_period_cdf(strain = c("Omicron", "Delta"))
 }
 \arguments{
-\item{strain}{}
+\item{strain}{COVID-19 strain}
 }
 \value{
 cumulative density function for incubation period

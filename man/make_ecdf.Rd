@@ -7,8 +7,13 @@
 make_ecdf(y, x)
 }
 \arguments{
-\item{x}{}
+\item{y}{probability}
+
+\item{x}{vector of one or more elements from which to choose}
+}
+\value{
+ecdf function
 }
 \description{
-convert a vector of cumulative probabilities into an ecdf object
+Convert a vector of cumulative probabilities into an ecdf object.
 }

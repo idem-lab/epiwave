@@ -31,5 +31,6 @@ through three different formulations.
 This random effect over time is not explicitly specified as an
 epidemiologically defined quantity like the growth rate or the reproduction
 number. Rather, these quantities are calculated from posterior samples.
-The function uses an uninformative prior for the initial number of infections.
+The function uses an uninformative prior for the initial number of
+infections.
 }

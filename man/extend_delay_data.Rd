@@ -2,13 +2,21 @@
 % Please edit documentation in R/extend_delay_data.R
 \name{extend_delay_data}
 \alias{extend_delay_data}
-\title{Title}
+\title{Extend delay data}
 \usage{
 extend_delay_data(delay_dat, incubation_period_distribution)
 }
 \arguments{
-\item{incubation_period_distribution}{}
+\item{delay_dat}{long form delay data that covers the date sequence of the
+entire infection timeseries}
+
+\item{incubation_period_distribution}{distribution for the incubation
+period}
+}
+\value{
+delay distribution that combines both infection to notification
+delay and incubation period
 }
 \description{
-Title
+Extend delay data
 }

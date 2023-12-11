@@ -7,7 +7,12 @@
 implement_day_of_week(infection_days, dow_model)
 }
 \arguments{
-\item{dow_model}{}
+\item{infection_days}{vector of dates that cover infection timeseries}
+
+\item{dow_model}{greta model for day of week effect}
+}
+\value{
+matrix of dimension date x jurisdiction with day of week correction
 }
 \description{
 Implement day of week effect in observation model

@@ -7,12 +7,20 @@
 get_convolution_matrix(mass_functions, n)
 }
 \arguments{
+\item{mass_functions}{single function or vector of functions that describe
+probability mass across delays}
+
 \item{n}{dimensions of output convolution matrix}
 }
+\value{
+matrix for forward convolution
+}
 \description{
-Get a matrix to use for forward convolution, given the mass function(s) (integrating to 1 for
-convolution) and the number of timepoints to convolve. This function can take either a single
-mass function, or a list of mass functions with length = n. The latter parametrisation is
-necessary when the delay mass function is time varying. Note that we need to think about if we
-should make explicit if the user is inputting a single mass function or a list of mass functions
+Get a matrix to use for forward convolution, given the mass
+function(s) (integrating to 1 for convolution) and the number of timepoints
+to convolve. This function can take either a single mass function, or a
+vector of mass functions with length = n. The latter parameterisation is
+necessary when the delay mass function is time varying. Note that we need
+to think about if we should make explicit if the user is inputting a single
+mass function or a list of mass functions.
 }

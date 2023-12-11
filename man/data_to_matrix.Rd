@@ -12,9 +12,11 @@ data_to_matrix(long_data, extra_col)
 \item{extra_col}{for column name}
 }
 \value{
-matrix form
+data in wide matrix form, with continuous seq of dates
 }
 \description{
-Turn wide data to matrix
+Take long form input data and turn into wide form matrix with
+continuous sequence of dates. This function assumes that users supply long
+form count data where dates with 0 cases are explicit.
 }
 \keyword{internal}

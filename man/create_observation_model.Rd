@@ -14,10 +14,37 @@ create_observation_model(
 )
 }
 \arguments{
+\item{infection_timeseries}{greta array of infection timeseries}
+
+\item{delay_distribution}{distribution of delays, covering length of
+infection timeseries, including incubation period, if applicable}
+
+\item{proportion_observed}{long form data, for all dates of infection
+timeseries, of expected proportions of infections observed in count data}
+
+\item{count_data}{long form data of counts of notifications}
+
 \item{dow_model}{optional module of greta arrays defining day-of-week model}
 
 \item{data_id}{optional name label identifying data type for greta arrays}
 }
+\value{
+greta arrays of observation model
+}
 \description{
-A short description...
+This function constructs the observation model and defines
+likelihood over the observational data (e.g. cases, hospital
+admissions...). It first begets a timeseries of expected observations from
+a timeseries of new infections, the infection-to-observation delay
+distribution(s), and the proportion of infections to be observed.
+Specifically, the model uses the delay distribution(s) to convolve the
+infection timeseries into the expected observation timeseries, thus
+accounting for the probability of observation over time-since-infection. An
+additional multiplication by observation proportion is applied to the
+convolved timeseries, to adjust for effects such as case ascertainment.
+Optionally, a day-of-week effect may be included in the convolution process
+to introduce weekly periodicity. The expected observation timeseries is
+treated as the mean of a negative binomial distribution from which the data
+is observed, thus allowing us to define likelihood over the data, and link
+the data to the unknown infection timeseries.
 }

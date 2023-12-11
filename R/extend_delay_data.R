@@ -1,9 +1,12 @@
-#' Title
+#' Extend delay data
 #'
-#' @param delay_dat
-#' @param incubation_period_distribution
+#' @param delay_dat long form delay data that covers the date sequence of the
+#'  entire infection timeseries
+#' @param incubation_period_distribution distribution for the incubation
+#'  period
 #'
-#' @return
+#' @return delay distribution that combines both infection to notification
+#'  delay and incubation period
 #'
 #' @export
 extend_delay_data <- function (delay_dat,

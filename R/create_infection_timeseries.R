@@ -1,15 +1,16 @@
 #' Create infection timeseries
 #'
 #' @description Compute the number of infections per day, given a
-#' log-scaled initial number of infections and a time-varying random effect
-#' controlling the trend of infections over time. The random effect is defined
-#' as a Gaussian Process (GP), and can be applied to the infection number
-#' through three different formulations.
+#'  log-scaled initial number of infections and a time-varying random effect
+#'  controlling the trend of infections over time. The random effect is defined
+#'  as a Gaussian Process (GP), and can be applied to the infection number
+#'  through three different formulations.
 #'
-#' This random effect over time is not explicitly specified as an
-#' epidemiologically defined quantity like the growth rate or the reproduction
-#' number. Rather, these quantities are calculated from posterior samples.
-#' The function uses an uninformative prior for the initial number of infections.
+#'  This random effect over time is not explicitly specified as an
+#'  epidemiologically defined quantity like the growth rate or the reproduction
+#'  number. Rather, these quantities are calculated from posterior samples.
+#'  The function uses an uninformative prior for the initial number of
+#'  infections.
 #'
 #' @param n_days_infection length of full date sequence of infection timeseries
 #' @param n_jurisdictions number of jurisdictions, defaults to 1

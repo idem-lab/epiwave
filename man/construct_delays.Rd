@@ -13,12 +13,24 @@ construct_delays(
 )
 }
 \arguments{
-\item{stepfun_output}{}
+\item{ecdf1}{empirical cdf}
+
+\item{ecdf2}{optional second empirical cds to combine}
+
+\item{delay_range}{number of days to create distribution for}
+
+\item{output}{output style, choice of "probability" or "cumulative density"}
+
+\item{stepfun_output}{TF}
+}
+\value{
+delay distribution in range of forms
 }
 \description{
-Given a date range to compute delays over, and an empirical cdf, compute the probability of delay
-having that length. Outputs either the probability or the cumulative density, as either a data
-frame lined up against days-of-day or as a step function in the style of R native ecdf function.
-Optionally, two cdfs can be used as input, in which case the probability and cdf of the additive
-combined delay are calculated.
+Given a date range to compute delays over, and an empirical cdf,
+compute the probability of delay having that length. Outputs either the
+probability or the cumulative density, as either a data frame lined up
+against days-of-day or as a step function in the style of R native ecdf
+function. Optionally, two cdfs can be used as input, in which case the
+probability and cdf of the additive combined delay are calculated.
 }

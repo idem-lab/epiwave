@@ -2,14 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{fill_date_gaps}
 \alias{fill_date_gaps}
-\title{Title}
+\title{Fill date gaps}
 \usage{
 fill_date_gaps(df)
 }
 \arguments{
-\item{df}{}
+\item{df}{Wide dataframe}
+}
+\value{
+Wide dataframe with rows filled in so it has continuous seq of dates
 }
 \description{
-Title
+Fill in date gaps in data, if they exist, so that there is a
+continuous sequence of dates in matrix that is fed to the model.
 }
 \keyword{internal}

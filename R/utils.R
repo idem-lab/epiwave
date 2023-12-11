@@ -1,15 +1,18 @@
 #' Calculate a convolution matrix
 #'
-#' @description Get a matrix to use for forward convolution, given the mass function(s) (integrating to 1 for
-#' convolution) and the number of timepoints to convolve. This function can take either a single
-#' mass function, or a list of mass functions with length = n. The latter parametrisation is
-#' necessary when the delay mass function is time varying. Note that we need to think about if we
-#' should make explicit if the user is inputting a single mass function or a list of mass functions
+#' @description Get a matrix to use for forward convolution, given the mass
+#'  function(s) (integrating to 1 for convolution) and the number of timepoints
+#'  to convolve. This function can take either a single mass function, or a
+#'  vector of mass functions with length = n. The latter parameterisation is
+#'  necessary when the delay mass function is time varying. Note that we need
+#'  to think about if we should make explicit if the user is inputting a single
+#'  mass function or a list of mass functions.
 #'
-#' @param mass_functions
+#' @param mass_functions single function or vector of functions that describe
+#'  probability mass across delays
 #' @param n dimensions of output convolution matrix
 #'
-#' @return
+#' @return matrix for forward convolution
 get_convolution_matrix <- function (mass_functions, n) {
 
   if (!length(mass_functions) %in% c(1, n)) {
@@ -65,36 +68,46 @@ module <- function (..., sort = TRUE) {
   dots
 
 }
+
 #' Turn wide data to matrix
+#'
+#' @description Take long form input data and turn into wide form matrix with
+#'  continuous sequence of dates. This function assumes that users supply long
+#'  form count data where dates with 0 cases are explicit.
 #'
 #' @param long_data long data form
 #' @param extra_col for column name
 #'
 #' @keywords internal
-#' @return matrix form
+#' @return data in wide matrix form, with continuous seq of dates
 data_to_matrix <- function (long_data, extra_col) {
 
-  wide_data <- long_data |>
+  wide_data <- long_data %>%
     tidyr::pivot_wider(id_cols = date,
                        names_from = jurisdiction,
                        values_from = !!extra_col,
-                       values_fill = NA) |> # assuming rows with 0 cases are explicit
-    fill_date_gaps() |>
-    tibble::column_to_rownames(var = 'date') |>
+                       values_fill = NA) %>%
+    fill_date_gaps() %>%
+    tibble::column_to_rownames(var = 'date') %>%
     as.matrix()
 
   wide_data
 }
 
-#' Title
+#' Fill date gaps
 #'
-#' @param df
+#' @description Fill in date gaps in data, if they exist, so that there is a
+#'  continuous sequence of dates in matrix that is fed to the model.
+#'
+#' @param df Wide dataframe
 #'
 #' @keywords internal
-#' @return
+#' @return Wide dataframe with rows filled in so it has continuous seq of dates
 fill_date_gaps <- function (df) {
 
-  if (!is(df$date, 'Date')) df$date <- as.Date(df$date)
+  if (!is(df$date, 'Date')) {
+    df$date <- as.Date(df$date)
+  }
   date_sequence <- data.frame(
     date = seq(min(df$date),
                max(df$date),
