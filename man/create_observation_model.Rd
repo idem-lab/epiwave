@@ -14,6 +14,8 @@ create_observation_model(
 )
 }
 \arguments{
+\item{dow_model}{optional module of greta arrays defining day-of-week model}
+
 \item{data_id}{optional name label identifying data type for greta arrays}
 }
 \description{

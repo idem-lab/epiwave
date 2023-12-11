@@ -8,7 +8,7 @@
 #' @param delay_distribution
 #' @param proportion_observed
 #' @param count_data
-#' @param dow_model
+#' @param dow_model optional module of greta arrays defining day-of-week model
 #' @param data_id optional name label identifying data type for greta arrays
 #'
 #' @importFrom greta %*%
@@ -40,9 +40,12 @@ create_observation_model <- function (infection_timeseries,
   n_jurisdictions <- ncol(infection_timeseries)
   n_dates <- nrow(infection_timeseries)
 
-  convolution_matrices <- lapply(1:n_jurisdictions, function(x)
-    get_convolution_matrix(delay_distribution[, x],
-                           n_dates))
+  convolution_matrices <- lapply(
+    1:n_jurisdictions,
+    function(x) {
+      get_convolution_matrix(delay_distribution[, x],
+                             n_dates)
+    })
 
   # compute expected cases of the same length
   # note not all of these dates would have been observed

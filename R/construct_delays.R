@@ -12,6 +12,10 @@
 #' @param output
 #' @param stepfun_output
 #'
+#' @importFrom tidyr expand_grid
+#' @importFrom dplyr filter group_by summarise pull
+#' @importFrom tibble tibble
+#'
 #' @return
 #' @export
 construct_delays <- function (ecdf1,
