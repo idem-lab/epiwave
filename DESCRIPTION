@@ -17,6 +17,7 @@ Imports:
     greta,
     greta.gp,
     magrittr,
+    methods,
     stats,
     tibble,
     tidyr

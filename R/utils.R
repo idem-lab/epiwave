@@ -101,6 +101,8 @@ data_to_matrix <- function (long_data, extra_col) {
 #'
 #' @param df Wide dataframe
 #'
+#' @importFrom methods is
+#'
 #' @keywords internal
 #' @return Wide dataframe with rows filled in so it has continuous seq of dates
 fill_date_gaps <- function (df) {

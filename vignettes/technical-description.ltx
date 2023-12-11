@@ -1,0 +1,116 @@
+%\VignetteIndexEntry{Technical Description}
+%\VignetteKeyword{R}
+%\VignetteKeyword{package}
+%\VignetteKeyword{vignette}
+%\VignetteKeyword{LaTeX}
+%\VignetteEngine{R.rsp::tex}
+
+\documentclass{article}
+% General document formatting
+\usepackage[margin=0.7in]{geometry}
+% \usepackage[parfill]{parskip}
+\usepackage[utf8]{inputenc}
+
+% Related to math
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+\newcommand{\reffmaths}{R_{\text{eff}}}
+\newcommand{\reff}{R\textsubscript{eff}}
+
+%-----------------------
+% Begin document
+%-----------------------
+
+\begin{document}
+\title{Model Description}
+\maketitle
+
+\section{Description}
+
+In this model we consider the number of new locally-acquired infections per day $N_t$ to be unknown, with an expected number of infections per day given by parameter $\hat{N}_t$, which we model as some real-valued non-parametric function of time:
+
+\begin{align} \label{eq1}
+ln(\hat{N}_t) &= f(t)
+\end{align}
+
+\section{Estimating \reff}
+Given a fitted time series model of the expected number of new infections per day, we can post-hoc calculate the \reff timeseries $R_t$ from each posterior sample of infection time series, given the (potentially time-varying) generation interval (i.e., time between symptom onsets of infector-infectee pairs) distribution $g(t', t)$:
+
+\begin{align}
+\hat{R}_t &= \hat{N}_t / \hat{I}_t \\
+\hat{I}_t &= \sum_{t' = 0}^t g(t', t) \hat{N}_{t'}
+\end{align}
+
+Here $\hat{I}_t$ represents \textit{infectiousness} at time $t$, calculated from the number of recent infections weighted by their infectivity profile over time. This accounts for when the individual is most infectious following their infection. Infectivity profile distribution can be approximated by the generation interval distribution, since the latter is a direct consequence of the former. However, because infection times are not directly observed, the serial interval (i.e., time between symptom onsets of infector-infectee pairs) is often used to approximate the generation interval \cite{cori_new_2013}.
+
+The interpretation of \reff as the number of new infections over infectiousness is consistent with the literature in general and with existing discrete renewal model methods \cite{golding_modelling_2023,abbott_estimating_2020,cori_new_2013}.
+
+\subsection*{Direct likelihood over infections}
+
+If we observed the number of new infections per day perfectly, we would simply define likelihood over the observed infection time series with a negative binomial distribution, which is the standard choice for infection time series data:
+\begin{align}
+N_t &\sim NB(\hat{N}_t, r) \\
+\end{align}
+
+\subsection*{Convolution likelihoods over many types of data}
+
+However, because we do not typically directly observe infections, we would instead  model the likelihoods of some observed quantity, such as the number of incidence/cases per day $C_t$, while accounting for the time-varying  delays from infection to reporting, and the fraction of infections that end up being reported. Focusing on case data $C_t$ as an example, we would have:
+
+\begin{align}
+C_t &\sim NB(\hat{C}_t, r) \\
+\hat{C}_t &= \sum_{t' = 0}^t c(t', t)\text{CAR}_{t'} \hat{N}_{t'}
+\end{align}
+
+where $c(t', t)$ is the time-varying delay distribution from infection to case notification (integrating to 1), and $\text{CAR}_{t'}$ is the time-varying case ascertainment rate.
+
+Similarly, we can use this approach to model negative binomial likelihoods over hospital admissions, deaths, or detected infections by some other date, provided that we can provide or estimate a delay distribution for that data type.
+
+Note that the case ascertainment rate (or the equivalent reporting rate for other data, such as hospitalisation rate) is not identified from case data alone, so we would need to constrain it (to avoid identifiability issues) with an informative prior, or by fixing it to an arbitrary value. When we have more than one stream of data, we can learn the \emph{relative} reporting rates between different data streams, as needed. The important implication here is while correcting for relative reporting rates still does not allow one to completely reconstruct the number of new infections, it allows one to disentangle reporting rate trends and infection trends, thus ameliorating the influence of reporting rate in the estimation of \reff.
+
+The model can also incorporate likelihoods for data with distributions other than negative binomial, such as seroprevalence data:
+
+\begin{align}
+S^+_T &\sim Binomial(S_T, \hat{p}_T) \\
+\hat{p}_T &= \frac{1}{\text{pop}_T} \sum_{t' = 0}^T s(t', T) \hat{N}_{t'}
+\end{align}
+
+where $S_T$ and $S^+_T$ are the number tested and number seropositive on some serosurvey date $T$, $\text{pop}_T$ is the size of the population being studied (i.e., the population from which $S_T$ was drawn), and $s(t', T)$ is the seropositivity curve; the proportion of people infected on day $t'$ who are seropositive when tested on day $T$ (similar to a delay curve for case data).
+
+Incorporating data such as seropositivity rate in prevalence survey results or viral prevalence in wasterwater provides another independent source of information informing the infection time series, thus improving our ability to calibrate reporting rates for time-series-type data such as case time series.
+
+\section*{Function choices}
+
+In Equation \ref{eq1} we specify that the infection time series is to be modelled with some non-parametric function of time $f(t)$. This requires some type of flexible fitting tools that allows infections to vary with time. Many such tools exist, including Brownian motion, splines, and piece-wise regressions, and they differ in how flexibility (e.g., the wiggliness of trajectories, sharpness of turns) is parameterised. An appropriate choice  here is a Gaussian Process (GP) of time, which is a type of flexible fitting tools commonly used in epidemiological modelling \cite{abbott_estimating_2020}.
+
+Crucially, how the GP is used to describe the infection trajectory imparts implicit assumptions on extrapolation behaviour, therefore controlling how the trajectory would behave in the recent past when new infections are not yet completely observed (i.e., \textit{now-cast}) and in the future  (i.e., \textit{forecast}).
+
+
+Below we describe three options for using GP to describe the infection time series:
+
+1. $f(t)$ could be described directly through a GP, making the log of infections tend towards the GP mean value in now-cast:
+\begin{align}
+f(t) &= GP(t)
+\end{align}
+
+2. $f(t)$ could be calculated from a stationary GP on the log multiplicative growth rate ($r_{t'}$), multiplied by the number of initial infections $\hat{N}_0$, this would make the growth rate tend to 1 and the infections stay at around the same level:
+\begin{align}
+f(t) &= ln(\hat{N}_t) \\
+&= ln(\hat{N}_0 \prod_{t'=0}^t r_{t'}) \\
+ &= ln(N_0) \sum_{t'=0}^t ln(r_{t'}) \\
+ln(r_{t'}) &= GP(t')
+\end{align}
+
+3. the log growth rate itself modelled as the cumulative sum of a stationary GP so that in now-cast/forecast the infection trajectory would follow the most recent growth rate trend, similar approaches are implemented in related models \cite{abbott_estimating_2020}:
+\begin{align}
+f(t) &= ln(\hat{N}_0) \sum_{t'=0}^t ln(r_t) \\
+ln(r_t) &= \sum_{t'=0}^t ln(r^*_{t'}) \\
+ln(r^*_{t'}) &= GP(t')
+\end{align}
+
+In all of these, the GP could incorporate some linear mean function (i.e., modelling $f(t)$ as a linear regression model with a temporally-correlated random effect), as an additional mechanism to explicitly incorporate the effects of weekends or public holidays, or predictor covariates like mobility metrics, on the daily growth rate. Doing so introduces mechanistic input to the estimated \reff, which is  computationally intensive.
+
+
+\bibliographystyle{unsrt}
+\bibliography{refs.bib}
+\end{document}
+
