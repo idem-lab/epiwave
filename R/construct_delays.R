@@ -8,10 +8,10 @@
 #'  probability and cdf of the additive combined delay are calculated.
 #'
 #' @param ecdf1 empirical cdf
-#' @param ecdf2 optional second empirical cds to combine
+#' @param ecdf2 optional second empirical cdf to combine
 #' @param delay_range number of days to create distribution for
 #' @param output output style, choice of "probability" or "cumulative density"
-#' @param stepfun_output TF
+#' @param stepfun_output logical whether or not to output as step function
 #'
 #' @importFrom tidyr expand_grid
 #' @importFrom dplyr filter group_by summarise pull

@@ -41,5 +41,4 @@ estimate_reff <- function (infection_timeseries,
     reff)
 
   return(greta_arrays)
-
 }
