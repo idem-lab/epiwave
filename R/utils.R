@@ -78,11 +78,15 @@ module <- function (..., sort = TRUE) {
 #' @param long_data long data form
 #' @param extra_col for column name
 #'
+#' @importFrom tidyr pivot_wider
+#' @importFrom tibble column_to_rownames
+#'
 #' @keywords internal
 #' @return data in wide matrix form, with continuous seq of dates
 data_to_matrix <- function (long_data, extra_col) {
 
-  wide_data <- long_data %>%
+  keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', extra_col)])
+  wide_data <- keep_df %>%
     tidyr::pivot_wider(id_cols = date,
                        names_from = jurisdiction,
                        values_from = !!extra_col,
@@ -107,7 +111,7 @@ data_to_matrix <- function (long_data, extra_col) {
 #' @return Wide dataframe with rows filled in so it has continuous seq of dates
 fill_date_gaps <- function (df) {
 
-  if (!is(df$date, 'Date')) {
+  if (!methods::is(df$date, 'Date')) {
     df$date <- as.Date(df$date)
   }
   date_sequence <- data.frame(

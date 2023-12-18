@@ -45,7 +45,13 @@ create_observation_model <- function (infection_timeseries,
 
   infection_days <- as.Date(rownames(prop_mat))
 
-  ## check for correct dow arrays
+  # for hospitalisation, multiply the car by the chr to create ihr
+  # this is temp code for covid live demo
+  if (!is.null(proportion_observed$ratio)) {
+    prop_mat <- prop_mat * proportion_observed$ratio
+  }
+
+  ## add a check for correct dow arrays
   if (!is.null(dow_model)) {
     dow_correction <- implement_day_of_week(infection_days, dow_model)
     prop_mat <- prop_mat * dow_correction
@@ -62,9 +68,6 @@ create_observation_model <- function (infection_timeseries,
     })
 
   # compute expected cases of the same length
-  # note not all of these dates would have been observed
-  # compute expected cases of the same length
-  # note not all of these dates would have been observed
   expected_cases_list <- lapply(
     1:n_jurisdictions,
     function(x) {
@@ -81,8 +84,7 @@ create_observation_model <- function (infection_timeseries,
 
   n_days <- nrow(case_mat)
 
-  # negative binomial parameters - need to change from mean and variance
-  # specification to size and prob
+  # negative binomial parameters
   sqrt_inv_size <- greta::normal(0, 0.5,
                                  truncation = c(0, Inf),
                                  dim = n_jurisdictions)

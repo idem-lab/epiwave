@@ -1,15 +1,26 @@
 Package: lowerGPreff
 Title: Estimate epidemiological parameters by modelling new infections as a 
     gaussian process over time
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).  non discrete renewal. infection as non param of time. 
+Version: 0.0.1.0000
+Authors@R: c(
+    person("Saras", "Windecker", role = c("aut", "cre"),
+           email = "saras.windecker@gmail.com",
+           comment = c(ORCID = "0000-0002-4870-8353")),
+    person("Tianxiao", "Hao", role = "aut",
+           comment = c(ORCID = "0000-0003-4363-1956")),
+    person("Nick", "Golding", role = "aut",
+           comment = c(ORCID = "0000-0001-8916-5570")),
+    person("Kate", "Senior", role = "ctb",
+           comment = c(ORCID = "0000-0003-1123-1472")))
+Description: This package exists as a toolbox to create the greta arrays 
+    necessary to model infections as a gaussian process over time. The resulting
+    infection timeseries can be used toestimate epidemiological parameters. 
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+URL: https://github.com/idem-lab/lowerGPreff
+BugReports: https://github.com/idem-lab/lowerGPreff/issues
 Suggests: R.rsp
 VignetteBuilder: R.rsp
 Imports:

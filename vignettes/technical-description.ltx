@@ -82,7 +82,7 @@ where $S_T$ and $S^+_T$ are the number tested and number seropositive on some se
 
 Incorporating data such as seropositivity rate in prevalence survey results or viral prevalence in wasterwater provides another independent source of information informing the infection time series, thus improving our ability to calibrate reporting rates for time-series-type data such as case time series.
 
-\section*{Function choices}
+\section{Function choices}
 
 In Equation \ref{eq1} we specify that the infection time series is to be modelled with some non-parametric function of time $f(t)$. This requires some type of flexible fitting tools that allows infections to vary with time. Many such tools exist, including Brownian motion, splines, and piece-wise regressions, and they differ in how flexibility (e.g., the wiggliness of trajectories, sharpness of turns) is parameterised. An appropriate choice  here is a Gaussian Process (GP) of time, which is a type of flexible fitting tools commonly used in epidemiological modelling \cite{abbott_estimating_2020}.
 

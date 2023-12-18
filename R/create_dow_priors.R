@@ -1,4 +1,4 @@
-#' Create day of week correction arrays
+#' Create day of week correction priors
 #'
 #' @description This function proposes prior distributions for the weights of
 #'  day-of-week effect. Weekly periodicity is often observed in the case
@@ -14,14 +14,12 @@
 #'  proposals may be implemented in the future.
 #'
 #' @param n_jurisdictions number of jurisdictions, defaults to 1
-#' @param data_id optional name label identifying data type for greta arrays
 #'
 #' @importFrom greta normal dirichlet
 #'
 #' @return named greta arrays for day of week corrections
 #' @export
-create_dow_correction_arrays <- function (n_jurisdictions = 1,
-                                          data_id = '') {
+create_dow_priors <- function (n_jurisdictions = 1) {
 
   # prior for dweek correction
   dow_alpha <- greta::normal(1, 1,

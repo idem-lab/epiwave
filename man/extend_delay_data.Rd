@@ -4,14 +4,14 @@
 \alias{extend_delay_data}
 \title{Extend delay data}
 \usage{
-extend_delay_data(delay_dat, incubation_period_distribution)
+extend_delay_data(delay_dat, incubation_period_distribution = NULL)
 }
 \arguments{
 \item{delay_dat}{long form delay data that covers the date sequence of the
 entire infection timeseries}
 
-\item{incubation_period_distribution}{distribution for the incubation
-period}
+\item{incubation_period_distribution}{optional distribution for the
+incubation period}
 }
 \value{
 delay distribution that combines both infection to notification
