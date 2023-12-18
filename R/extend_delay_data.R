@@ -17,13 +17,16 @@ extend_delay_data <- function (delay_dat,
   # our short-term solution to allow hospitalisation data to be reformatted
   # with this function, even though doesn't need to be merged with incubation
   if (is.null(incubation_period_distribution)) {
-    incubation_period_distribution <- make_cdf(option = "None")
+    incubation_period_distribution <- make_cdf(
+      option = "None",
+      weibull_shape = 1,
+      weibull_scale = 0.1)
   }
 
   delay_and_incubation <- apply(
     delay_matrix,
     c(1,2), construct_delays,
-    ecdf2 = incubation_period_distribution,
+    ecdf_2 = incubation_period_distribution,
     output = "probability",
     stepfun_output = TRUE)
 

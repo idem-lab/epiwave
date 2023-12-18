@@ -7,8 +7,8 @@
 #'  function. Optionally, two cdfs can be used as input, in which case the
 #'  probability and cdf of the additive combined delay are calculated.
 #'
-#' @param ecdf1 empirical cdf
-#' @param ecdf2 optional second empirical cdf to combine
+#' @param ecdf_1 empirical cdf
+#' @param ecdf_2 optional second empirical cdf to combine
 #' @param delay_range number of days to create distribution for
 #' @param output output style, choice of "probability" or "cumulative density"
 #' @param stepfun_output logical whether or not to output as step function
@@ -19,29 +19,29 @@
 #'
 #' @return delay distribution in range of forms
 #' @export
-construct_delays <- function (ecdf1,
-                              ecdf2 = NULL,
+construct_delays <- function (ecdf_1,
+                              ecdf_2 = NULL,
                               delay_range = c(-3, 28),
                               output = c("probability", "cumulative density"),
                               stepfun_output = FALSE) {
 
-  if (is.list(ecdf1)) {
-    ecdf1 <- ecdf1[[1]]
+  if (is.list(ecdf_1)) {
+    ecdf_1 <- ecdf_1[[1]]
   }
 
   # days of delay
   days <- seq(delay_range[1], delay_range[2])
 
-  if (is.null(ecdf2)) {
+  if (is.null(ecdf_2)) {
 
     # get discretised probability
-    p <- ecdf1(days + 1) - ecdf1(days)
+    p <- ecdf_1(days + 1) - ecdf_1(days)
 
   } else {
 
     # get discretised probabilities for both cdfs
-    p1 <- ecdf1(days + 1) - ecdf1(days)
-    p2 <- ecdf2(days + 1) - ecdf2(days)
+    p1 <- ecdf_1(days + 1) - ecdf_1(days)
+    p2 <- ecdf_2(days + 1) - ecdf_2(days)
 
     p1 <- approxfun(days,p1, rule = 2)
     p2 <- approxfun(days,p2, rule = 2)

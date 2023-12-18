@@ -8,6 +8,14 @@
 \description{
 This package exists as a toolbox to create the greta arrays necessary to model infections as a gaussian process over time. The resulting infection timeseries can be used toestimate epidemiological parameters.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/idem-lab/lowerGPreff}
+  \item Report bugs at \url{https://github.com/idem-lab/lowerGPreff/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Saras Windecker \email{saras.windecker@gmail.com} (\href{https://orcid.org/0000-0002-4870-8353}{ORCID})
 

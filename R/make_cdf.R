@@ -15,7 +15,9 @@
 #' @export
 make_cdf <- function (option = c('Omicron',
                                  'Delta',
-                                 'None')) {
+                                 'None'),
+                      weibull_shape = NULL,
+                      weibull_scale = NULL) {
 
   days <- 0:28
 
@@ -23,8 +25,11 @@ make_cdf <- function (option = c('Omicron',
     switch (option,
             Delta = stats::pweibull(days, shape = 1.83, scale = 4.93),
             Omicron = stats::pweibull(days, shape = 1.5, scale = 3.6),
-            None = stats::pweibull(days, shape = 1, scale = 0.1))
+            None = stats::pweibull(days,
+                                   shape = weibull_shape,
+                                   scale = weibull_scale))
   }
+
 
   cum_density <- f(option)
   cdf <- stats::approxfun(days, cum_density)

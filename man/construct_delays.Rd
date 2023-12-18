@@ -5,17 +5,17 @@
 \title{Construct delays}
 \usage{
 construct_delays(
-  ecdf1,
-  ecdf2 = NULL,
+  ecdf_1,
+  ecdf_2 = NULL,
   delay_range = c(-3, 28),
   output = c("probability", "cumulative density"),
   stepfun_output = FALSE
 )
 }
 \arguments{
-\item{ecdf1}{empirical cdf}
+\item{ecdf_1}{empirical cdf}
 
-\item{ecdf2}{optional second empirical cdf to combine}
+\item{ecdf_2}{optional second empirical cdf to combine}
 
 \item{delay_range}{number of days to create distribution for}
 

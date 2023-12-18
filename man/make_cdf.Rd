@@ -4,7 +4,11 @@
 \alias{make_cdf}
 \title{Make cumulative density function}
 \usage{
-make_cdf(option = c("Omicron", "Delta", "None"))
+make_cdf(
+  option = c("Omicron", "Delta", "None"),
+  weibull_shape = NULL,
+  weibull_scale = NULL
+)
 }
 \arguments{
 \item{option}{SARS-CoV-2 covariant or NULL model}
