@@ -1,18 +1,18 @@
 cff-version: 1.1.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: Windecker
-  given-names: Saras Mei
-  orcid: https://orcid.org/0000-0002-4870-8353
-- family-names: Hao
-  given-names: Tianxiao
-  orcid: https://orcid.org/0000-0003-4363-1956
-- family-names: Senior
-  given-names: Kate
-  orcid: https://orcid.org/0000-0003-1123-1472
-- family-names: Golding
-  given-names: Nick
-  orcid: https://orcid.org/0000-0001-8916-5570
+- family-names: "Windecker"
+  given-names: "Saras Mei"
+  orcid: "https://orcid.org/0000-0002-4870-8353"
+- family-names: "Hao"
+  given-names: "Tianxiao"
+  orcid: "https://orcid.org/0000-0003-4363-1956"
+- family-names: "Senior"
+  given-names: "Kate"
+  orcid: "https://orcid.org/0000-0003-1123-1472"
+- family-names: "Golding"
+  given-names: "Nick"
+  orcid: "https://orcid.org/0000-0001-8916-5570"
 title: idem-lab/lowerGPreff: First minor release
 version: v.0.1.0-alpha
 date-released: 2023-12-18
