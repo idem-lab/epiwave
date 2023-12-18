@@ -1,7 +1,7 @@
 Package: lowerGPreff
 Title: Estimate epidemiological parameters by modelling new infections as a 
     gaussian process over time
-Version: 0.0.1.0000
+Version: 0.1.0
 Authors@R: c(
     person("Saras", "Windecker", role = c("aut", "cre"),
            email = "saras.windecker@gmail.com",
