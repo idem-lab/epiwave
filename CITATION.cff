@@ -13,7 +13,7 @@ authors:
 - family-names: "Golding"
   given-names: "Nick"
   orcid: "https://orcid.org/0000-0001-8916-5570"
-title: idem-lab/lowerGPreff: First minor release
+title: "idem-lab/lowerGPreff: First minor release"
 version: v.0.1.0-alpha
 date-released: 2023-12-18
 doi: 10.5281/zenodo.10398080
