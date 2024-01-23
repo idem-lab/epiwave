@@ -49,7 +49,7 @@ conv_mass_weibull <- function(min_delay = 0,
                        shape,
                        scale)
   # if the dist is supposed to be a pmf, make sure it sums to 1
-  if (is_pmf) {
+  if (output_is_pmf) {
     y <- y/sum(y)
   }
 
@@ -74,8 +74,7 @@ conv_mass_from_cdf <- function(min_delay = 0,
 
 # calculate from empirical delay data
 conv_mass_empirical <- function(min_delay = -3, #example for when anticipating possible negative delay
-                                max_delay = 56,
-                                output_is_pmf = TRUE,
+                                max_delay = 56
                                 input_data){
 
   x <- min_delay:max_delay
@@ -88,7 +87,7 @@ conv_mass_empirical <- function(min_delay = -3, #example for when anticipating p
   # calculate prob at each time step
   y <- emp_cdf(x + 1) - emp_cdf(x)
   # if the dist is supposed to be a pmf, make sure it sums to 1
-  if (is_pmf) {
+  if (output_is_pmf) {
     y <- y/sum(y)
   }
   stats::approxfun(x, y)
