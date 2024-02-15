@@ -17,7 +17,7 @@ make_massfun <- function (min_delay,
   if (normalise) {
     delay_massfun <- delay_massfun %>%
       dplyr::mutate(
-        correction = cdf_fun(max_delay + 1),
+        correction = sum(mass),
         mass = mass / correction
       )
   }
@@ -40,7 +40,7 @@ data_as_delay_dist <- function (data,
   cdf_fun <- stats::ecdf(day_diff)
 
   if (is.null(min_delay)) {
-    min_delay <- floor(quantile(cdf_fun, 0.01))
+    min_delay <- floor(quantile(cdf_fun, 0.00))
   }
   if (is.null(max_delay)) {
     max_delay <- ceiling(quantile(cdf_fun, 0.99))
@@ -57,7 +57,7 @@ params_as_delay_dist <- function (dist,
 
   # this quantile is the S3 method for quantile from distributional pkg
   if (is.null(min_delay)) {
-    min_delay <- floor(quantile(dist, 0.01))
+    min_delay <- floor(quantile(dist, 0.00))
   }
   if (is.null(max_delay)) {
     max_delay <- ceiling(quantile(dist, 0.99))
