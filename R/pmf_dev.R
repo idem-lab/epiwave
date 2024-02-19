@@ -1,3 +1,16 @@
+match_mass_lookup <- function (day_diff, lookup, mass_val_col, delay_col) {
+
+  lookup <- as.data.frame(lookup)
+  day_diff[] <- lookup[,mass_val_col][
+    match(unlist(day_diff),
+          lookup[,delay_col])]
+  day_diff[is.na(day_diff)] <- 0
+
+  class(day_diff) <- 'numeric'
+  day_diff
+
+}
+
 # make normalise argument on top level so user can modify
 
 make_massfun <- function (min_delay,
@@ -26,8 +39,10 @@ make_massfun <- function (min_delay,
     dplyr::select(
       delays, mass
     )
+  # %>%
+    # as.data.frame()
 
-  class(delay_massfun) <- c(class(delay_massfun), "delay_probs")
+  class(delay_massfun) <- c("delay_probs", class(delay_massfun))
   delay_massfun
 
 }
