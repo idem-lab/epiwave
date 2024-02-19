@@ -61,7 +61,7 @@ construct_delays <- function (ecdf_1,
   # preventive measure has taken place once the "would-be" infectee is notified
   p[days < 0] <- 0
 
-  # remove extremely long but unlikely delays, ususally a result of
+  # remove extremely long but unlikely delays, usually a result of
   # parametric specification of the input cdf --- need to check if this is
   # right
   p[days > delay_range[2]] <- 0
