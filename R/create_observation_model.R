@@ -40,7 +40,7 @@ create_observation_model <- function (infection_timeseries,
   # the right period
 
   case_mat <- data_to_matrix(count_data, 'count')
-  delay_mat <- data_to_matrix(delay_distribution, 'delay_fxn')
+  # delay_mat <- data_to_matrix(delay_distribution)
   prop_mat <- data_to_matrix(proportion_observed, 'prop')
 
   infection_days <- as.Date(rownames(prop_mat))
@@ -63,7 +63,7 @@ create_observation_model <- function (infection_timeseries,
   convolution_matrices <- lapply(
     1:n_jurisdictions,
     function(x) {
-      get_convolution_matrix(delay_mat[, x],
+      get_convolution_matrix(delay_distribution[, x],
                              n_dates)
     })
 
