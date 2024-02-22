@@ -29,7 +29,6 @@ get_convolution_matrix <- function (mass_functions, n) {
 
     # apply the single mass function
     message("using a single mass function for all time points!")
-    # con_mat <- matrix(mass_functions(day_diff), n, n)
     con_mat <- match_mass_lookup(day_diff, mass_functions,
                                  'massfun_combined', 'total_delay')
 
@@ -37,11 +36,6 @@ get_convolution_matrix <- function (mass_functions, n) {
 
   if (length(mass_functions) == n) {
 
-    # apply the matching mass functions to these delays
-    # con_mat <- matrix(as.numeric(
-    #   mapply(function(f, x) do.call(f, list(x)),
-    #          mass_functions,
-    #          day_diff)), n, n)
     con_mat <- do.call(cbind,
                        lapply(1:ncol(day_diff),
                               function (x) {

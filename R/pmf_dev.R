@@ -11,8 +11,6 @@ match_mass_lookup <- function (day_diff, lookup, mass_val_col, delay_col) {
 
 }
 
-# make normalise argument on top level so user can modify
-
 make_massfun <- function (min_delay,
                           max_delay,
                           cdf_fun,
@@ -39,17 +37,19 @@ make_massfun <- function (min_delay,
     dplyr::select(
       delays, mass
     )
-  # %>%
-    # as.data.frame()
 
+  # add if to separate the two classes that are normlaise or not.
   class(delay_massfun) <- c("delay_probs", class(delay_massfun))
+
   delay_massfun
 
 }
 
+# potential new name = data_to_distribution
 data_as_delay_dist <- function (data,
                                 min_delay = NULL,
-                                max_delay = NULL) {
+                                max_delay = NULL,
+                                normalise = TRUE) {
 
   day_diff <- data$notif_date - data$sym_date
   cdf_fun <- stats::ecdf(day_diff)
@@ -61,14 +61,16 @@ data_as_delay_dist <- function (data,
     max_delay <- ceiling(quantile(cdf_fun, 0.99))
   }
 
-  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = TRUE)
+  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = normalise)
   out
 
 }
 
+# potential new name = parametric_dist_to_distribution
 params_as_delay_dist <- function (dist,
                                   min_delay = NULL,
-                                  max_delay = NULL) {
+                                  max_delay = NULL,
+                                  normalise = TRUE) {
 
   # this quantile is the S3 method for quantile from distributional pkg
   if (is.null(min_delay)) {
@@ -81,7 +83,7 @@ params_as_delay_dist <- function (dist,
   # when distributional::cdf is applied to a sequence (of x) it returns a list
   cdf_fun <- function(x) distributional::cdf(dist, x)[[1]]
 
-  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = TRUE)
+  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = normalise)
   out
 
 }
