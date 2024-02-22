@@ -43,11 +43,10 @@ infection_days <- seq(from = as.Date('2021-05-03'),
 n_days_infection <- length(infection_days)
 
 ## proportions
-car <- GPreff::expand_constant_value(
+car <- create_lowerGPreff_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = 0.75,
-  col_name = 'prop')
+  constant_val = 0.75) #will error because we removed col_name from function
 
 # we may pass in timevarying or greta arrays in the "second class"
 ihr <- lowerGPreff::create_ihr_prior(car)
@@ -70,11 +69,10 @@ incubation_period_distribution <- params_as_delay_dist(incub_dist)
 #   incubation_period_distribution)
 notif_delay_dist <-
   combine_massfuns(notif_delay_ecdf, incubation_period_distribution)
-notif_full_delay_dist <- GPreff::expand_constant_value(
+notif_full_delay_dist <- create_lowerGPreff_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = list(notif_delay_dist),
-  col_name = 'delay_fxn')
+  constant_val = list(notif_delay_dist))
 
 
 # hosp_delay_ecdf <- make_cdf(option = 'None',
@@ -89,11 +87,10 @@ notif_full_delay_dist <- GPreff::expand_constant_value(
 #   hosp_delay_dist)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- params_as_delay_dist(hosp_dist)
-hosp_full_delay_dist <- GPreff::expand_constant_value(
+hosp_full_delay_dist <- create_lowerGPreff_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = list(hosp_delay_ecdf),
-  col_name = 'delay_fxn')
+  constant_val = list(hosp_delay_ecdf))
 
 
 ## generation interval distribution
