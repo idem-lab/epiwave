@@ -39,16 +39,16 @@ create_observation_model <- function (infection_timeseries,
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
-  case_mat <- data_to_matrix(count_data, 'count')
-  delay_mat <- data_to_matrix(delay_distribution, 'delay_fxn')
-  prop_mat <- data_to_matrix(proportion_observed, 'prop')
+  case_mat <- data_to_matrix(count_data, 'value')
+  delay_mat <- data_to_matrix(delay_distribution, 'value')
+  prop_mat <- data_to_matrix(proportion_observed, 'value')
 
   infection_days <- as.Date(rownames(prop_mat))
 
   # for hospitalisation, multiply the car by the chr to create ihr
   # this is temp code for covid live demo
-  if (!is.null(proportion_observed$ratio)) {
-    prop_mat <- prop_mat * proportion_observed$ratio
+  if (!is.null(proportion_observed$value)) {
+    prop_mat <- prop_mat * proportion_observed$value
   }
 
   ## add a check for correct dow arrays
