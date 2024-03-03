@@ -18,7 +18,7 @@ Description: This package exists as a toolbox to create the greta arrays
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 URL: https://github.com/idem-lab/lowerGPreff
 BugReports: https://github.com/idem-lab/lowerGPreff/issues
 Suggests: R.rsp
