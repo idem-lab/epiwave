@@ -1,7 +1,7 @@
 ## header
-# library(lowerGPreff)
+library(lowerGPreff)
 # library(GPreff)
-source('R/pmf_dev.R')
+# source('R/pmf_dev.R')
 library(dplyr)
 library(greta)
 
@@ -13,8 +13,14 @@ notif_file <- '../../BDSS_governance/BDSS/data/COVID_live_cases.rds'
 
 notif_dat <- notif_file |>
   readRDS() |>
-  dplyr::rename(count = new_cases) |>
+  dplyr::rename(value = new_cases) |>
   dplyr::filter(date %in% study_seq)
+### DO WE HAVE A VERSION OF THE FUNCTION TO MAKE THIS INTERNALLY?
+# BECAUSE THE WAY THE OTHER SET UP FUNCTIONS ARE WRITTEN THIS ONE DOESN'T NEED
+# TO PASS THROUGH
+class(notif_dat) <- c('lowerGPreff_fixed_timeseries',
+                      'lowerGPreff_timeseries',
+                      class(notif_dat))
 
 ## hospitalisation counts
 hosp_file <- '../../BDSS_governance/BDSS/data/COVID_live_cases_in_hospital.rds'
@@ -23,7 +29,11 @@ hosp_occupancy <- hosp_file |>
   readRDS() |>
   dplyr::filter(date %in% study_seq)
 hosp_dat <- hosp_occupancy |>
-  dplyr::mutate(count = cases_in_hospital/3)
+  dplyr::mutate(value = cases_in_hospital/3)
+class(hosp_dat) <- c('lowerGPreff_fixed_timeseries',
+                     'lowerGPreff_timeseries',
+                     class(hosp_dat))
+
 
 # jurisdictions
 jurisdictions <- unique(notif_dat$jurisdiction)
@@ -34,7 +44,8 @@ oldnotif_delay <- readRDS('../../BDSS_governance/BDSS/data/ECDF_delay_constant_P
 ## created massfun version using the following. to update with pmf from data
 min_delay <- 0
 max_delay <- 41
-notif_delay_ecdf <- make_massfun(min_delay, max_delay, oldnotif_delay, normalise = TRUE)
+notif_delay_ecdf <- create_lowerGPreff_massfun(
+  min_delay, max_delay, oldnotif_delay, normalise = TRUE)
 
 ## days of infection timeseries
 infection_days <- seq(from = as.Date('2021-05-03'),
@@ -43,10 +54,10 @@ infection_days <- seq(from = as.Date('2021-05-03'),
 n_days_infection <- length(infection_days)
 
 ## proportions
-car <- create_lowerGPreff_timeseries(
+car <- create_lowerGPreff_fixed_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = 0.75) #will error because we removed col_name from function
+  value = 0.75)
 
 # we may pass in timevarying or greta arrays in the "second class"
 ihr <- lowerGPreff::create_ihr_prior(car)
@@ -56,7 +67,7 @@ incub_dist <- distributional::dist_weibull(
   shape = 1.83, scale = 4.93)
 # incubation_period_distribution <- lowerGPreff::make_cdf(
 #   option = "Delta")
-incubation_period_distribution <- params_as_delay_dist(incub_dist)
+incubation_period_distribution <- parametric_dist_to_distribution(incub_dist)
 
 ## formatted delay distribution
 # notif_delay_dist <- GPreff::expand_constant_value(
@@ -68,11 +79,11 @@ incubation_period_distribution <- params_as_delay_dist(incub_dist)
 #   notif_delay_dist,
 #   incubation_period_distribution)
 notif_delay_dist <-
-  combine_massfuns(notif_delay_ecdf, incubation_period_distribution)
-notif_full_delay_dist <- create_lowerGPreff_timeseries(
+  combine(notif_delay_ecdf, incubation_period_distribution)
+notif_full_delay_dist <- create_lowerGPreff_dist_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = list(notif_delay_dist))
+  value = notif_delay_dist)
 
 
 # hosp_delay_ecdf <- make_cdf(option = 'None',
@@ -86,11 +97,11 @@ notif_full_delay_dist <- create_lowerGPreff_timeseries(
 # hosp_full_delay_dist <- lowerGPreff::extend_delay_data(
 #   hosp_delay_dist)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
-hosp_delay_ecdf <- params_as_delay_dist(hosp_dist)
-hosp_full_delay_dist <- create_lowerGPreff_timeseries(
+hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
+hosp_full_delay_dist <- create_lowerGPreff_dist_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  constant_val = list(hosp_delay_ecdf))
+  value = hosp_delay_ecdf)
 
 
 ## generation interval distribution
@@ -104,7 +115,7 @@ gi_distribution_data <- readr::read_csv(
 gi_dist <- distributional::dist_lognormal(
   mu = mean(gi_distribution_data$param1),
   sigma = mean(gi_distribution_data$param2))
-generation_interval_distribution <- params_as_delay_dist(gi_dist)
+generation_interval_distribution <- parametric_dist_to_distribution(gi_dist)
 
 ## optional day-of-week effect model
 dow_model <- lowerGPreff::create_dow_priors(
