@@ -5,11 +5,19 @@ library(lowerGPreff)
 library(dplyr)
 library(greta)
 
+#dplyr::combine currently masking lowerGPreff::combine
+conflicted::conflict_prefer("combine", winner = "lowerGPreff")
+
 study_seq <- seq(from = as.Date('2021-06-01'),
                  to = as.Date('2021-12-31'), 'days')
 
+## user specific folder with not synced data
+not_synced_folder <- 'not_synced/data'
+
+#-------
+
 ## notification counts
-notif_file <- '../../BDSS_governance/BDSS/data/COVID_live_cases.rds'
+notif_file <- paste0(not_synced_folder, '/COVID_live_cases.rds')
 
 notif_dat <- notif_file |>
   readRDS() |>
@@ -23,7 +31,7 @@ class(notif_dat) <- c('lowerGPreff_fixed_timeseries',
                       class(notif_dat))
 
 ## hospitalisation counts
-hosp_file <- '../../BDSS_governance/BDSS/data/COVID_live_cases_in_hospital.rds'
+hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
 
 hosp_occupancy <- hosp_file |>
   readRDS() |>
@@ -40,7 +48,7 @@ jurisdictions <- unique(notif_dat$jurisdiction)
 n_jurisdictions <- length(jurisdictions)
 
 ## delay data
-oldnotif_delay <- readRDS('../../BDSS_governance/BDSS/data/ECDF_delay_constant_PCR.rds')
+oldnotif_delay <- readRDS(paste0(not_synced_folder, '/ECDF_delay_constant_PCR.rds'))
 ## created massfun version using the following. to update with pmf from data
 min_delay <- 0
 max_delay <- 41
@@ -106,7 +114,7 @@ hosp_full_delay_dist <- create_lowerGPreff_dist_timeseries(
 
 ## generation interval distribution
 gi_distribution_data <- readr::read_csv(
-  file = '../../BDSS_governance/BDSS/data/nishiura_samples.csv',
+  file = paste0(not_synced_folder,'/nishiura_samples.csv'),
   col_types = readr::cols(param1 = readr::col_double(),
                           param2 = readr::col_double()))
 

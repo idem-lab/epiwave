@@ -13,7 +13,7 @@ evaluate <- function(lookup,
 }
 
 #' @export
-evaluate.lowerGPreff_distribution <- function (lookup,
+evaluate.lowerGPreff_distribution_massfun <- function (lookup,
                                                day_diff, ...) {
 
   lookup <- as.data.frame(lookup)
@@ -33,8 +33,10 @@ evaluate.lowerGPreff_distribution_timeseries <- function (lookup,
 
   con_list <- lapply(1:ncol(day_diff),
                             function (x) {
+                              distribution <- lookup[x, 'value']$value[[1]]
+
                               evaluate(
-                                lookup[x, 'value']$value[[1]], day_diff[, x])
+                                distribution, day_diff[, x])
                             }
                      )
   con_mat <- do.call(cbind, con_list)
