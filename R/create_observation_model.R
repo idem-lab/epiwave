@@ -30,9 +30,9 @@
 #' @return greta arrays of observation model
 #' @export
 create_observation_model <- function (infection_timeseries,
-                                      delay_distribution,
-                                      proportion_observed,
-                                      count_data,
+                                      delay_distribution, # seropositivity curve
+                                      proportion_observed, # 1 for sero
+                                      count_data, # sero curve
                                       dow_model = NULL,
                                       data_id = NULL) {
 
