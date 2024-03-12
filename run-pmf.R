@@ -15,5 +15,5 @@ data$notif_date <- data$sym_date + rpois(nrow(data), 4)
 delay_probs_from_data <- data_to_distribution(data)
 
 
-combined <- combine(delay_probs_from_dist,
-                    delay_probs_from_data)
+combined <- add(delay_probs_from_dist,
+                delay_probs_from_data)

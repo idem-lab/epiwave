@@ -7,13 +7,13 @@
 #' @return combined lowerGPreff massfuns
 #'
 #' @export
-combine <- function(delay_massfun1, delay_massfun2, ...) {
-  UseMethod("combine")
+add <- function(delay_massfun1, delay_massfun2, ...) {
+  UseMethod("add")
 }
 
 #' @export
-combine.lowerGPreff_massfun <- function (delay_massfun1,
-                                         delay_massfun2, ...) {
+add.lowerGPreff_massfun <- function (delay_massfun1,
+                                     delay_massfun2, ...) {
 
   # add check that both inputs are same class (ie both distribution or
   # both curve)

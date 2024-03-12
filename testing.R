@@ -57,7 +57,7 @@ n_days_infection <- length(infection_days)
 car <- create_lowerGPreff_fixed_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
-  value = 0.75)
+  value = 0.75) # 1 for sero prop
 
 # we may pass in timevarying or greta arrays in the "second class"
 ihr <- lowerGPreff::create_ihr_prior(car)
@@ -79,7 +79,7 @@ incubation_period_distribution <- parametric_dist_to_distribution(incub_dist)
 #   notif_delay_dist,
 #   incubation_period_distribution)
 notif_delay_dist <-
-  combine(notif_delay_ecdf, incubation_period_distribution)
+  add(notif_delay_ecdf, incubation_period_distribution)
 notif_full_delay_dist <- create_lowerGPreff_dist_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
