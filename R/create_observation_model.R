@@ -28,12 +28,14 @@
 #'   by date and jurisdiction
 #' @param binom_sample_sizes total sample size in binomial survey data, in long
 #'   data format
-#' @param total_pops total jurisdiction pop, for calculating infection
-#'   prevalence for seropositivity sample data, need to be a vector matching to
-#'   jurisdiction names in the infection matrix
+#' @param state_denom state level denominator for converting observed infections
+#'   into proportion binom or logNormal data. e.g. total jurisdiction pop for
+#'   calculating infection prevalence for seropositivity sample data. And
+#'   wastewater concentration denominator for the wastewater logNormal data.
+#'   This argument needs to be a vector matching to jurisdiction names in the
+#'   infection matrix
 #' @param likelihood choice for likelihood over data
 #' @param noise optional cauchy noise
-#' @param lab_y_offset time-constant scaling effect for wastewater data
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
 #'
@@ -44,13 +46,12 @@ create_observation_model <- function (infection_timeseries,
                                       proportion_observed = NULL,
                                       obs_data,
                                       binom_sample_sizes = NULL,
-                                      total_pops = NULL,
+                                      state_denom = NULL,
                                       dow_model = NULL,
                                       likelihood = c('negbinom',
                                                      'binom',
                                                      'logNormal'),
                                       noise = FALSE,
-                                      lab_y_offset = NULL,
                                       data_id = NULL) {
 
   # add if statements to check that infection_days is long enough to cover
@@ -139,11 +140,11 @@ create_observation_model <- function (infection_timeseries,
     expected_obs <- expected_obs * exp(noise)
   }
 
-  if (likelihood == 'binom') {
-    # divide by total pop of jurisdictions to get pop positivity rates
+  if (likelihood %in% c('binom','logNormal')) {
+    # divide by denominator to get the correct rates
     expected_obs <- sweep(expected_obs,
                           2,
-                          total_pops,
+                          state_denom,
                           FUN = "/")
   }
 
@@ -199,6 +200,7 @@ create_observation_model <- function (infection_timeseries,
 
   if (likelihood == 'binom') {
 
+    # get the binomial sample size from survey in matrix format
     sample_sizes_mat <- data_to_matrix(binom_sample_sizes, 'total')
 
     greta::distribution(obs_mat_array) <- greta::binomial(
@@ -220,6 +222,20 @@ create_observation_model <- function (infection_timeseries,
 
   if (likelihood == 'logNormal') {
 
+    greta::distribution(obs_mat_array) <- greta::lognormal(
+      meanlog = expected_obs_idxed[valid_idx],
+      sdlog = logN_sd # dummy var, time constant
+    )
+
+    greta_arrays <- list(
+      expected_obs,
+      convolution_matrices
+    )
+
+    names(greta_arrays) <- c(
+      paste0(data_id, '_logNormal_mean'),
+      paste0(data_id, '_convolution_matrices')
+    )
   }
 
   return(greta_arrays)
