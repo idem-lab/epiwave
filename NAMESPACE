@@ -2,7 +2,7 @@
 
 S3method(add,lowerGPreff_massfun)
 S3method(as_matrix,lowerGPreff_timeseries)
-S3method(evaluate,lowerGPreff_distribution)
+S3method(evaluate,lowerGPreff_distribution_massfun)
 S3method(evaluate,lowerGPreff_distribution_timeseries)
 S3method(plot,lowerGPreff_massfun)
 export("%>%")

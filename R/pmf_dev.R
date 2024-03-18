@@ -38,10 +38,10 @@ create_lowerGPreff_massfun <- function (min_delay,
   class(delay_massfun) <- c("lowerGPreff_massfun", class(delay_massfun))
 
   if (normalise) {
-    class(delay_massfun) <- c("lowerGPreff_distribution", class(delay_massfun))
+    class(delay_massfun) <- c("lowerGPreff_distribution_massfun", class(delay_massfun))
   }
   if (!normalise) {
-    class(delay_massfun) <- c("lowerGPreff_curve", class(delay_massfun))
+    class(delay_massfun) <- c("lowerGPreff_curve_massfun", class(delay_massfun))
   }
 
   delay_massfun
