@@ -8,44 +8,28 @@
 #'  to think about if we should make explicit if the user is inputting a single
 #'  mass function or a list of mass functions.
 #'
-#' @param mass_functions single function or vector of functions that describe
+#' @param delay_distribution single function or vector of functions that describe
 #'  probability mass across delays
+#' @param jurisdiction default is
 #' @param n dimensions of output convolution matrix
 #'
 #' @return matrix for forward convolution
-get_convolution_matrix <- function (mass_functions, n) {
+get_convolution_matrix <- function (delay_distribution,
+                                    jurisdiction = 'default_juris_name',
+                                    n) {
 
-  mass_functions <- matrix(mass_functions)
+  # if (!length(mass_functions) %in% c(1, n)) {
+  #   stop('number of mass functions do not match the number of timepoints!')
+  # }
 
-  if (!length(mass_functions) %in% c(1, n)) {
-    stop('number of mass functions do not match the number of timepoints!')
-  }
+  subset_distribution <- delay_distribution[
+    delay_distribution$jurisdiction == jurisdiction, ]
 
   # get a matrix of time differences between pairs of days
   day_diff <- matrix(NA, n, n)
   day_diff <- row(day_diff) - col(day_diff)
 
-  if (length(mass_functions) == 1) {
-
-    # apply the single mass function
-    message("using a single mass function for all time points!")
-    con_mat <- match_mass_lookup(day_diff, mass_functions,
-                                 'massfun_combined', 'total_delay')
-
-  }
-
-  if (length(mass_functions) == n) {
-
-    con_mat <- do.call(cbind,
-                       lapply(1:ncol(day_diff),
-                              function (x) {
-                                match_mass_lookup(
-                                  day_diff[,x], mass_functions[x,],
-                                  'massfun_combined', 'total_delay')
-                              }
-                       ))
-
-  }
+  con_mat <- evaluate(subset_distribution, day_diff)
 
   return(con_mat)
 }
@@ -76,59 +60,3 @@ module <- function (..., sort = TRUE) {
   dots
 
 }
-
-#' Turn wide data to matrix
-#'
-#' @description Take long form input data and turn into wide form matrix with
-#'  continuous sequence of dates. This function assumes that users supply long
-#'  form count data where dates with 0 cases are explicit.
-#'
-#' @param long_data long data form
-#' @param extra_col for column name
-#'
-#' @importFrom tidyr pivot_wider
-#' @importFrom tibble column_to_rownames
-#'
-#' @keywords internal
-#' @return data in wide matrix form, with continuous seq of dates
-data_to_matrix <- function (long_data, extra_col) {
-
-  keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', extra_col)])
-  wide_data <- keep_df %>%
-    tidyr::pivot_wider(id_cols = date,
-                       names_from = jurisdiction,
-                       values_from = !!extra_col,
-                       values_fill = NA) %>%
-    fill_date_gaps() %>%
-    tibble::column_to_rownames(var = 'date') %>%
-    as.matrix()
-
-  wide_data
-}
-
-#' Fill date gaps
-#'
-#' @description Fill in date gaps in data, if they exist, so that there is a
-#'  continuous sequence of dates in matrix that is fed to the model.
-#'
-#' @param df Wide dataframe
-#'
-#' @importFrom methods is
-#'
-#' @keywords internal
-#' @return Wide dataframe with rows filled in so it has continuous seq of dates
-fill_date_gaps <- function (df) {
-
-  if (!methods::is(df$date, 'Date')) {
-    df$date <- as.Date(df$date)
-  }
-  date_sequence <- data.frame(
-    date = seq(min(df$date),
-               max(df$date),
-               by = "days"))
-  df_with_all_dates <- merge(df, date_sequence,
-                             by = 'date',
-                             all.x = FALSE, all.y = TRUE)
-  df_with_all_dates
-}
-

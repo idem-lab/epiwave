@@ -56,6 +56,7 @@ create_observation_model <- function (infection_timeseries,
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
+
   # need to avoid match.arg? can change later
   likelihood <- match.arg(likelihood)
 
@@ -66,6 +67,7 @@ create_observation_model <- function (infection_timeseries,
   if (likelihood == 'binom') {
     message("binomial likelihood over data!")
   }
+
 
   if (likelihood == 'logNormal') {
     message("log-Normal likelihood over data!")
@@ -91,15 +93,15 @@ create_observation_model <- function (infection_timeseries,
   if (likelihood == 'logNormal') {
     obs_mat <- data_with_site_to_matrix(obs_data, 'concentration') # dummy fun
   } else {
-    obs_mat <- data_to_matrix(obs_data, 'count')
+    obs_mat <- as_matrix(obs_data, 'count')
   }
-  dist_mat <- data_to_matrix(convolution_distribution, 'delay_fxn')
-  prop_mat <- data_to_matrix(proportion_observed, 'prop')
+  dist_mat <- as_matrix(convolution_distribution, 'delay_fxn')
+  prop_mat <- as_matrix(proportion_observed, 'prop')
 
   # for hospitalisation, multiply the car by the chr to create ihr
   # this is temp code for covid live demo
-  if (!is.null(proportion_observed$ratio)) {
-    prop_mat <- prop_mat * proportion_observed$ratio
+  if (!is.null(proportion_observed$value)) {
+    prop_mat <- prop_mat * proportion_observed$value
   }
 
   ## add a check for correct dow arrays
@@ -108,11 +110,17 @@ create_observation_model <- function (infection_timeseries,
     prop_mat <- prop_mat * dow_correction
   }
 
+  # add check that ncol(infection_timeseries and below yield same. number of juris)
+  # n_jurisdictions <- length(unique(convolution_distribution$jurisdiction))
+  #ncol(infection_timeseries)
+  # n_dates <- nrow(infection_timeseries)
+
 
   convolution_matrices <- lapply(
-    1:n_jurisdictions,
+    unique(delay_distribution$jurisdiction),
     function(x) {
-      get_convolution_matrix(dist_mat[, x],
+      get_convolution_matrix(convolution_distribution,
+                             x,
                              n_dates)
     })
 

@@ -1,20 +1,16 @@
-match_mass_lookup <- function (day_diff, lookup, mass_val_col, delay_col) {
-
-  lookup <- as.data.frame(lookup)
-  day_diff[] <- lookup[,mass_val_col][
-    match(unlist(day_diff),
-          lookup[,delay_col])]
-  day_diff[is.na(day_diff)] <- 0
-
-  class(day_diff) <- 'numeric'
-  day_diff
-
-}
-
-make_massfun <- function (min_delay,
-                          max_delay,
-                          cdf_fun,
-                          normalise = c(TRUE, FALSE)) {
+#' Create lowerGPreff_massfun object
+#'
+#' @param min_delay miniumum delay
+#' @param max_delay maxiumum delay
+#' @param cdf_fun function for creating the cdf that defines the mass
+#' @param normalise whether the mass should be normalised
+#'
+#' @return lowerGPreff_massfun object
+#' @export
+create_lowerGPreff_massfun <- function (min_delay,
+                                        max_delay,
+                                        cdf_fun,
+                                        normalise = c(TRUE, FALSE)) {
 
   delay_massfun <- data.frame(
     delays = seq(min_delay, max_delay)
@@ -39,17 +35,31 @@ make_massfun <- function (min_delay,
     )
 
   # add if to separate the two classes that are normlaise or not.
-  class(delay_massfun) <- c("delay_probs", class(delay_massfun))
+  class(delay_massfun) <- c("lowerGPreff_massfun", class(delay_massfun))
+
+  if (normalise) {
+    class(delay_massfun) <- c("lowerGPreff_distribution_massfun", class(delay_massfun))
+  }
+  if (!normalise) {
+    class(delay_massfun) <- c("lowerGPreff_curve_massfun", class(delay_massfun))
+  }
 
   delay_massfun
 
 }
 
-# potential new name = data_to_distribution
-data_as_delay_dist <- function (data,
-                                min_delay = NULL,
-                                max_delay = NULL,
-                                normalise = TRUE) {
+#' Create distribution object from data
+#'
+#' @param data delay data
+#' @param min_delay optional specification for minimum delay
+#' @param max_delay optional specification for maxiumum delay
+#' @param normalise logical argument whether to normalise the mass output
+#'
+#' @return lowerGPreff_distribution object
+#' @export
+data_to_distribution <- function (data,
+                                  min_delay = NULL,
+                                  max_delay = NULL) {
 
   day_diff <- data$notif_date - data$sym_date
   cdf_fun <- stats::ecdf(day_diff)
@@ -61,16 +71,25 @@ data_as_delay_dist <- function (data,
     max_delay <- ceiling(quantile(cdf_fun, 0.99))
   }
 
-  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = normalise)
+  out <- create_lowerGPreff_massfun(
+    min_delay, max_delay,
+    cdf_fun, normalise = TRUE)
   out
 
 }
 
-# potential new name = parametric_dist_to_distribution
-params_as_delay_dist <- function (dist,
-                                  min_delay = NULL,
-                                  max_delay = NULL,
-                                  normalise = TRUE) {
+#' Create distribution object from parametric distribution values
+#'
+#' @param dist distributional package object
+#' @param min_delay optional specification for minimum delay
+#' @param max_delay optional specification for maxiumum delay
+#' @param normalise logical argument whether to normalise the mass output
+#'
+#' @return lowerGPreff_distribution object
+#' @export
+parametric_dist_to_distribution <- function (dist,
+                                             min_delay = NULL,
+                                             max_delay = NULL) {
 
   # this quantile is the S3 method for quantile from distributional pkg
   if (is.null(min_delay)) {
@@ -83,32 +102,23 @@ params_as_delay_dist <- function (dist,
   # when distributional::cdf is applied to a sequence (of x) it returns a list
   cdf_fun <- function(x) distributional::cdf(dist, x)[[1]]
 
-  out <- make_massfun(min_delay, max_delay, cdf_fun, normalise = normalise)
+  out <- create_lowerGPreff_massfun(
+    min_delay, max_delay,
+    cdf_fun, normalise = TRUE)
   out
 
 }
 
-combine_massfuns <- function (delay_massfun1, delay_massfun2) {
-
-  names(delay_massfun1) <- c('delay1', 'massfun1')
-  names(delay_massfun2) <- c('delay2', 'massfun2')
-
-  p <- tidyr::expand_grid(
-    delay1 = delay_massfun1$delay1, # ie. incubation period
-    delay2 = delay_massfun2$delay2) %>% # ie. sym to notif
-    dplyr::left_join(delay_massfun1) %>%
-    dplyr::left_join(delay_massfun2) %>%
-    dplyr::mutate(total_delay = delay1 + delay2) %>%
-    dplyr::group_by(total_delay) %>%
-    dplyr::summarise(massfun_combined =
-                       sum(massfun1 * massfun2))
-
-  p
-
-}
-
-
-plot.delay_probs <- function(x, y, ...) {
+#' Default plot function for lowerGPreff_massfun object
+#'
+#' @param x x value
+#' @param y y value
+#' @param ... additional arguments
+#'
+#' @return plot
+#'
+#' @export
+plot.lowerGPreff_massfun <- function (x, y, ...) {
   barplot(x$mass, width = 1, names.arg = x$delays,
           xlab = "delay (days)",
           ylab = "probability")
