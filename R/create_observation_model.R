@@ -26,14 +26,13 @@
 #'   data
 #' @param obs_data observational data, of any type, in long data format indexed
 #'   by date and jurisdiction
-#' @param binom_sample_sizes total sample size in binomial survey data, in long
-#'   data format
-#' @param state_denom state level denominator for converting observed infections
-#'   into proportion binom or logNormal data. e.g. total jurisdiction pop for
-#'   calculating infection prevalence for seropositivity sample data. And
-#'   wastewater concentration denominator for the wastewater logNormal data.
-#'   This argument needs to be a vector matching to jurisdiction names in the
-#'   infection matrix
+#' @param sample_size total sample size in binomial survey data, or
+#'   normalisation denominator in the wastewater concentration data. This input
+#'   data needs be in long data format and match size with obs_data
+#' @param state_pop state level denominator for converting observed infections
+#'   into proportion binom data. e.g. total jurisdiction pop for calculating
+#'   infection prevalence for seropositivity sample data. This argument needs to
+#'   be a vector matching to jurisdiction names in the infection matrix
 #' @param likelihood choice for likelihood over data
 #' @param noise optional cauchy noise
 #'
@@ -45,8 +44,8 @@ create_observation_model <- function (infection_timeseries,
                                       convolution_distribution,
                                       proportion_observed = NULL,
                                       obs_data,
-                                      binom_sample_sizes = NULL,
-                                      state_denom = NULL,
+                                      sample_size = NULL,
+                                      state_pop = NULL,
                                       dow_model = NULL,
                                       likelihood = c('negbinom',
                                                      'binom',
@@ -140,11 +139,11 @@ create_observation_model <- function (infection_timeseries,
     expected_obs <- expected_obs * exp(noise)
   }
 
-  if (likelihood %in% c('binom','logNormal')) {
+  if (likelihood %in% c('binom')) {
     # divide by denominator to get the correct rates
     expected_obs <- sweep(expected_obs,
                           2,
-                          state_denom,
+                          state_pop,
                           FUN = "/")
   }
 
@@ -201,7 +200,8 @@ create_observation_model <- function (infection_timeseries,
   if (likelihood == 'binom') {
 
     # get the binomial sample size from survey in matrix format
-    sample_sizes_mat <- data_to_matrix(binom_sample_sizes, 'total')
+    # colname doesn't need to be hard coded
+    sample_sizes_mat <- data_to_matrix(sample_size, 'total')
 
     greta::distribution(obs_mat_array) <- greta::binomial(
       size = sample_sizes_mat[valid_idx],
@@ -222,8 +222,14 @@ create_observation_model <- function (infection_timeseries,
 
   if (likelihood == 'logNormal') {
 
+    # time constant nuisance params
+    logN_sd <- greta::normal(0,1,truncation = c(.Machine$double.eps,Inf))
+
+    # get the normalisation denominator in matrix format
+    sample_sizes_mat <- data_to_matrix(sample_size, 'PMMoV')
+
     greta::distribution(obs_mat_array) <- greta::lognormal(
-      meanlog = expected_obs_idxed[valid_idx],
+      meanlog = expected_obs_idxed[valid_idx]/sample_sizes_mat[valid_idx],
       sdlog = logN_sd # dummy var, time constant
     )
 
