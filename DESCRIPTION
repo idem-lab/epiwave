@@ -21,9 +21,12 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 URL: https://github.com/idem-lab/lowerGPreff
 BugReports: https://github.com/idem-lab/lowerGPreff/issues
-Suggests: R.rsp
+Suggests: 
+    R.rsp,
+    testthat (>= 3.0.0)
 VignetteBuilder: R.rsp
 Imports:
+    distributional,
     dplyr,
     greta,
     greta.gp,
@@ -32,3 +35,4 @@ Imports:
     stats,
     tibble,
     tidyr
+Config/testthat/edition: 3
