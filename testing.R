@@ -1,5 +1,5 @@
 ## header
-library(lowerGPreff)
+library(epiwave)
 library(epiwave.params)
 library(dplyr)
 library(greta)
@@ -17,8 +17,8 @@ notif_dat <- notif_file |>
   readRDS() |>
   dplyr::rename(value = new_cases) |>
   dplyr::filter(date %in% study_seq)
-class(notif_dat) <- c('lowerGPreff_fixed_timeseries',
-                      'lowerGPreff_timeseries',
+class(notif_dat) <- c('epiwave_fixed_timeseries',
+                      'epiwave_timeseries',
                       class(notif_dat))
 
 ## hospitalisation counts
@@ -29,8 +29,8 @@ hosp_occupancy <- hosp_file |>
   dplyr::filter(date %in% study_seq)
 hosp_dat <- hosp_occupancy |>
   dplyr::mutate(value = cases_in_hospital/3)
-class(hosp_dat) <- c('lowerGPreff_fixed_timeseries',
-                     'lowerGPreff_timeseries',
+class(hosp_dat) <- c('epiwave_fixed_timeseries',
+                     'epiwave_timeseries',
                      class(hosp_dat))
 
 
@@ -42,7 +42,7 @@ n_jurisdictions <- length(jurisdictions)
 oldnotif_delay <- readRDS(paste0(not_synced_folder, '/ECDF_delay_constant_PCR.rds'))
 min_delay <- 0
 max_delay <- 41
-notif_delay_ecdf <- create_lowerGPreff_massfun(
+notif_delay_ecdf <- create_epiwave_massfun(
   min_delay, max_delay, oldnotif_delay, normalise = TRUE)
 
 ## days of infection timeseries
@@ -53,13 +53,13 @@ n_days_infection <- length(infection_days)
 
 ## proportions
 car_constant <- 0.75
-car <- create_lowerGPreff_fixed_timeseries(
+car <- create_epiwave_fixed_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = car_constant) # 1 for sero prop
 
 # create IHR
-ihr <- create_lowerGPreff_fixed_timeseries(
+ihr <- create_epiwave_fixed_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = list(car_constant * greta::uniform(0, 1))
@@ -73,7 +73,7 @@ incubation_period_distribution <- parametric_dist_to_distribution(incub_dist)
 ## formatted delay distribution
 notif_delay_dist <-
   add(notif_delay_ecdf, incubation_period_distribution)
-notif_full_delay_dist <- create_lowerGPreff_massfun_timeseries(
+notif_full_delay_dist <- create_epiwave_massfun_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = notif_delay_dist)
@@ -81,7 +81,7 @@ notif_full_delay_dist <- create_lowerGPreff_massfun_timeseries(
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
-hosp_full_delay_dist <- create_lowerGPreff_massfun_timeseries(
+hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = hosp_delay_ecdf)
@@ -99,11 +99,11 @@ gi_dist <- distributional::dist_lognormal(
 generation_interval_distribution <- parametric_dist_to_distribution(gi_dist)
 
 ## optional day-of-week effect model
-dow_model <- lowerGPreff::create_dow_priors(
+dow_model <- epiwave::create_dow_priors(
   n_jurisdictions)
 
 ## infection timeseries model
-infection_model_objects <- lowerGPreff::create_infection_timeseries(
+infection_model_objects <- epiwave::create_infection_timeseries(
   n_days_infection,
   n_jurisdictions,
   effect_type = 'growth_rate')
@@ -126,7 +126,7 @@ notif_observation_model_objects <- create_observation_model(
 #   data_id = 'hosp')
 
 ## Reff
-reff_model_objects <- lowerGPreff::estimate_reff(
+reff_model_objects <- epiwave::estimate_reff(
   infection_timeseries = infection_model_objects$infection_timeseries,
   generation_interval_mass_fxns = generation_interval_distribution)
 

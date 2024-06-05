@@ -1,6 +1,6 @@
 #' Evaluate the mass for given delay
 #'
-#' @param lookup lowerGPreff_distribution object with mass functions
+#' @param lookup epiwave_distribution object with mass functions
 #' @param day_diff matrix of
 #' @param ... extra args
 #'
@@ -13,7 +13,7 @@ evaluate <- function(lookup,
 }
 
 #' @export
-evaluate.lowerGPreff_distribution_massfun <- function (lookup,
+evaluate.epiwave_distribution_massfun <- function (lookup,
                                                        day_diff, ...) {
 
   lookup <- as.data.frame(lookup)
@@ -28,7 +28,7 @@ evaluate.lowerGPreff_distribution_massfun <- function (lookup,
 }
 
 #' @export
-evaluate.lowerGPreff_massfun_timeseries <- function (lookup,
+evaluate.epiwave_massfun_timeseries <- function (lookup,
                                                           day_diff,
                                                           ...) {
 

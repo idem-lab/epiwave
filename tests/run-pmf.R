@@ -1,6 +1,6 @@
 # # source('R/pmf_dev.R')
 # library(dplyr)
-# library(lowerGPreff)
+# library(epiwave)
 #
 # dist <- distributional::dist_weibull(shape = 2, scale = 3)
 # delay_probs_from_dist <- parametric_dist_to_distribution(dist)

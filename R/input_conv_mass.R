@@ -74,7 +74,7 @@ conv_mass_from_cdf <- function(min_delay = 0,
 
 # calculate from empirical delay data
 conv_mass_empirical <- function(min_delay = -3, #example for when anticipating possible negative delay
-                                max_delay = 56
+                                max_delay = 56,
                                 input_data){
 
   x <- min_delay:max_delay

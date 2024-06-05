@@ -7,7 +7,7 @@
 evaluate(lookup, day_diff, ...)
 }
 \arguments{
-\item{lookup}{lowerGPreff_distribution object with mass functions}
+\item{lookup}{epiwave_distribution object with mass functions}
 
 \item{day_diff}{matrix of}
 

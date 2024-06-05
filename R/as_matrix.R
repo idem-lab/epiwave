@@ -18,7 +18,7 @@ as_matrix <- function(long_data, ...) {
 }
 
 #' @export
-as_matrix.lowerGPreff_timeseries <- function (long_data, ...) {
+as_matrix.epiwave_timeseries <- function (long_data, ...) {
 
   keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', 'value')])
   wide_data <- keep_df %>%
