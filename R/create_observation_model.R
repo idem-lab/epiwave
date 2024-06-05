@@ -30,26 +30,19 @@
 #' @return greta arrays of observation model
 #' @export
 create_observation_model <- function (infection_timeseries,
-                                      delay_distribution,
-                                      proportion_observed,
-                                      count_data,
+                                      delay_distribution, # seropositivity curve
+                                      proportion_observed, # 1 for sero
+                                      count_data, # sero curve
                                       dow_model = NULL,
                                       data_id = NULL) {
 
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
-  case_mat <- data_to_matrix(count_data, 'count')
-  # delay_mat <- data_to_matrix(delay_distribution)
-  prop_mat <- data_to_matrix(proportion_observed, 'prop')
+  case_mat <- as_matrix(count_data)
+  prop_mat <- as_matrix(proportion_observed)
 
   infection_days <- as.Date(rownames(prop_mat))
-
-  # for hospitalisation, multiply the car by the chr to create ihr
-  # this is temp code for covid live demo
-  if (!is.null(proportion_observed$ratio)) {
-    prop_mat <- prop_mat * proportion_observed$ratio
-  }
 
   ## add a check for correct dow arrays
   if (!is.null(dow_model)) {
@@ -57,13 +50,16 @@ create_observation_model <- function (infection_timeseries,
     prop_mat <- prop_mat * dow_correction
   }
 
-  n_jurisdictions <- ncol(infection_timeseries)
+  # add check that ncol(infection_timeseries and below yield same. number of juris)
+  n_jurisdictions <- length(unique(delay_distribution$jurisdiction))
+  #ncol(infection_timeseries)
   n_dates <- nrow(infection_timeseries)
 
   convolution_matrices <- lapply(
-    1:n_jurisdictions,
+    unique(delay_distribution$jurisdiction),
     function(x) {
-      get_convolution_matrix(delay_distribution[, x],
+      get_convolution_matrix(delay_distribution,
+                             x,
                              n_dates)
     })
 

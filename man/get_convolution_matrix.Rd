@@ -4,11 +4,17 @@
 \alias{get_convolution_matrix}
 \title{Calculate a convolution matrix}
 \usage{
-get_convolution_matrix(mass_functions, n)
+get_convolution_matrix(
+  delay_distribution,
+  jurisdiction = "default_juris_name",
+  n
+)
 }
 \arguments{
-\item{mass_functions}{single function or vector of functions that describe
+\item{delay_distribution}{single function or vector of functions that describe
 probability mass across delays}
+
+\item{jurisdiction}{default is}
 
 \item{n}{dimensions of output convolution matrix}
 }
