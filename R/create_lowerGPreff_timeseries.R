@@ -51,7 +51,7 @@ create_lowerGPreff_timeseries <- function (dates,
 #'
 #' @return long tibble with distribution replicated
 #' @export
-create_lowerGPreff_dist_timeseries <- function (dates,
+create_lowerGPreff_massfun_timeseries <- function (dates,
                                                 jurisdictions,
                                                 value) {
 
@@ -59,12 +59,9 @@ create_lowerGPreff_dist_timeseries <- function (dates,
     dates = infection_days,
     jurisdictions = jurisdictions,
     value = list(value))
-#
-#   distribution_timeseries <- dplyr::rename(
-#     notif_full_delay_dist,
-#     distribution = value)
 
-  class(timeseries) <- c("lowerGPreff_distribution_timeseries",
+  class(timeseries) <- c("lowerGPreff_massfun_timeseries",
+                         class(value),  # CHECK THIS
                          class(timeseries))
   timeseries
 
@@ -96,3 +93,5 @@ create_lowerGPreff_fixed_timeseries <- function (dates,
   timeseries
 
 }
+
+

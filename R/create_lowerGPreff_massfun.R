@@ -34,7 +34,6 @@ create_lowerGPreff_massfun <- function (min_delay,
       delays, mass
     )
 
-  # add if to separate the two classes that are normlaise or not.
   class(delay_massfun) <- c("lowerGPreff_massfun", class(delay_massfun))
 
   if (normalise) {
@@ -53,7 +52,6 @@ create_lowerGPreff_massfun <- function (min_delay,
 #' @param data delay data
 #' @param min_delay optional specification for minimum delay
 #' @param max_delay optional specification for maxiumum delay
-#' @param normalise logical argument whether to normalise the mass output
 #'
 #' @return lowerGPreff_distribution object
 #' @export
@@ -83,7 +81,8 @@ data_to_distribution <- function (data,
 #' @param dist distributional package object
 #' @param min_delay optional specification for minimum delay
 #' @param max_delay optional specification for maxiumum delay
-#' @param normalise logical argument whether to normalise the mass output
+#'
+#' @importFrom distributional cdf
 #'
 #' @return lowerGPreff_distribution object
 #' @export
