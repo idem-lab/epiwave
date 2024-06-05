@@ -44,12 +44,6 @@ create_observation_model <- function (infection_timeseries,
 
   infection_days <- as.Date(rownames(prop_mat))
 
-  # for hospitalisation, multiply the car by the chr to create ihr
-  # this is temp code for covid live demo
-  if (!is.null(proportion_observed$value)) {
-    prop_mat <- prop_mat * proportion_observed$value
-  }
-
   ## add a check for correct dow arrays
   if (!is.null(dow_model)) {
     dow_correction <- implement_day_of_week(infection_days, dow_model)
