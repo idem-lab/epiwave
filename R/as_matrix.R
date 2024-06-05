@@ -18,7 +18,7 @@ as_matrix <- function(long_data, ...) {
 }
 
 #' @export
-as_matrix.lowerGPreff_timeseries <- function (long_data) {
+as_matrix.lowerGPreff_timeseries <- function (long_data, ...) {
 
   keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', 'value')])
   wide_data <- keep_df %>%
@@ -49,12 +49,10 @@ fill_date_gaps <- function (df) {
   if (!methods::is(df$date, 'Date')) {
     df$date <- as.Date(df$date)
   }
-  date_sequence <- data.frame(
+  df_with_all_dates <- tibble::tibble(
     date = seq(min(df$date),
                max(df$date),
-               by = "days"))
-  df_with_all_dates <- merge(df, date_sequence,
-                             by = 'date',
-                             all.x = FALSE, all.y = TRUE)
+               by = "days")) |>
+    dplyr::left_join(df)
   df_with_all_dates
 }
