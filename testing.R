@@ -21,19 +21,6 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       'epiwave_timeseries',
                       class(notif_dat))
 
-## hospitalisation counts
-hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
-
-hosp_occupancy <- hosp_file |>
-  readRDS() |>
-  dplyr::filter(date %in% study_seq)
-hosp_dat <- hosp_occupancy |>
-  dplyr::mutate(value = cases_in_hospital/3)
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(hosp_dat))
-
-
 # jurisdictions
 jurisdictions <- unique(notif_dat$jurisdiction)
 n_jurisdictions <- length(jurisdictions)
@@ -58,13 +45,6 @@ car <- create_epiwave_fixed_timeseries(
   jurisdictions = jurisdictions,
   value = car_constant) # 1 for sero prop
 
-# create IHR
-ihr <- create_epiwave_fixed_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  value = list(car_constant * greta::uniform(0, 1))
-)
-
 ## incubation period
 incub_dist <- distributional::dist_weibull(
   shape = 1.83, scale = 4.93)
@@ -77,14 +57,6 @@ notif_full_delay_dist <- create_epiwave_massfun_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = notif_delay_dist)
-
-
-hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
-hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
-hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  value = hosp_delay_ecdf)
 
 
 ## generation interval distribution
@@ -116,14 +88,6 @@ notif_observation_model_objects <- create_observation_model(
   count_data = notif_dat,
   dow_model = dow_model,
   data_id = 'notif')
-
-## PROBLEM: here with the IHR being lists.
-# hosp_observation_model_objects <- create_observation_model(
-#   infection_timeseries = infection_model_objects$infection_timeseries,
-#   delay_distribution = hosp_full_delay_dist,
-#   proportion_observed = ihr,
-#   count_data = hosp_dat,
-#   data_id = 'hosp')
 
 ## Reff
 reff_model_objects <- epiwave::estimate_reff(
