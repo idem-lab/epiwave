@@ -75,7 +75,7 @@ create_observation_model <- function (infection_timeseries,
     expected_cases_list
   )
 
-  data_idx <- infection_days %in% rownames(case_mat)
+  data_idx <- infection_days %in% as.Date(rownames(case_mat))
   expected_cases_idx <- expected_cases[data_idx, ]
 
   n_days <- nrow(case_mat)
