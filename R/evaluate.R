@@ -14,7 +14,8 @@ evaluate <- function(lookup,
 
 #' @export
 evaluate.epiwave_distribution_massfun <- function (lookup,
-                                                       day_diff, ...) {
+                                                   day_diff,
+                                                   ...) {
 
   lookup <- as.data.frame(lookup)
   day_diff[] <- lookup$mass[
@@ -29,17 +30,16 @@ evaluate.epiwave_distribution_massfun <- function (lookup,
 
 #' @export
 evaluate.epiwave_massfun_timeseries <- function (lookup,
-                                                          day_diff,
-                                                          ...) {
+                                                 day_diff,
+                                                 ...) {
 
-  con_list <- lapply(1:ncol(day_diff),
-                            function (x) {
-                              distribution <- lookup[x, 'value'][[1]]
-
-                              evaluate(
-                                distribution, day_diff[, x])
-                            }
-                     )
+  con_list <- lapply(
+    1:ncol(day_diff),
+    function (x) {
+      distribution <- lookup[x, 'value'][[1]]
+      evaluate(distribution, day_diff[, x])
+    }
+  )
   con_mat <- do.call(cbind, con_list)
   con_mat
 
