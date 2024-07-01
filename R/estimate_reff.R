@@ -29,9 +29,11 @@
 estimate_reff <- function (infection_timeseries,
                            generation_interval_mass_fxns) {
 
+  generation_interval_mass_fxns$jurisdiction <- "dummy"
   convolution_matrix <- get_convolution_matrix(
       generation_interval_mass_fxns,
-      n = nrow(infection_timeseries))
+      n = nrow(infection_timeseries),
+      jurisdiction = "dummy")
   infectiousness <- convolution_matrix %*% infection_timeseries
 
   reff <- infection_timeseries / (infectiousness + .Machine$double.eps)
