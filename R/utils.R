@@ -10,20 +10,23 @@
 #'
 #' @param delay_distribution single function or vector of functions that describe
 #'  probability mass across delays
-#' @param jurisdiction default is
+#' @param jurisdiction default no jurisdiction specified (eg for gi or one location)
 #' @param n dimensions of output convolution matrix
 #'
 #' @return matrix for forward convolution
 get_convolution_matrix <- function (delay_distribution,
-                                    jurisdiction = 'default_juris_name',
+                                    jurisdiction = NULL,
                                     n) {
 
   # if (!length(mass_functions) %in% c(1, n)) {
   #   stop('number of mass functions do not match the number of timepoints!')
   # }
 
-  subset_distribution <- delay_distribution[
-    delay_distribution$jurisdiction == jurisdiction, ]
+  if(is.null(jurisdiction)) subset_distribution <- delay_distribution
+  if(!is.null(jurisdiction)) {
+    subset_distribution <- delay_distribution[
+      delay_distribution$jurisdiction == jurisdiction, ]
+  }
 
   # get a matrix of time differences between pairs of days
   day_diff <- matrix(NA, n, n)
