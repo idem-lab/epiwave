@@ -1,4 +1,4 @@
-define_observation_model <- function(...) {
+define_observation_model <- function(x, ...) {
 
   observation_list <- list(...)
 
