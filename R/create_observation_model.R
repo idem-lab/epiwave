@@ -28,14 +28,14 @@ create_observation_model <- function (data_id = 'cases',
                                       observation_model_data,
                                       infection_model) {
 
-  observations <- observation_models[[data_id]]
+  observations <- observation_model_data[[data_id]]
 
   timeseries_data <- observations$timeseries_data
   delays <- observations$delays
   case_mat <- observations$case_mat
   prop_mat <- observations$prop_mat
 
-  infection_timeseries <- infection_model_objects$infection_timeseries
+  infection_timeseries <- infection_model$infection_timeseries
   n_dates <- nrow(infection_timeseries)
 
   convolution_matrices <- lapply(
