@@ -5,8 +5,8 @@
 #' @param timeseries_data long form data of counts of notifications
 #' @param delays distribution of delays, covering length of
 #'  infection timeseries, including incubation period, if applicable
-#' @param proportion_observed long form data, for all dates of infection
-#'  timeseries, of expected proportions of infections observed in count data
+#' @param proportion_observed single fixed value of expected proportions of
+#'   infections observed in count data
 #' @param type count or prevalence
 #' @param dow_model optional module of greta arrays defining day-of-week model
 #'
@@ -18,7 +18,8 @@ prepare_observation_data <- function (timeseries_data,
                                       delays,
                                       proportion_observed,
                                       type = c('count', 'prevalence'),
-                                      dow_model = NULL) {
+                                      dow_model = NULL,
+                                      ihr_correction = NULL) {
 
   # see how we are defining the likelihood
   type <- match.arg(type)
@@ -40,6 +41,9 @@ prepare_observation_data <- function (timeseries_data,
   if (!is.null(dow_model)) {
     dow_correction <- implement_day_of_week(obs_infection_days, dow_model)
     prop_mat <- prop_mat * dow_correction
+  }
+  if (!is.null(ihr_correction)) {
+    prop_mat <- prop_mat * ihr_correction
   }
 
   out <- list(timeseries_data = timeseries_data,
