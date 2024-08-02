@@ -44,9 +44,6 @@ fit_waves <- function (observations, # list of data type lists
   #   observations,
   #   infection_model)
 
-
-
-
   ## greta model fit
   m <- greta::model(infection_model$infection_timeseries)
 
@@ -60,7 +57,7 @@ fit_waves <- function (observations, # list of data type lists
 
   # return the stuff in an object of type waveylistythingy
   wavylistythingy <- list(
-    infection_model_objects = infection_model_objects,
+    infection_model = infection_model,
     fit = fit,
     infection_days = infection_days,
     jurisdictions = jurisdictions)
