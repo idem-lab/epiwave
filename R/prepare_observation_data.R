@@ -18,11 +18,11 @@ prepare_observation_data <- function (timeseries_data,
                                       delays,
                                       proportion_observed,
                                       type = c('count', 'prevalence'),
-                                      dow_model = NULL,
-                                      ihr_correction = NULL) {
+                                      dow_model = NULL) {
 
   # see how we are defining the likelihood
   type <- match.arg(type)
+
 
   # check the data is a valid timeseries object (or can be coerced to one) and
   # that it contains data consistent with the observation model type
@@ -32,18 +32,24 @@ prepare_observation_data <- function (timeseries_data,
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
+  # these should be two different dimensions yes? because prop will be
+  # dim of infection dates and cases will be cases.
+  # if these should both be infection dates we can change things.
+  # because this doesn't work for a single value for prop.
+  # even though we can pass a single value through to the convolution
+  # we can do the cheat below to get back infection dates for dow.
   case_mat <- as_matrix(timeseries_data)
   prop_mat <- as_matrix(proportion_observed)
 
+
+  # is this basically a cheat way to get back the infection dates?
+  # if so it's sloppy, if not, are these supposed to match case dates?
   obs_infection_days <- as.Date(rownames(prop_mat))
 
   ## add a check for correct dow arrays
   if (!is.null(dow_model)) {
     dow_correction <- implement_day_of_week(obs_infection_days, dow_model)
     prop_mat <- prop_mat * dow_correction
-  }
-  if (!is.null(ihr_correction)) {
-    prop_mat <- prop_mat * ihr_correction
   }
 
   out <- list(timeseries_data = timeseries_data,
