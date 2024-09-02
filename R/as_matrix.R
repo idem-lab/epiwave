@@ -18,6 +18,11 @@ as_matrix <- function(long_data, ...) {
 }
 
 #' @export
+as_matrix.numeric <- function (value, ...) {
+  value
+}
+
+#' @export
 as_matrix.epiwave_timeseries <- function (long_data, ...) {
 
   keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', 'value')])
@@ -25,12 +30,26 @@ as_matrix.epiwave_timeseries <- function (long_data, ...) {
     tidyr::pivot_wider(id_cols = date,
                        names_from = jurisdiction,
                        values_from = value,
-                       values_fill = NA) %>%
-    fill_date_gaps() %>%
+                       values_fill = NA)
+  wide_all_dates <- tibble::tibble(date = fill_date_gaps(wide_data)) |>
+    dplyr::left_join(wide_data) |>
     tibble::column_to_rownames(var = 'date') %>%
     as.matrix()
 
-  wide_data
+  wide_all_dates
+}
+
+#' @export
+as_matrix.epiwave_greta_timeseries <- function (prop, ...) {
+
+  dates <- fill_date_gaps(prop$timeseries$date)
+
+  jurisdictions <- unique(prop$timeseries$jurisdiction)
+  ihr <- prop$ihr
+
+  dim(ihr) <- c(length(unique(dates)), length(unique(jurisdictions)))
+
+  ihr
 }
 
 #' Fill date gaps
@@ -44,15 +63,16 @@ as_matrix.epiwave_timeseries <- function (long_data, ...) {
 #'
 #' @keywords internal
 #' @return Wide dataframe with rows filled in so it has continuous seq of dates
+
 fill_date_gaps <- function (df) {
 
   if (!methods::is(df$date, 'Date')) {
     df$date <- as.Date(df$date)
   }
-  df_with_all_dates <- tibble::tibble(
-    date = seq(min(df$date),
-               max(df$date),
-               by = "days")) |>
-    dplyr::left_join(df)
-  df_with_all_dates
+  dates <- seq(min(df$date),
+                           max(df$date),
+                           by = "days")
+
+  dates
 }
+
