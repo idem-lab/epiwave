@@ -4,10 +4,10 @@
 \alias{as_matrix}
 \title{Turn wide data to matrix}
 \usage{
-as_matrix(long_data, ...)
+as_matrix(data, ...)
 }
 \arguments{
-\item{long_data}{long data form}
+\item{data}{long data form}
 
 \item{...}{extra args}
 }

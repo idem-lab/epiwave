@@ -26,13 +26,13 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: R.rsp
 Imports:
-    distributional,
     dplyr,
+    epiwave.pipelines,
     greta,
     greta.gp,
     magrittr,
     methods,
-    stats,
+    rlang,
     tibble,
     tidyr
 Config/testthat/edition: 3
