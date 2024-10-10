@@ -1,3 +1,26 @@
+#' Compute R effective from model outputs and generation interval
+#'
+#' @param fit_output model fit
+#' @param gi generation interval distribution
+#'
+#' @return Estimated R effective
+#' @export
+#'
+compute_reff <- function (fit_output, gi) {
+
+  reff_model_objects <- estimate_reff(
+    infection_timeseries = fit_output$infection_model$infection_timeseries,
+    generation_interval_mass_fxns = gi)
+
+  reff_out <- epiwave.pipelines::generate_long_estimates(
+    reff_model_objects$reff,
+    fit_output$fit,
+    fit_output$infection_days,
+    fit_output$jurisdictions)
+
+  reff_out
+}
+
 #' Estimate R_effective
 #'
 #' @description Calculate a timeseries of effective reproduction number, given a
@@ -30,8 +53,8 @@ estimate_reff <- function (infection_timeseries,
                            generation_interval_mass_fxns) {
 
   convolution_matrix <- get_convolution_matrix(
-      generation_interval_mass_fxns,
-      n = nrow(infection_timeseries))
+    generation_interval_mass_fxns,
+    n = nrow(infection_timeseries))
   infectiousness <- convolution_matrix %*% infection_timeseries
 
   reff <- infection_timeseries / (infectiousness + .Machine$double.eps)

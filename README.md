@@ -1,4 +1,11 @@
+---
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
 # epiwave
+
 ## Package to estimate epidemiological parameters using a Gaussian Process for infection timeseries
 
 [![source](https://img.shields.io/badge/source-GitHub-success?style=flat&labelColor=gray)](https://github.com/idem-lab/epiwave)
@@ -12,6 +19,7 @@ From the estimated time-series of daily new infections we can then estimate usef
 This package will be especially useful when case incidence data, the most commonly used source of information for estimating effective reproduction number, is unreliable or challenging to use, but other data sources are available.
 
 `epiwave` can be installed with GitHub, as follows:
+
 ``` r
 remotes::install_github('idem-lab/epiwave')
 ```

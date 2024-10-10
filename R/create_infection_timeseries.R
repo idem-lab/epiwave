@@ -1,10 +1,19 @@
 #' Create infection timeseries
 #'
-#' @description Compute the number of infections per day, given a
+#' @description Compute the number of infections per day either with an
+#'  uninformative flat prior (effect_type = 'flat_prior'), or given a
 #'  log-scaled initial number of infections and a time-varying random effect
 #'  controlling the trend of infections over time. The random effect is defined
 #'  as a Gaussian Process (GP), and can be applied to the infection number
-#'  through three different formulations.
+#'  through three different formulations: effect_type = 'gp_infections',
+#'  'gp_growth_rate', or 'gp_growth_rate_derivative'.
+#'
+#'  gp_infections: the log of infections tend towards the GP mean value in the
+#'  now-cast period.
+#'  gp_growth_rate: the growth rate tends to 1 and the infections stay at
+#'  around the same level in now-casts and forecasts.
+#'  gp_growth_rate_derivative: in now-cast/forecast the infection trajectory
+#'  would follow the most recent growth rate trend.
 #'
 #'  This random effect over time is not explicitly specified as an
 #'  epidemiologically defined quantity like the growth rate or the reproduction
@@ -14,8 +23,8 @@
 #'
 #' @param n_days_infection length of full date sequence of infection timeseries
 #' @param n_jurisdictions number of jurisdictions, defaults to 1
-#' @param effect_type options include c('infections', 'growth_rate',
-#'        'growth_rate_derivative')
+#' @param effect_type options include 'flat_prior', 'gp_infections', 'gp_growth_rate',
+#'        'gp_growth_rate_derivative'. See description for more info.
 #'
 #' @importFrom greta lognormal normal
 #' @importFrom greta.gp gp mat52
@@ -24,9 +33,21 @@
 #' @export
 create_infection_timeseries <- function (n_days_infection,
                                          n_jurisdictions = 1,
-                                         effect_type = c('infections',
-                                                         'growth_rate',
-                                                         'growth_rate_deriv')) {
+                                         effect_type = c('flat_prior',
+                                                         'gp_infections',
+                                                         'gp_growth_rate',
+                                                         'gp_growth_rate_deriv')) {
+
+  if (effect_type == 'flat_prior') {
+    # improper flat prior for infection incidence
+    infection_timeseries <- greta::variable(lower = 0,
+                                            dim = c(n_days_infection,
+                                                    n_jurisdictions))
+    greta_arrays <- module(
+      infection_timeseries
+    )
+    return(greta_arrays)
+  }
 
   # kernel hyperparams
   gp_lengthscale <- greta::lognormal(0, 3) #inverse_gamma(187/9,1157/18)
@@ -47,9 +68,9 @@ create_infection_timeseries <- function (n_days_infection,
 
   f <- function (inits, gp, type) {
     switch (type,
-            infections = infections(inits, gp),
-            growth_rate = growth_rate(inits, gp),
-            growth_rate_deriv = growth_rate_deriv(inits, gp))
+            gp_infections = gp_infections(inits, gp),
+            gp_growth_rate = gp_growth_rate(inits, gp),
+            gp_growth_rate_deriv = gp_growth_rate_deriv(inits, gp))
   }
 
   infection_timeseries <- f(inits, gp, effect_type)
@@ -73,7 +94,7 @@ create_infection_timeseries <- function (n_days_infection,
 #' @importFrom greta sweep
 #'
 #' @return infection timeseries
-infections <- function (inits, z) {
+gp_infections <- function (inits, z) {
   exp(greta::sweep(z, 2, inits, FUN = '+'))
 }
 
@@ -85,7 +106,7 @@ infections <- function (inits, z) {
 #' @importFrom greta apply sweep
 #'
 #' @return infection timeseries
-growth_rate <- function (inits, z) {
+gp_growth_rate <- function (inits, z) {
   log_rt <- z
   exp(greta::sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))
 }
@@ -98,7 +119,7 @@ growth_rate <- function (inits, z) {
 #' @importFrom greta apply sweep
 #'
 #' @return infection timeseries
-growth_rate_deriv <- function (inits, z) {
+gp_growth_rate_deriv <- function (inits, z) {
   log_rt_diff <- z
   log_rt <- greta::apply(log_rt_diff, 2, 'cumsum')
   exp(greta::sweep(greta::apply(log_rt, 2, 'cumsum'), 2, inits, FUN = '+'))

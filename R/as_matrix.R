@@ -4,33 +4,53 @@
 #'  continuous sequence of dates. This function assumes that users supply long
 #'  form count data where dates with 0 cases are explicit.
 #'
-#' @param long_data long data form
+#' @param data long data form
 #' @param ... extra args
 #'
 #' @importFrom tidyr pivot_wider
 #' @importFrom tibble column_to_rownames
+#' @importFrom rlang .data
 #'
 #' @return data in wide matrix form, with continuous seq of dates
 #'
 #' @export
-as_matrix <- function(long_data, ...) {
+as_matrix <- function(data, ...) {
   UseMethod("as_matrix")
 }
 
 #' @export
-as_matrix.epiwave_timeseries <- function (long_data, ...) {
+as_matrix.numeric <- function (data, ...) {
+  data
+}
 
-  keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', 'value')])
+#' @export
+as_matrix.epiwave_timeseries <- function (data, ...) {
+
+  keep_df <- as.data.frame(data[c('date', 'jurisdiction', 'value')])
   wide_data <- keep_df %>%
-    tidyr::pivot_wider(id_cols = date,
-                       names_from = jurisdiction,
-                       values_from = value,
-                       values_fill = NA) %>%
-    fill_date_gaps() %>%
+    tidyr::pivot_wider(id_cols = .data$date,
+                       names_from = .data$jurisdiction,
+                       values_from = .data$value,
+                       values_fill = NA)
+  wide_all_dates <- tibble::tibble(date = fill_date_gaps(wide_data)) |>
+    dplyr::left_join(wide_data) |>
     tibble::column_to_rownames(var = 'date') %>%
     as.matrix()
 
-  wide_data
+  wide_all_dates
+}
+
+#' @export
+as_matrix.epiwave_greta_timeseries <- function (data, ...) {
+
+  dates <- fill_date_gaps(data$timeseries)
+
+  jurisdictions <- unique(data$timeseries$jurisdiction)
+  ihr <- data$ihr
+
+  dim(ihr) <- c(length(unique(dates)), length(unique(jurisdictions)))
+
+  ihr
 }
 
 #' Fill date gaps
@@ -44,15 +64,16 @@ as_matrix.epiwave_timeseries <- function (long_data, ...) {
 #'
 #' @keywords internal
 #' @return Wide dataframe with rows filled in so it has continuous seq of dates
+
 fill_date_gaps <- function (df) {
 
   if (!methods::is(df$date, 'Date')) {
     df$date <- as.Date(df$date)
   }
-  df_with_all_dates <- tibble::tibble(
-    date = seq(min(df$date),
+  dates <- seq(min(df$date),
                max(df$date),
-               by = "days")) |>
-    dplyr::left_join(df)
-  df_with_all_dates
+               by = "days")
+
+  dates
 }
+

@@ -7,7 +7,8 @@
 create_infection_timeseries(
   n_days_infection,
   n_jurisdictions = 1,
-  effect_type = c("infections", "growth_rate", "growth_rate_deriv")
+  effect_type = c("flat_prior", "gp_infections", "gp_growth_rate",
+    "gp_growth_rate_deriv")
 )
 }
 \arguments{
@@ -15,18 +16,27 @@ create_infection_timeseries(
 
 \item{n_jurisdictions}{number of jurisdictions, defaults to 1}
 
-\item{effect_type}{options include c('infections', 'growth_rate',
-'growth_rate_derivative')}
+\item{effect_type}{options include 'flat_prior', 'gp_infections', 'gp_growth_rate',
+'gp_growth_rate_derivative'. See description for more info.}
 }
 \value{
 greta arrays for infection timeseries
 }
 \description{
-Compute the number of infections per day, given a
+Compute the number of infections per day either with an
+uninformative flat prior (effect_type = 'flat_prior'), or given a
 log-scaled initial number of infections and a time-varying random effect
 controlling the trend of infections over time. The random effect is defined
 as a Gaussian Process (GP), and can be applied to the infection number
-through three different formulations.
+through three different formulations: effect_type = 'gp_infections',
+'gp_growth_rate', or 'gp_growth_rate_derivative'.
+
+gp_infections: the log of infections tend towards the GP mean value in the
+now-cast period.
+gp_growth_rate: the growth rate tends to 1 and the infections stay at
+around the same level in now-casts and forecasts.
+gp_growth_rate_derivative: in now-cast/forecast the infection trajectory
+would follow the most recent growth rate trend.
 
 This random effect over time is not explicitly specified as an
 epidemiologically defined quantity like the growth rate or the reproduction

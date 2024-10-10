@@ -16,52 +16,39 @@
 #'  is observed, thus allowing us to define likelihood over the data, and link
 #'  the data to the unknown infection timeseries.
 #'
-#' @param infection_timeseries greta array of infection timeseries
-#' @param delay_distribution distribution of delays, covering length of
-#'  infection timeseries, including incubation period, if applicable
-#' @param proportion_observed long form data, for all dates of infection
-#'  timeseries, of expected proportions of infections observed in count data
-#' @param count_data long form data of counts of notifications
-#' @param dow_model optional module of greta arrays defining day-of-week model
-#' @param data_id optional name label identifying data type for greta arrays
+#' @param data_id name of observation model data in list
+#' @param observation_model_data list of observation model data lists
+#' @param infection_days infection dates that cover more than the data dates
+#' @param infection_model greta arrays that define the infection model
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
 #'
 #' @return greta arrays of observation model
 #' @export
-create_observation_model <- function (infection_timeseries,
-                                      delay_distribution, # seropositivity curve
-                                      proportion_observed, # 1 for sero
-                                      count_data, # sero curve
-                                      dow_model = NULL,
-                                      data_id = NULL) {
+create_observation_model <- function (data_id = 'cases',
+                                      observation_model_data,
+                                      infection_days,
+                                      infection_model) {
 
-  # add if statements to check that infection_days is long enough to cover
-  # the right period
+  observations <- observation_model_data[[data_id]]
 
-  case_mat <- as_matrix(count_data)
-  prop_mat <- as_matrix(proportion_observed)
+  timeseries_data <- observations$timeseries_data
+  delays <- observations$delays
+  case_mat <- observations$case_mat
+  prop_mat <- observations$prop_mat
 
-  infection_days <- as.Date(rownames(prop_mat))
-
-  ## add a check for correct dow arrays
-  if (!is.null(dow_model)) {
-    dow_correction <- implement_day_of_week(infection_days, dow_model)
-    prop_mat <- prop_mat * dow_correction
-  }
-
-  # add check that ncol(infection_timeseries and below yield same. number of juris)
-  n_jurisdictions <- length(unique(delay_distribution$jurisdiction))
-  #ncol(infection_timeseries)
-  n_dates <- nrow(infection_timeseries)
+  infection_timeseries <- infection_model$infection_timeseries
+  n_dates <- length(infection_days)
 
   convolution_matrices <- lapply(
-    unique(delay_distribution$jurisdiction),
+    unique(delays$jurisdiction),
     function(x) {
-      get_convolution_matrix(delay_distribution,
+      get_convolution_matrix(delays,
                              x,
                              n_dates)
     })
+
+  n_jurisdictions <- length(unique(delays$jurisdiction))
 
   # compute expected cases of the same length
   expected_cases_list <- lapply(
@@ -117,4 +104,5 @@ create_observation_model <- function (infection_timeseries,
   )
 
   return(greta_arrays)
+
 }
