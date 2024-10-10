@@ -61,11 +61,20 @@ fit_waves <- function (observations,
     effect_type = infection_model_type)
 
   # observation model objects in observations
-  observation_models <- lapply(names(observations),
-                               create_observation_model,
-                               observations,
-                               target_infection_dates,
-                               infection_model)
+  if (infection_model_type == 'flat_prior') {
+    observation_models <- lapply(names(observations),
+                                 create_poisson_observation_model,
+                                 observations,
+                                 target_infection_dates,
+                                 infection_model)
+  }
+  else {
+    observation_models <- lapply(names(observations),
+                                 create_observation_model,
+                                 observations,
+                                 target_infection_dates,
+                                 infection_model)
+  }
 
   # greta model fit
   m <- greta::model(infection_model$infection_timeseries)
