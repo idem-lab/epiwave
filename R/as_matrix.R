@@ -4,32 +4,33 @@
 #'  continuous sequence of dates. This function assumes that users supply long
 #'  form count data where dates with 0 cases are explicit.
 #'
-#' @param long_data long data form
+#' @param data long data form
 #' @param ... extra args
 #'
 #' @importFrom tidyr pivot_wider
 #' @importFrom tibble column_to_rownames
+#' @importFrom rlang .data
 #'
 #' @return data in wide matrix form, with continuous seq of dates
 #'
 #' @export
-as_matrix <- function(long_data, ...) {
+as_matrix <- function(data, ...) {
   UseMethod("as_matrix")
 }
 
 #' @export
-as_matrix.numeric <- function (value, ...) {
-  value
+as_matrix.numeric <- function (data, ...) {
+  data
 }
 
 #' @export
-as_matrix.epiwave_timeseries <- function (long_data, ...) {
+as_matrix.epiwave_timeseries <- function (data, ...) {
 
-  keep_df <- as.data.frame(long_data[c('date', 'jurisdiction', 'value')])
+  keep_df <- as.data.frame(data[c('date', 'jurisdiction', 'value')])
   wide_data <- keep_df %>%
-    tidyr::pivot_wider(id_cols = date,
-                       names_from = jurisdiction,
-                       values_from = value,
+    tidyr::pivot_wider(id_cols = .data$date,
+                       names_from = .data$jurisdiction,
+                       values_from = .data$value,
                        values_fill = NA)
   wide_all_dates <- tibble::tibble(date = fill_date_gaps(wide_data)) |>
     dplyr::left_join(wide_data) |>
@@ -40,12 +41,12 @@ as_matrix.epiwave_timeseries <- function (long_data, ...) {
 }
 
 #' @export
-as_matrix.epiwave_greta_timeseries <- function (prop, ...) {
+as_matrix.epiwave_greta_timeseries <- function (data, ...) {
 
-  dates <- fill_date_gaps(prop$timeseries$date)
+  dates <- fill_date_gaps(data$timeseries)
 
-  jurisdictions <- unique(prop$timeseries$jurisdiction)
-  ihr <- prop$ihr
+  jurisdictions <- unique(data$timeseries$jurisdiction)
+  ihr <- data$ihr
 
   dim(ihr) <- c(length(unique(dates)), length(unique(jurisdictions)))
 
@@ -70,8 +71,8 @@ fill_date_gaps <- function (df) {
     df$date <- as.Date(df$date)
   }
   dates <- seq(min(df$date),
-                           max(df$date),
-                           by = "days")
+               max(df$date),
+               by = "days")
 
   dates
 }
