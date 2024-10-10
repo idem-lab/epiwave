@@ -5,28 +5,20 @@
 \title{Create observation model}
 \usage{
 create_observation_model(
-  infection_timeseries,
-  delay_distribution,
-  proportion_observed,
-  count_data,
-  dow_model = NULL,
-  data_id = NULL
+  data_id = "cases",
+  observation_model_data,
+  infection_days,
+  infection_model
 )
 }
 \arguments{
-\item{infection_timeseries}{greta array of infection timeseries}
+\item{data_id}{name of observation model data in list}
 
-\item{delay_distribution}{distribution of delays, covering length of
-infection timeseries, including incubation period, if applicable}
+\item{observation_model_data}{list of observation model data lists}
 
-\item{proportion_observed}{long form data, for all dates of infection
-timeseries, of expected proportions of infections observed in count data}
+\item{infection_days}{infection dates that cover more than the data dates}
 
-\item{count_data}{long form data of counts of notifications}
-
-\item{dow_model}{optional module of greta arrays defining day-of-week model}
-
-\item{data_id}{optional name label identifying data type for greta arrays}
+\item{infection_model}{greta arrays that define the infection model}
 }
 \value{
 greta arrays of observation model

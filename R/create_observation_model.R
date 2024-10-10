@@ -18,6 +18,7 @@
 #'
 #' @param data_id name of observation model data in list
 #' @param observation_model_data list of observation model data lists
+#' @param infection_days infection dates that cover more than the data dates
 #' @param infection_model greta arrays that define the infection model
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
@@ -26,6 +27,7 @@
 #' @export
 create_observation_model <- function (data_id = 'cases',
                                       observation_model_data,
+                                      infection_days,
                                       infection_model) {
 
   observations <- observation_model_data[[data_id]]
@@ -36,7 +38,7 @@ create_observation_model <- function (data_id = 'cases',
   prop_mat <- observations$prop_mat
 
   infection_timeseries <- infection_model$infection_timeseries
-  n_dates <- nrow(infection_timeseries)
+  n_dates <- length(infection_days)
 
   convolution_matrices <- lapply(
     unique(delays$jurisdiction),
@@ -45,6 +47,8 @@ create_observation_model <- function (data_id = 'cases',
                              x,
                              n_dates)
     })
+
+  n_jurisdictions <- length(unique(delays$jurisdiction))
 
   # compute expected cases of the same length
   expected_cases_list <- lapply(
