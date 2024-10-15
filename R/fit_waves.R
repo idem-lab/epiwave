@@ -55,7 +55,7 @@ fit_waves <- function (observations,
 
   # set up the greta model
   # infection timeseries model
-  infection_model <- epiwave::create_infection_timeseries(
+  infection_model <- create_infection_timeseries(
     n_days_infection,
     n_jurisdictions,
     effect_type = infection_model_type)
@@ -82,14 +82,31 @@ fit_waves <- function (observations,
   if (infection_model_type == 'flat_prior') one_by_one <- FALSE
   else one_by_one <- TRUE
 
-  fit <- epiwave.pipelines::fit_model(
-    model = m,
-    n_chains = n_chains,
-    max_convergence_tries = max_convergence_tries,
+  max_incidence <- infection_model$max_incidence
+  init <- replicate(
+    n_chains,
+    greta::initials(max_incidence =
+                     max(observations[[1]]$timeseries_data$value) / 0.75),
+    simplify = FALSE)
+
+  fit <- greta::mcmc(
+    m,
+    sampler = greta::hmc(Lmin = 25, Lmax = 30),
+    chains = n_chains,
     warmup = warmup,
     n_samples = n_samples,
-    n_extra_samples = n_extra_samples,
-    one_by_one = one_by_one)
+    initial_values = init,
+    one_by_one = one_by_one
+  )
+
+  # fit <- epiwave.pipelines::fit_model(
+  #   model = m,
+  #   n_chains = n_chains,
+  #   max_convergence_tries = max_convergence_tries,
+  #   warmup = warmup,
+  #   n_samples = n_samples,
+  #   n_extra_samples = n_extra_samples,
+  #   one_by_one = one_by_one)
 
   # return the outputs
   fit_output <- list(
