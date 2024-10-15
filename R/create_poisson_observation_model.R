@@ -18,7 +18,7 @@
 #'
 #' @param data_id name of observation model data in list
 #' @param observation_model_data list of observation model data lists
-#' @param infection_days
+#' @param infection_days full date sequence of infection timeseries
 #' @param infection_model greta arrays that define the infection model
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
@@ -73,17 +73,16 @@ create_poisson_observation_model <- function (data_id = 'cases',
     as.numeric(case_mat)[valid_idx])
 
   greta::distribution(case_mat_array) <- greta::poisson(
-    lambda)
+    lambda[valid_idx])
 
   greta_arrays <- list(
     lambda,
     convolution_matrices
   )
 
-  names(greta_arrays) <- c(
-    paste0(data_id, '_lambda'),
-    paste0(data_id, '_convolution_matrices')
-  )
+  names(greta_arrays) <- paste0(data_id,
+                                c('_lambda',
+                                  '_convolution_matrices'))
 
   return(greta_arrays)
 
