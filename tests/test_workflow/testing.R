@@ -6,10 +6,10 @@ library(greta)
 
 
 ## user modified
-study_seq <- seq(from = as.Date('2021-02-01'),
-                 to = as.Date('2021-12-15'), 'days')
-infection_days <- seq(from = as.Date('2021-01-03'),
-                      to = as.Date('2022-01-12'), 'days')
+study_seq <- seq(from = as.Date('2021-08-01'),
+                 to = as.Date('2021-09-15'), 'days')
+infection_days <- seq(from = as.Date('2021-07-03'),
+                      to = as.Date('2021-10-12'), 'days')
 jurisdictions <- 'NSW'
 
 # specific folder with not synced data
@@ -91,22 +91,22 @@ fit_object <- fit_waves(
                                                 onset_to_notification),
       proportion_observed = car,
       type = "count",
-      dow_model = create_dow_priors(n_jurisdictions)) # make an on/off?
-    ,
-    hospitalisations = prepare_observation_data(
-      timeseries_data = hosp_dat,
-      delay = hosp_full_delay_dist,
-      proportion_observed = ihr,
-      type = "count")
+      dow_model = create_dow_priors(n_jurisdictions))
+    # ,
+    # hospitalisations = prepare_observation_data(
+    #   timeseries_data = hosp_dat,
+    #   delay = hosp_full_delay_dist,
+    #   proportion_observed = ihr,
+    #   type = "count")
   ),
 
-  infection_model = 'gp_growth_rate', #'flat_prior',
-  target_infection_dates = infection_days,
-  n_chains = 2,
-  max_convergence_tries = 2,
-  warmup = 100,
-  n_samples = 100,
-  n_extra_samples = 100
+  infection_model = 'flat_prior', #'gp_growth_rate',
+  target_infection_dates = infection_days#,
+  # n_chains = 2,
+  # max_convergence_tries = 2,
+  # warmup = 100,
+  # n_samples = 100,
+  # n_extra_samples = 100
 )
 
 fitted_reff <- compute_reff(fit_object, gi)
