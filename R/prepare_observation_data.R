@@ -3,7 +3,7 @@
 #' @description Prepare list of data objects needed for observation model.
 #'
 #' @param timeseries_data long form data of counts of notifications
-#' @param delays distribution of delays, covering length of
+#' @param delay_from_infection distribution of delays, covering length of
 #'  infection timeseries, including incubation period, if applicable
 #' @param proportion_infections single fixed value of expected proportions of
 #'   infections observed in count data
@@ -15,7 +15,7 @@
 #' @return greta arrays of observation model
 #' @export
 prepare_observation_data <- function (timeseries_data,
-                                      delays,
+                                      delay_from_infection,
                                       proportion_infections,
                                       type = c('count', 'prevalence'),
                                       dow_model = NULL) {
@@ -53,7 +53,7 @@ prepare_observation_data <- function (timeseries_data,
   }
 
   out <- list(timeseries_data = timeseries_data,
-              delays = delays,
+              delays = delay_from_infection,
               case_mat = case_mat,
               prop_mat = prop_mat)
   out
