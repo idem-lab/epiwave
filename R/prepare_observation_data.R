@@ -5,7 +5,7 @@
 #' @param timeseries_data long form data of counts of notifications
 #' @param delays distribution of delays, covering length of
 #'  infection timeseries, including incubation period, if applicable
-#' @param proportion_observed single fixed value of expected proportions of
+#' @param proportion_infections single fixed value of expected proportions of
 #'   infections observed in count data
 #' @param type count or prevalence
 #' @param dow_model optional module of greta arrays defining day-of-week model
@@ -16,7 +16,7 @@
 #' @export
 prepare_observation_data <- function (timeseries_data,
                                       delays,
-                                      proportion_observed,
+                                      proportion_infections,
                                       type = c('count', 'prevalence'),
                                       dow_model = NULL) {
 
@@ -39,7 +39,7 @@ prepare_observation_data <- function (timeseries_data,
   # even though we can pass a single value through to the convolution
   # we can do the cheat below to get back infection dates for dow.
   case_mat <- as_matrix(timeseries_data)
-  prop_mat <- as_matrix(proportion_observed)
+  prop_mat <- as_matrix(proportion_infections)
 
 
   # is this basically a cheat way to get back the infection dates?

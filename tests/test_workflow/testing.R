@@ -89,15 +89,17 @@ fit_object <- fit_waves(
       timeseries_data = notif_dat,
       delay = epiwave.params::add_distributions(incubation,
                                                 onset_to_notification),
-      proportion_observed = car,
-      type = "count")#,
-      # dow_model = create_dow_priors(n_jurisdictions))
+      proportion_infections = car,
+      type = "count",
+      dow_model = create_dow_priors(n_jurisdictions)) # make an on/off?
     ,
     hospitalisations = prepare_observation_data(
       timeseries_data = hosp_dat,
       delay = hosp_full_delay_dist,
-      proportion_observed = ihr,
+      proportion_infections = ihr,
       type = "count")
+    # ,
+    # other
   ),
 
   infection_model = 'flat_prior', #'gp_growth_rate',

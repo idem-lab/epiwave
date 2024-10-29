@@ -7,7 +7,7 @@
 prepare_observation_data(
   timeseries_data,
   delays,
-  proportion_observed,
+  proportion_infections,
   type = c("count", "prevalence"),
   dow_model = NULL
 )
@@ -18,7 +18,7 @@ prepare_observation_data(
 \item{delays}{distribution of delays, covering length of
 infection timeseries, including incubation period, if applicable}
 
-\item{proportion_observed}{single fixed value of expected proportions of
+\item{proportion_infections}{single fixed value of expected proportions of
 infections observed in count data}
 
 \item{type}{count or prevalence}
