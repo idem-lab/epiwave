@@ -22,15 +22,14 @@
 create_dow_priors <- function (n_jurisdictions = 1) {
 
   # prior for dweek correction
-  dow_alpha <- greta::normal(1, 1,
+  dow_alpha <- greta::normal(-1.8, # corresponds to roughly 1/7
+                             0.25,
                              truncation = c(0, Inf),
-                             dim = c(1, 7))
+                             dim = c(1, 6))
 
-  dow_dist <- greta::dirichlet(dow_alpha,
-                               n_realisations = n_jurisdictions)
+  dow_dist <- greta::imultilogit(dow_alpha)
 
   greta_arrays <- module(
-    dow_alpha,
     dow_dist)
 
   return(greta_arrays)
