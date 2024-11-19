@@ -6,14 +6,14 @@ library(greta)
 
 
 ## user modified
-study_seq <- seq(from = as.Date('2021-08-01'),
-                 to = as.Date('2021-09-15'), 'days')
-infection_days <- seq(from = as.Date('2021-07-03'),
-                      to = as.Date('2021-10-12'), 'days')
+infection_days <- seq(from = as.Date('2021-05-01'),
+                 to = as.Date('2022-01-01'), 'days')
+study_seq <- seq(from = as.Date('2021-06-01'),
+                      to = as.Date('2021-12-01'), 'days')
 jurisdictions <- 'NSW'
 
 # specific folder with not synced data
-not_synced_folder <- '../../BDSS_governance/BDSS/data'
+not_synced_folder <- '../data'
 
 
 ## data prep
@@ -83,26 +83,43 @@ hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
   value = hosp_delay_ecdf)
 
 
+# create schematic for user
+# observation model and process model
+# consistent language
+# constructor function for process model "define...xxxx"
+# simpler map for user that the observation and process model are parallel
+# help user conceptualise different phases by pulling define_obs adn define_inf
+#   out of fit_waves
+# define subobject earlier to assist with logic
+# STEPS model has several complicated steps - check out documentation
+## data
+# users happy to submit data in very specified format that is clearly explained
+# constructor function case_col = X, .... for each argument you can have clear
+#   format specifications. errors early
+# what to do with missing dates/missing jurisdictions
+
+
 fit_object <- fit_waves(
   observations = define_observation_model(
     cases = prepare_observation_data(
       timeseries_data = notif_dat,
-      delay_from_infection = epiwave.params::add_distributions(incubation,
-                                                onset_to_notification),
+      delay_from_infection = epiwave.params::add_distributions(
+        incubation,
+        onset_to_notification),
       proportion_infections = car,
       type = "count",
-      dow_model = create_dow_priors(n_jurisdictions)) # make an on/off?
-    ,
-    hospitalisations = prepare_observation_data(
-      timeseries_data = hosp_dat,
-      delay_from_infection = hosp_full_delay_dist,
-      proportion_infections = ihr,
-      type = "count")
+      dow_model = create_dow_priors(n_jurisdictions))
+    # ,
+    # hospitalisations = prepare_observation_data(
+    #   timeseries_data = hosp_dat,
+    #   delay_from_infection = hosp_full_delay_dist,
+    #   proportion_infections = ihr,
+    #   type = "count")
     # ,
     # other
   ),
 
-  infection_model = 'flat_prior', #'gp_growth_rate',
+  infection_model = 'flat_prior', #define_infection_model() ...,'gp_growth_rate' ,#
   target_infection_dates = infection_days#,
   # n_chains = 2,
   # max_convergence_tries = 2,
@@ -110,6 +127,13 @@ fit_object <- fit_waves(
   # n_samples = 100,
   # n_extra_samples = 100
 )
+
+
+rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
+max(rhats$psrf[, 1], na.rm = TRUE)
+
+test <- greta::calculate(fit_object$infection_model$infection_timeseries, values = fit_object$fit, nsim = 10)
+
 
 fitted_reff <- compute_reff(fit_object, gi)
 
