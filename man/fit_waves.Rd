@@ -6,10 +6,8 @@
 \usage{
 fit_waves(
   observations,
-  data_inform_inits = "cases",
   infection_model_type = c("flat_prior", "gp_infections", "gp_growth_rate",
     "gp_growth_rate_deriv"),
-  target_infection_dates = NULL,
   n_chains = 4,
   max_convergence_tries = 3,
   warmup = 1000,
@@ -23,8 +21,6 @@ fit_waves(
 \item{infection_model_type}{options include 'flat_prior', 'infections', 'growth_rate',
 'growth_rate_derivative'. See description for more info.}
 
-\item{target_infection_dates}{infection dates that cover more than the data dates}
-
 \item{n_chains}{number of chains to run MCMC}
 
 \item{max_convergence_tries}{number of times to repeat run to get convergence}
@@ -34,6 +30,8 @@ fit_waves(
 \item{n_samples}{number of samples after warmup}
 
 \item{n_extra_samples}{number of extra samples if original run didn't converge}
+
+\item{target_infection_dates}{infection dates that cover more than the data dates}
 }
 \value{
 list of infection_model, fit, infection_days, and jurisdictions

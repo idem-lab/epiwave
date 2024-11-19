@@ -4,7 +4,13 @@
 \alias{define_observation_model}
 \title{Define observation model}
 \usage{
-define_observation_model(x, ...)
+define_observation_model(
+  target_infection_dates = NULL,
+  target_jurisdictions,
+  data_inform_inits = "cases",
+  x,
+  ...
+)
 }
 \arguments{
 \item{x}{observation data set}

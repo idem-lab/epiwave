@@ -6,7 +6,7 @@
 \usage{
 prepare_observation_data(
   timeseries_data,
-  delays,
+  delay_from_infection,
   proportion_infections,
   type = c("count", "prevalence"),
   dow_model = NULL
@@ -15,7 +15,7 @@ prepare_observation_data(
 \arguments{
 \item{timeseries_data}{long form data of counts of notifications}
 
-\item{delays}{distribution of delays, covering length of
+\item{delay_from_infection}{distribution of delays, covering length of
 infection timeseries, including incubation period, if applicable}
 
 \item{proportion_infections}{single fixed value of expected proportions of
