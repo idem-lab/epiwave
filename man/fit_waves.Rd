@@ -6,6 +6,7 @@
 \usage{
 fit_waves(
   observations,
+  data_inform_inits = "cases",
   infection_model_type = c("flat_prior", "gp_infections", "gp_growth_rate",
     "gp_growth_rate_deriv"),
   target_infection_dates = NULL,

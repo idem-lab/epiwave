@@ -31,6 +31,7 @@
 #' @export
 #'
 fit_waves <- function (observations,
+                       data_inform_inits = 'cases',
                        infection_model_type = c('flat_prior',
                                                 'gp_infections',
                                                 'gp_growth_rate',
@@ -41,6 +42,11 @@ fit_waves <- function (observations,
                        warmup = 1000,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
+
+  inits_data_exist <- data_inform_inits %in% names(observations)
+  if(!inits_data_exist) {
+    stop('data_inform_inits must match name of a dataset in observations')
+  }
 
   # prep the model objects
   # add check that ncol(infection_timeseries and below yield same. number of juris)
@@ -55,39 +61,38 @@ fit_waves <- function (observations,
 
   # set up the greta model
   # infection timeseries model
-  infection_model <- create_infection_timeseries(
+  incidence_greta_arrays <- create_infection_timeseries(
     n_days_infection,
     n_jurisdictions,
     effect_type = infection_model_type)
+  incidence <- incidence_greta_arrays$infection_timeseries
 
   # observation model objects in observations
-  if (infection_model_type == 'flat_prior') {
-    observation_models <- lapply(names(observations),
-                                 create_poisson_observation_model,
-                                 observations,
-                                 target_infection_dates,
-                                 infection_model)
-  }
-  else {
-    observation_models <- lapply(names(observations),
-                                 create_observation_model,
-                                 observations,
-                                 target_infection_dates,
-                                 infection_model)
-  }
+  observation_models <- lapply(names(observations),
+                               create_observation_model,
+                               observations,
+                               target_infection_dates,
+                               incidence)
+  names(observation_models) <- names(observations)
 
   # greta model fit
-  m <- greta::model(infection_model$infection_timeseries)
+  m <- greta::model(incidence)
 
-  if (infection_model_type == 'flat_prior') one_by_one <- FALSE
-  else one_by_one <- TRUE
+  if (infection_model_type == 'flat_prior') {
 
-  max_incidence <- infection_model$max_incidence
-  init <- replicate(
-    n_chains,
-    greta::initials(max_incidence =
-                     max(observations[[1]]$timeseries_data$value) / 0.75),
-    simplify = FALSE)
+    inits_df <- observation_models[[data_inform_inits]]$inits_df
+    first_init <- inits_df[1]
+    extra_beginning <- round((n_days_infection - length(inits_df)) / 2)
+    last_init <- inits_df[length(inits_df)]
+    extra_end <- n_days_infection - (extra_beginning + length(inits_df))
+    inits_full <- c(rep(first_init, times = extra_beginning),
+                    inits_df,
+                    rep(last_init, times = extra_end))
+
+    inits <- greta::initials(
+      incidence = inits_full)
+
+  } else { inits <- greta::initials() }
 
   fit <- greta::mcmc(
     m,
@@ -95,22 +100,13 @@ fit_waves <- function (observations,
     chains = n_chains,
     warmup = warmup,
     n_samples = n_samples,
-    initial_values = init,
-    one_by_one = one_by_one
+    initial_values = inits,
+    one_by_one = TRUE
   )
-
-  # fit <- epiwave.pipelines::fit_model(
-  #   model = m,
-  #   n_chains = n_chains,
-  #   max_convergence_tries = max_convergence_tries,
-  #   warmup = warmup,
-  #   n_samples = n_samples,
-  #   n_extra_samples = n_extra_samples,
-  #   one_by_one = one_by_one)
 
   # return the outputs
   fit_output <- list(
-    infection_model = infection_model,
+    infection_model = incidence,
     fit = fit,
     infection_days = target_infection_dates,
     jurisdictions = jurisdictions)
