@@ -38,19 +38,12 @@ create_infection_timeseries <- function (n_days_infection,
                                                          'gp_growth_rate',
                                                          'gp_growth_rate_deriv')) {
 
+  # improper flat prior for infection incidence
   if (effect_type == 'flat_prior') {
-    # improper flat prior for infection incidence
-    relative_incidence <- variable(0, 1, dim = c(n_days_infection,
-                                                 n_jurisdictions))
-    max_incidence <- variable(0, dim = 1)
-    infection_timeseries <- relative_incidence * max_incidence
-
-    # infection_timeseries <- greta::variable(lower = 0,
-    #                                         dim = c(n_days_infection,
-    #                                                 n_jurisdictions))
+    infection_timeseries <- greta::variable(lower = 0,
+                                            dim = c(n_days_infection,
+                                                    n_jurisdictions))
     greta_arrays <- module(
-      relative_incidence,
-      max_incidence,
       infection_timeseries
     )
     return(greta_arrays)
