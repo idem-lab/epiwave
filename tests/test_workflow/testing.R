@@ -101,6 +101,8 @@ hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
 
 fit_object <- fit_waves(
   observations = define_observation_model(
+    target_infection_dates = infection_days,
+    target_jurisdictions = jurisdictions,
     cases = prepare_observation_data(
       timeseries_data = notif_dat,
       delay_from_infection = epiwave.params::add_distributions(
@@ -119,8 +121,8 @@ fit_object <- fit_waves(
     # other
   ),
 
-  infection_model = 'flat_prior', #define_infection_model() ...,'gp_growth_rate' ,#
-  target_infection_dates = infection_days#,
+  infection_model = 'flat_prior' #define_infection_model() ...,'gp_growth_rate' ,#
+
   # n_chains = 2,
   # max_convergence_tries = 2,
   # warmup = 100,
