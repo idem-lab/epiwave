@@ -28,7 +28,7 @@
 create_observation_model <- function (data_id = 'cases',
                                       observation_model_data,
                                       infection_days,
-                                      infection_model) {
+                                      infection_timeseries) {
 
   observations <- observation_model_data[[data_id]]
 
@@ -37,7 +37,6 @@ create_observation_model <- function (data_id = 'cases',
   case_mat <- observations$case_mat
   prop_mat <- observations$prop_mat
 
-  infection_timeseries <- infection_model$infection_timeseries
   n_dates <- length(infection_days)
 
   convolution_matrices <- lapply(
@@ -87,6 +86,24 @@ create_observation_model <- function (data_id = 'cases',
   case_mat_array <- greta::as_data(
     as.numeric(case_mat)[valid_idx])
 
+  # inits
+  init_by_jurisdiction <- function (n_juris_ID, cases, delays) {
+
+    cases_by_juris <- cases[, n_juris_ID]
+    incidence_approx_unshifted <- cases_by_juris / 0.75
+    avg_delay <- mean(unlist(
+      lapply(delays, function (x) round(sum(x$delay * x$mass)))
+    ))
+    shift_index <- pmin(avg_delay + seq_along(cases_by_juris), length(cases_by_juris))
+    incidence_approx <- incidence_approx_unshifted[shift_index]
+
+    return(incidence_approx)
+  }
+
+  n_jurisdictions <- ncol(case_mat)
+  inits_list <- lapply(1:n_jurisdictions, init_by_jurisdiction, case_mat, delays$value)
+  inits_df <- do.call(cbind, inits_list)
+
   greta::distribution(case_mat_array) <- greta::negative_binomial(
     size[valid_idx],
     prob[valid_idx])
@@ -94,13 +111,15 @@ create_observation_model <- function (data_id = 'cases',
   greta_arrays <- list(
     size,
     prob,
-    convolution_matrices
+    convolution_matrices,
+    inits_df
   )
 
   names(greta_arrays) <- c(
     paste0(data_id, '_size'),
     paste0(data_id, '_prob'),
-    paste0(data_id, '_convolution_matrices')
+    paste0(data_id, '_convolution_matrices'),
+    'inits_df'
   )
 
   return(greta_arrays)
