@@ -31,33 +31,25 @@
 #' @export
 #'
 fit_waves <- function (observations,
-                       data_inform_inits = 'cases',
                        infection_model_type = c('flat_prior',
                                                 'gp_infections',
                                                 'gp_growth_rate',
                                                 'gp_growth_rate_deriv'),
-                       target_infection_dates = NULL,
                        n_chains = 4,
                        max_convergence_tries = 3,
                        warmup = 1000,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
 
-  inits_data_exist <- data_inform_inits %in% names(observations)
-  if(!inits_data_exist) {
-    stop('data_inform_inits must match name of a dataset in observations')
-  }
 
   # prep the model objects
   # add check that ncol(infection_timeseries and below yield same. number of juris)
 
-  jurisdictions <- unique(observations[[1]]$timeseries_data$jurisdiction)
-  n_jurisdictions <- length(jurisdictions)
+  target_infection_dates <- observations$target_infection_dates
   n_days_infection <- length(target_infection_dates)
 
-  # sanitise dates
-  # target_infection_dates <- check_target_infection_dates(target_infection_dates)
-  # observations <- sanitise_dates(observations, target_infection_dates)
+  jurisdictions <- observations$target_jurisdictions
+  n_jurisdictions <- length(jurisdictions)
 
   # set up the greta model
   # infection timeseries model
@@ -68,19 +60,20 @@ fit_waves <- function (observations,
   incidence <- incidence_greta_arrays$infection_timeseries
 
   # observation model objects in observations
-  observation_models <- lapply(names(observations),
+  observation_model_data <- observations$observation_model_data
+  observation_models <- lapply(names(observation_model_data),
                                create_observation_model,
-                               observations,
+                               observation_model_data,
                                target_infection_dates,
                                incidence)
-  names(observation_models) <- names(observations)
+  names(observation_models) <- names(observation_model_data)
 
   # greta model fit
   m <- greta::model(incidence)
 
   if (infection_model_type == 'flat_prior') {
 
-    inits_df <- observation_models[[data_inform_inits]]$inits_df
+    inits_df <- observations$inits_df
     first_init <- inits_df[1]
     extra_beginning <- round((n_days_infection - length(inits_df)) / 2)
     last_init <- inits_df[length(inits_df)]
