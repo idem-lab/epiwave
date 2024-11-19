@@ -26,14 +26,11 @@ prepare_observation_data <- function (timeseries_data,
 
   # check the data is a valid timeseries object (or can be coerced to one) and
   # that it contains data consistent with the observation model type
-  # timeseries_data <- check_valid_timeseries_data(timeseries_data,
-  #                                                type = type)
 
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
-  # these should be two different dimensions yes? because prop will be
-  # dim of infection dates and cases will be cases.
+
   # if these should both be infection dates we can change things.
   # because this doesn't work for a single value for prop.
   # even though we can pass a single value through to the convolution
@@ -41,9 +38,8 @@ prepare_observation_data <- function (timeseries_data,
   case_mat <- as_matrix(timeseries_data)
   prop_mat <- as_matrix(proportion_infections)
 
-
-  # is this basically a cheat way to get back the infection dates?
-  # if so it's sloppy, if not, are these supposed to match case dates?
+  # this extracts the dates relevant to the proportion matrix in order to assign
+  # appropriate DOW correction
   obs_infection_days <- as.Date(rownames(prop_mat))
 
   ## add a check for correct dow arrays
