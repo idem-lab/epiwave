@@ -3,6 +3,9 @@
 #' @description
 #' Placeholder function for now to create list of the observation datasets.
 #'
+#' @param target_infection_dates sequence of infection dates
+#' @param target_jurisdictions jurisdictions
+#' @param data_inform_inits which dataset to inform inits with
 #' @param x observation data set
 #' @param ... optional additional observation data sets
 #'
@@ -11,7 +14,7 @@
 #'
 define_observation_model <- function (target_infection_dates = NULL,
                                       target_jurisdictions,
-                                      data_inform_inits = 'cases',
+                                      data_inform_inits,
                                       x, ...) {
 
   observation_list <- list(...)
@@ -30,58 +33,17 @@ define_observation_model <- function (target_infection_dates = NULL,
   # maybe here can allow for indexing of infection dates vs. case dates for informing inits
   # move creation of inits here
 
-  # inits
-  inits_by_jurisdiction <- function (n_juris_ID,
-                                     cases,
-                                     # can change name later
-                                     delays,
-                                     obs_prop = 0.75,
-                                     target_infection_dates,
-                                     smooth = FALSE) {
-
-    case_dates <- as.Date(rownames(cases))
-    case_idx <- which(target_infection_dates %in% case_dates)
-
-    cases_by_juris <- cases[, n_juris_ID]
-    infection_approx <- cases_by_juris / obs_prop
-
-    avg_delay <- mean(unlist(lapply(delays, function (x)
-      round(
-        sum(x$delay * x$mass)
-      ))))
-
-    inits_idx <- case_idx - avg_delay
-
-    if (smooth) {
-      smooth_approx <- mgcv::gam(
-        val ~ s(idx) + s(idx, bs = "cc"),
-        data = data.frame(val = infection_approx, idx = seq_along(infection_approx)),
-        family = mgcv::nb(link = "log")
-      )
-
-      smooth_pred <- mgcv::predict.gam(
-        smooth_approx,
-        newdata = data.frame(idx = seq_along(infection_approx)),
-        type = "response"
-      )
-
-      infection_approx[] <- smooth_pred
-    }
-
-    inits_values <- rep(0, length(target_infection_dates))
-    inits_values[inits_idx] <- infection_approx
-    inits_values[is.na(inits_values)] <- 0
-    inits_values <- pmax(inits_values, .Machine$double.eps)
-
-    return(inits_values)
-  }
-
   inits_data_mat <- prepared_observation_model_data[[data_inform_inits]]$case_mat
   inits_delays <- prepared_observation_model_data[[data_inform_inits]]$delays
+  inits_prop <- prepared_observation_model_data[[data_inform_inits]]$prop_mat |>
+    mean()
   n_jurisdictions <- length(target_jurisdictions)
-  inits_list <- lapply(1:n_jurisdictions, inits_by_jurisdiction,
-                       inits_data_mat, inits_delays$value,
-                       obs_prop = 0.75, target_infection_dates)
+  inits_list <- lapply(1:n_jurisdictions,
+                       inits_by_jurisdiction,
+                       inits_data_mat,
+                       inits_delays$value,
+                       obs_prop = inits_prop,
+                       target_infection_dates)
 
   inits_values_mat <- as.matrix(do.call(cbind, inits_list))
 
