@@ -54,11 +54,11 @@ n_jurisdictions <- length(jurisdictions)
 n_days_infection <- length(infection_days)
 
 # proportions
-car_constant <- 0.75
-car <- create_epiwave_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  value = car_constant) # 1 for sero prop
+# car_constant <- 0.75
+# car <- create_epiwave_timeseries(
+#   dates = infection_days,
+#   jurisdictions = jurisdictions,
+#   value = car_constant) # 1 for sero prop
 car <- 0.75
  # 1 for sero prop
 
@@ -80,10 +80,10 @@ onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification
 # notification_to_hospitalisation <- lowerGPReff::data_to_distribution(delay_hospitalisation_timeseries)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
-hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  value = hosp_delay_ecdf)
+# hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
+#   dates = infection_days,
+#   jurisdictions = jurisdictions,
+#   value = hosp_delay_ecdf)
 
 
 
