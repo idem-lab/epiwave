@@ -10,7 +10,7 @@ infection_days <- seq(from = as.Date('2021-05-01'),
                  to = as.Date('2022-01-01'), 'days')
 study_seq <- seq(from = as.Date('2021-06-01'),
                       to = as.Date('2021-12-01'), 'days')
-jurisdictions <- 'NSW'
+jurisdictions <- c('NSW', 'VIC')
 
 # specific folder with not synced data
 not_synced_folder <- '../data'
@@ -23,12 +23,13 @@ notif_dat <- notif_file |>
   readRDS() |>
   dplyr::rename(value = new_cases) |>
   dplyr::filter(date %in% study_seq)
-if (!is.na(jurisdictions)) {
-  notif_dat <- notif_dat[notif_dat$jurisdiction == jurisdictions,]
+if (exists('jurisdictions')) {
+  notif_dat <- notif_dat[notif_dat$jurisdiction %in% jurisdictions,]
 }
 class(notif_dat) <- c('epiwave_fixed_timeseries',
                       'epiwave_timeseries',
                       class(notif_dat))
+notif_dat <- notif_dat[3:nrow(notif_dat),]
 
 # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -36,15 +37,15 @@ hosp_dat <- hosp_file |>
   readRDS() |>
   dplyr::filter(date %in% study_seq) |>
   dplyr::mutate(value = cases_in_hospital/3)
-if (!is.na(jurisdictions)) {
-  hosp_dat <- hosp_dat[hosp_dat$jurisdiction == jurisdictions,]
+if (exists('jurisdictions')) {
+  hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
 }
 class(hosp_dat) <- c('epiwave_fixed_timeseries',
                      'epiwave_timeseries',
                      class(hosp_dat))
 
 # jurisdictions
-if (is.na(jurisdictions)) {
+if (!exists('jurisdictions')) {
   jurisdictions <- unique(notif_dat$jurisdiction)
 }
 n_jurisdictions <- length(jurisdictions)
@@ -58,6 +59,8 @@ car <- create_epiwave_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
   value = car_constant) # 1 for sero prop
+car <- 0.75
+ # 1 for sero prop
 
 # create IHR
 chr <- greta::uniform(0, 1)
@@ -83,6 +86,7 @@ hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
   value = hosp_delay_ecdf)
 
 
+
 # create schematic for user
 # observation model and process model
 # consistent language
@@ -98,31 +102,30 @@ hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
 #   format specifications. errors early
 # what to do with missing dates/missing jurisdictions
 
+observation_models <- define_observation_model(
+
+  target_infection_dates = infection_days,
+  target_jurisdictions = jurisdictions,
+
+  cases = define_observation_data(
+    timeseries_data = notif_dat,
+    delay_from_infection = epiwave.params::add_distributions(
+      incubation,
+      onset_to_notification),
+    proportion_infections = car,
+    dow_model = TRUE)
+  # ,
+  # hospitalisations = define_observation_data(
+  #   timeseries_data = hosp_dat,
+  #   delay_from_infection = hosp_delay_ecdf,
+  #   proportion_infections = ihr)
+  # ,
+  # other
+)
 
 fit_object <- fit_waves(
-  observations = define_observation_model(
-    target_infection_dates = infection_days,
-    target_jurisdictions = jurisdictions,
-    cases = prepare_observation_data(
-      timeseries_data = notif_dat,
-      delay_from_infection = epiwave.params::add_distributions(
-        incubation,
-        onset_to_notification),
-      proportion_infections = car,
-      type = "count",
-      dow_model = create_dow_priors(n_jurisdictions))
-    # ,
-    # hospitalisations = prepare_observation_data(
-    #   timeseries_data = hosp_dat,
-    #   delay_from_infection = hosp_full_delay_dist,
-    #   proportion_infections = ihr,
-    #   type = "count")
-    # ,
-    # other
-  ),
-
+  observations = observation_models,
   infection_model = 'flat_prior' #define_infection_model() ...,'gp_growth_rate' ,#
-
   # n_chains = 2,
   # max_convergence_tries = 2,
   # warmup = 100,
