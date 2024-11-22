@@ -20,7 +20,6 @@
 #' @param observations prepared datasets
 #' @param infection_model_type options include 'flat_prior', 'infections', 'growth_rate',
 #'        'growth_rate_derivative'. See description for more info.
-#' @param target_infection_dates infection dates that cover more than the data dates
 #' @param n_chains number of chains to run MCMC
 #' @param max_convergence_tries number of times to repeat run to get convergence
 #' @param warmup how much samples to use in warmup
@@ -73,17 +72,9 @@ fit_waves <- function (observations,
 
   if (infection_model_type == 'flat_prior') {
 
-    inits_df <- observations$inits_df
-    first_init <- inits_df[1]
-    extra_beginning <- round((n_days_infection - length(inits_df)) / 2)
-    last_init <- inits_df[length(inits_df)]
-    extra_end <- n_days_infection - (extra_beginning + length(inits_df))
-    inits_full <- c(rep(first_init, times = extra_beginning),
-                    inits_df,
-                    rep(last_init, times = extra_end))
-
+    inits_values_mat <- observations$inits_values_mat
     inits <- greta::initials(
-      incidence = inits_full)
+      incidence = inits_values_mat)
 
   } else { inits <- greta::initials() }
 
