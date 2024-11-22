@@ -7,21 +7,15 @@
 #'  infection timeseries, including incubation period, if applicable
 #' @param proportion_infections single fixed value of expected proportions of
 #'   infections observed in count data
-#' @param type count or prevalence
 #' @param dow_model optional module of greta arrays defining day-of-week model
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
 #'
 #' @return greta arrays of observation model
 #' @export
-prepare_observation_data <- function (timeseries_data,
-                                      delay_from_infection,
-                                      proportion_infections,
-                                      type = c('count', 'prevalence'),
-                                      dow_model = NULL) {
-
-  # see how we are defining the likelihood
-  type <- match.arg(type)
+prepare_observation_data <- function (observation_data,
+                                      target_infection_dates,
+                                      target_jurisdictions) {
 
 
   # check the data is a valid timeseries object (or can be coerced to one) and
@@ -30,26 +24,57 @@ prepare_observation_data <- function (timeseries_data,
   # add if statements to check that infection_days is long enough to cover
   # the right period
 
+  # can check for juris and dates for all input data
 
-  # if these should both be infection dates we can change things.
-  # because this doesn't work for a single value for prop.
-  # even though we can pass a single value through to the convolution
-  # we can do the cheat below to get back infection dates for dow.
-  case_mat <- as_matrix(timeseries_data)
-  prop_mat <- as_matrix(proportion_infections)
+  delays <- observation_data$delay_from_infection
+  if (!('epiwave_distribution_massfun' %in% class(delays))) {
+    delays <- create_epiwave_massfun_timeseries(
+      dates = target_infection_dates,
+      jurisdictions = target_jurisdictions,
+      value = delays)
+  }
 
-  # this extracts the dates relevant to the proportion matrix in order to assign
-  # appropriate DOW correction
-  obs_infection_days <- as.Date(rownames(prop_mat))
+  prop <- observation_data$proportion_infections
+  if (!('epiwave_timeseries' %in% class(prop))) {
+    prop <- create_epiwave_timeseries(
+      dates = target_infection_dates,
+      jurisdictions = target_jurisdictions,
+      value = prop)
+  }
 
-  ## add a check for correct dow arrays
-  if (!is.null(dow_model)) {
-    dow_correction <- implement_day_of_week(obs_infection_days, dow_model)
+  case_mat <- as_matrix(observation_data$timeseries_data)
+  prop_mat <- as_matrix(prop)
+
+  # check jurisdictions
+  jurisdictions_cases_mismatch <- !setequal(colnames(case_mat), target_jurisdictions)
+  jurisdictions_prop_mismatch <- !setequal(colnames(prop_mat), target_jurisdictions)
+  if (jurisdictions_cases_mismatch | jurisdictions_prop_mismatch) {
+    stop('Jurisdictions in data do not match specified jurisdictions')
+  }
+
+  # reorder columns if necessary
+  case_mat <- as.matrix(as.data.frame(case_mat[, target_jurisdictions]))
+  prop_mat <- as.matrix(as.data.frame(prop_mat[, target_jurisdictions]))
+
+  # check dates
+  # case_dates <- as.Date(rownames(prop_mat))
+  prop_dates <- as.Date(rownames(prop_mat))
+
+  if (!identical(prop_dates, target_infection_dates)) {
+    stop('dates supplied in proportion_infections should match target_infection_dates')
+  }
+  ## we want to check the case dates are within the infection sequence, and also
+  ## that with delays it covers the right period
+  # if (case_dates ....)
+
+  if (observation_data$dow_model) {
+    dow_priors <- create_dow_priors(length(target_jurisdictions))
+    dow_correction <- implement_day_of_week(target_infection_dates, dow_priors)
     prop_mat <- prop_mat * dow_correction
   }
 
-  out <- list(timeseries_data = timeseries_data,
-              delays = delay_from_infection,
+  out <- list(timeseries_data = observation_data$timeseries_data,
+              delays = delays,
               case_mat = case_mat,
               prop_mat = prop_mat)
   out
