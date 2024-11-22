@@ -8,7 +8,7 @@ create_observation_model(
   data_id = "cases",
   observation_model_data,
   infection_days,
-  infection_timeseries
+  infection_model
 )
 }
 \arguments{

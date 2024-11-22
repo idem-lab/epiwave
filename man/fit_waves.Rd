@@ -30,8 +30,6 @@ fit_waves(
 \item{n_samples}{number of samples after warmup}
 
 \item{n_extra_samples}{number of extra samples if original run didn't converge}
-
-\item{target_infection_dates}{infection dates that cover more than the data dates}
 }
 \value{
 list of infection_model, fit, infection_days, and jurisdictions

@@ -2,12 +2,9 @@
 #'
 #' @description Prepare list of data objects needed for observation model.
 #'
-#' @param timeseries_data long form data of counts of notifications
-#' @param delay_from_infection distribution of delays, covering length of
-#'  infection timeseries, including incubation period, if applicable
-#' @param proportion_infections single fixed value of expected proportions of
-#'   infections observed in count data
-#' @param dow_model optional module of greta arrays defining day-of-week model
+#' @param observation_data long form data of counts of notifications
+#' @param target_infection_dates full date sequence of infection timeseries
+#' @param target_jurisdictions jurisdictions
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
 #'

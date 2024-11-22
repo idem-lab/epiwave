@@ -28,7 +28,7 @@
 create_observation_model <- function (data_id = 'cases',
                                       observation_model_data,
                                       infection_days,
-                                      infection_timeseries) {
+                                      infection_model) {
 
   observations <- observation_model_data[[data_id]]
 
@@ -53,7 +53,7 @@ create_observation_model <- function (data_id = 'cases',
   expected_cases_list <- lapply(
     1:n_jurisdictions,
     function(x) {
-      convolution_matrices[[x]] %*% infection_timeseries[, x] * prop_mat[, x]
+      convolution_matrices[[x]] %*% infection_model[, x] * prop_mat[, x]
     })
 
   expected_cases <- do.call(

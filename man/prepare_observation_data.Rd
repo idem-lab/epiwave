@@ -5,25 +5,17 @@
 \title{Prepare observation data}
 \usage{
 prepare_observation_data(
-  timeseries_data,
-  delay_from_infection,
-  proportion_infections,
-  type = c("count", "prevalence"),
-  dow_model = NULL
+  observation_data,
+  target_infection_dates,
+  target_jurisdictions
 )
 }
 \arguments{
-\item{timeseries_data}{long form data of counts of notifications}
+\item{observation_data}{long form data of counts of notifications}
 
-\item{delay_from_infection}{distribution of delays, covering length of
-infection timeseries, including incubation period, if applicable}
+\item{target_infection_dates}{full date sequence of infection timeseries}
 
-\item{proportion_infections}{single fixed value of expected proportions of
-infections observed in count data}
-
-\item{type}{count or prevalence}
-
-\item{dow_model}{optional module of greta arrays defining day-of-week model}
+\item{target_jurisdictions}{jurisdictions}
 }
 \value{
 greta arrays of observation model

@@ -7,12 +7,18 @@
 define_observation_model(
   target_infection_dates = NULL,
   target_jurisdictions,
-  data_inform_inits = "cases",
+  data_inform_inits,
   x,
   ...
 )
 }
 \arguments{
+\item{target_infection_dates}{sequence of infection dates}
+
+\item{target_jurisdictions}{jurisdictions}
+
+\item{data_inform_inits}{which dataset to inform inits with}
+
 \item{x}{observation data set}
 
 \item{...}{optional additional observation data sets}
