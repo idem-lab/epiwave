@@ -4,11 +4,12 @@ library(epiwave.params)
 library(dplyr)
 library(greta)
 
-
 ## user modified
-infection_days <- seq(from = as.Date('2021-05-01'),
-                 to = as.Date('2022-01-01'), 'days')
+# infection_days <- seq(from = as.Date('2021-05-01'),
+#                  to = as.Date('2022-01-01'), 'days')
 study_seq <- seq(from = as.Date('2021-06-01'),
+                      to = as.Date('2021-12-01'), 'days')
+infection_days <- seq(from = as.Date('2021-06-01') - 6,
                       to = as.Date('2021-12-01'), 'days')
 jurisdictions <- c('NSW', 'VIC')
 
@@ -29,7 +30,7 @@ if (exists('jurisdictions')) {
 class(notif_dat) <- c('epiwave_fixed_timeseries',
                       'epiwave_timeseries',
                       class(notif_dat))
-notif_dat <- notif_dat[3:nrow(notif_dat),]
+# notif_dat <- notif_dat[3:nrow(notif_dat),]
 
 # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -106,6 +107,7 @@ observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
   target_jurisdictions = jurisdictions,
+  data_inform_inits = 'cases',
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
@@ -133,11 +135,14 @@ fit_object <- fit_waves(
   # n_extra_samples = 100
 )
 
-
+# inits_idx <- observation_models$inits_idx_mat
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)
 
-test <- greta::calculate(fit_object$infection_model$infection_timeseries, values = fit_object$fit, nsim = 10)
+
+
+test <- greta::calculate(fit_object$infection_model$infection_timeseries,
+                         values = fit_object$fit, nsim = 10)
 
 
 fitted_reff <- compute_reff(fit_object, gi)
