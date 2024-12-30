@@ -27,11 +27,13 @@ Suggests:
 VignetteBuilder: R.rsp
 Imports:
     dplyr,
+    epiwave.params, 
     epiwave.pipelines,
     greta,
     greta.gp,
     magrittr,
     methods,
+    mgcv,
     rlang,
     tibble,
     tidyr
