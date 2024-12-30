@@ -7,6 +7,7 @@
 #' @param target_jurisdictions jurisdictions
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
+#' @importFrom epiwave.params create_epiwave_massfun_timeseries create_epiwave_timeseries
 #'
 #' @return greta arrays of observation model
 #' @export
@@ -25,7 +26,7 @@ prepare_observation_data <- function (observation_data,
 
   delays <- observation_data$delay_from_infection
   if (!('epiwave_distribution_massfun' %in% class(delays))) {
-    delays <- create_epiwave_massfun_timeseries(
+    delays <- epiwave.params::create_epiwave_massfun_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
       value = delays)
@@ -33,7 +34,7 @@ prepare_observation_data <- function (observation_data,
 
   prop <- observation_data$proportion_infections
   if (!('epiwave_timeseries' %in% class(prop))) {
-    prop <- create_epiwave_timeseries(
+    prop <- epiwave.params::create_epiwave_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
       value = prop)
@@ -64,16 +65,20 @@ prepare_observation_data <- function (observation_data,
   ## that with delays it covers the right period
   # if (case_dates ....)
 
+  inits_prop_vec <- colMeans(prop_mat)
+
   if (observation_data$dow_model) {
     dow_priors <- create_dow_priors(length(target_jurisdictions))
     dow_correction <- implement_day_of_week(target_infection_dates, dow_priors)
     prop_mat <- prop_mat * dow_correction
   }
 
-  out <- list(timeseries_data = observation_data$timeseries_data,
-              delays = delays,
-              case_mat = case_mat,
-              prop_mat = prop_mat)
+    out <- list(timeseries_data = observation_data$timeseries_data,
+                delays = delays,
+                case_mat = case_mat,
+                prop_mat = prop_mat,
+                inits_prop_vec = inits_prop_vec)
+
   out
 
 }
