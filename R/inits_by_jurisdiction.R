@@ -8,6 +8,8 @@
 #' @param smooth logical whether to apply smoothing function of data to inform
 #'    initials
 #'
+#' @importFrom mgcv gam predict.gam
+#'
 #' @return initial values as matrix
 #' @export
 inits_by_jurisdiction <- function (n_juris_ID,
@@ -17,11 +19,12 @@ inits_by_jurisdiction <- function (n_juris_ID,
                                    target_infection_dates,
                                    smooth = FALSE) {
 
-  case_dates <- as.Date(rownames(cases))
+  case_dates <- as.Date(rownames(infection_inits_data))
   case_idx <- which(target_infection_dates %in% case_dates)
 
-  cases_by_juris <- cases[, n_juris_ID]
-  infection_approx <- cases_by_juris / obs_prop
+  cases_by_juris <- infection_inits_data[, n_juris_ID]
+  inits_prop_by_juris <- obs_prop[n_juris_ID]
+  infection_approx <- cases_by_juris / inits_prop_by_juris
 
   avg_delay <- mean(unlist(lapply(delays, function (x)
     round(
@@ -47,9 +50,14 @@ inits_by_jurisdiction <- function (n_juris_ID,
   }
 
   inits_values <- rep(0, length(target_infection_dates))
-  inits_values[inits_idx] <- infection_approx
+  inits_values[inits_idx] <- infection_approx # THIS LINE FAILS IF INFECTION DATES DON'T GO BACK
+  # TO COVER
   inits_values[is.na(inits_values)] <- 0
   inits_values <- pmax(inits_values, .Machine$double.eps)
+
+  # out <- list(inits_values = inits_values,
+  #             inits_idx = inits_idx)
+
 
   return(inits_values)
 }
