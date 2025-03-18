@@ -22,10 +22,20 @@
 create_dow_priors <- function (n_jurisdictions = 1) {
 
   # prior for dweek correction
-  dow_alpha <- greta::normal(-1.8, # corresponds to roughly 1/7
+
+  # nation-wide alpha
+  dow_alpha_raw <- greta::normal(-1.8, # corresponds to roughly 1/7
                              0.25,
                              truncation = c(0, Inf),
-                             dim = c(1, 6))
+                             dim = c(6, 1))
+
+  # state effect
+  dow_alpha_state <- greta::normal(0, # corresponds to roughly 1/7
+                                 0.1,
+                                 dim = c(n_jurisdictions, 6))
+
+  # combine
+  dow_alpha <- sweep(dow_alpha_state,1,dow_alpha_raw,"+")
 
   dow_dist <- greta::imultilogit(dow_alpha)
   # dow_dist <- greta::dirichlet(dow_alpha,
