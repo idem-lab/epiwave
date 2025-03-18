@@ -7,8 +7,8 @@ library(greta)
 library(readr)
 library(lubridate)
 
-origin_date <- as.Date("2024-07-09")#set for each week
-forecast_date <- as.Date("2024-07-11")
+origin_date <- as.Date("2024-08-27")#set for each week
+forecast_date <- as.Date("2024-08-29")
 
 study_seq <- seq(from = as.Date('2024-01-01'),
                  to = origin_date, 'days')
@@ -120,6 +120,7 @@ inits <- replicate(n_chains,
 
 fit <- greta::mcmc(
   model = m,
+  sampler = hmc(Lmin = 35, Lmax = 40),
   chains = n_chains,
   warmup = 2e3,
   n_samples = 2e3,
@@ -128,41 +129,57 @@ fit <- greta::mcmc(
 
 r_hats <- coda::gelman.diag(fit, autoburnin = FALSE,
                             multivariate = FALSE)$psrf[, 1]
-summary(r_hats)
-# long is classic output, then map to infection traj.
-infections_out <- epiwave.pipelines::generate_long_estimates(
-  infection_model_objects$infection_timeseries,
-  fit,
-  infection_days,
-  jurisdictions)
-
-infectiousness_out <- epiwave.pipelines::generate_long_estimates(
-  reff_model_objects$infectiousness,
-  fit,
-  infection_days,
-  jurisdictions)
-
-infection_traj <- epiwave.pipelines::build_trajectories(
-  param = infection_model_objects$infection_timeseries,
-  infection_days,
-  fit,
-  nsim = 1000,
-  jurisdictions)
-
-
-#plot_reff <- plot_timeseries_sims(
- # reff_out,
-  #type = "reff",
-  #days = infection_days)
-
-
-epiwave.pipelines::plot_reff_interval_curves(
-  'reff.png',
-  reff_out,
-  dates = infection_days,
-  start_date = min(study_seq),
-  end_date = max(study_seq),
-  jurisdictions = jurisdictions)
+# infection R hat witout nowcast phase
+summary(r_hats[1:(length(study_seq)+28)])
+# reff R hat witout nowcast phase
+summary(r_hats[(1:(length(study_seq)+28))+ n_days_infection])
+# # long is classic output, then map to infection traj.
+# infections_out <- epiwave.pipelines::generate_long_estimates(
+#   infection_model_objects$infection_timeseries,
+#   fit,
+#   infection_days,
+#   jurisdictions)
+#
+# infectiousness_out <- epiwave.pipelines::generate_long_estimates(
+#   reff_model_objects$infectiousness,
+#   fit,
+#   infection_days,
+#   jurisdictions)
+#
+# infection_traj <- epiwave.pipelines::build_trajectories(
+#   param = infection_model_objects$infection_timeseries,
+#   infection_days,
+#   fit,
+#   nsim = 1000,
+#   jurisdictions)
+#
+#
+# #plot_reff <- plot_timeseries_sims(
+#  # reff_out,
+#   #type = "reff",
+#   #days = infection_days)
+#
+#
+# epiwave.pipelines::plot_reff_interval_curves(
+#   'reff.png',
+#   reff_out,
+#   dates = infection_days,
+#   start_date = min(study_seq),
+#   end_date = max(study_seq),
+#   jurisdictions = jurisdictions)
+# growth_rate <- (greta::apply(infection_model_objects$gp, 2, 'cumsum'))
+# #growth_rate <- infection_model_objects$gp
+#
+# sim_check(growth_rate,
+#           title = "prior growth rate")
+#
+# sim_check(growth_rate,
+#           fitted_values = fit,
+#           title = "posterior growth rate")
+#
+# sim_check(infection_model_objects$infection_timeseries,
+#           fitted_values = fit,
+#           title = "posterior infections")
 
 infection_sims <- greta::calculate(infection_model_objects$infection_timeseries,
                                    values = fit,
@@ -223,9 +240,16 @@ calculate(dow_model$dow_dist,
           values = fit,
           nsim = 1000)[[1]] %>% apply(3,mean)
 
+(1/(calculate(notif_observation_model_objects$notif_size[1],
+          values = fit,
+          nsim = 1000)[[1]] %>% apply(3,mean)))^2
+
 case_sims <- greta::calculate(notif_observation_model_objects$notif_case_mat,
                               values = fit,
                               nsim = 1000)
+
+residual_diag_cases(case_sims,
+                    cases_true = notif_dat$value)
 
 plot_timeseries_sims(
   'cases_timeseries2.png',
