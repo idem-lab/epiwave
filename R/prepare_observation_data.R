@@ -25,7 +25,7 @@ prepare_observation_data <- function (observation_data,
   # can check for juris and dates for all input data
 
   delays <- observation_data$delay_from_infection
-  if (!('epiwave_distribution_massfun' %in% class(delays))) {
+  if (!('epiwave_massfun_timeseries' %in% class(delays))) {
     delays <- epiwave.params::create_epiwave_massfun_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
@@ -79,6 +79,8 @@ prepare_observation_data <- function (observation_data,
                 prop_mat = prop_mat,
                 inits_prop_vec = inits_prop_vec)
 
+    if('total_pop' %in% names(observation_data)) out$total_pop <- observation_data$total_pop
+    if('size_vec' %in% names(observation_data)) out$size_vec <-  observation_data$size_vec
   out
 
 }

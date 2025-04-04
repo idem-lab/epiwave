@@ -1,5 +1,6 @@
 ## header
-library(epiwave)
+#library(epiwave)
+devtools::load_all()
 library(epiwave.params)
 library(dplyr)
 library(greta)
@@ -14,10 +15,30 @@ infection_days <- seq(from = as.Date('2021-06-01') - 6,
 jurisdictions <- c('NSW', 'VIC')
 
 # specific folder with not synced data
-not_synced_folder <- '../data'
+not_synced_folder <- '~/not_synced/data/'
 
 
 ## data prep
+
+# sero simulated data
+sero_file <- readRDS(file = paste0(not_synced_folder,"sero_data_test.RDS"))
+
+sero_dat <- sero_file %>%
+  select(jurisdiction,value,date)
+
+class(sero_dat) <- c('epiwave_fixed_timeseries',
+                     'epiwave_timeseries',
+                     class(sero_dat))
+
+size_dummy <- sero_file %>%
+  select(jurisdiction,size,date) %>%
+  rename(value = size)
+
+class(size_dummy) <- c('epiwave_fixed_timeseries',
+                     'epiwave_timeseries',
+                     class(size_dummy))
+sero_size_mat <- as_matrix(size_dummy)
+
 # notification counts
 notif_file <- paste0(not_synced_folder, '/COVID_live_cases.rds')
 notif_dat <- notif_file |>
@@ -32,18 +53,18 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       class(notif_dat))
 # notif_dat <- notif_dat[3:nrow(notif_dat),]
 
-# hospitalisation counts
-hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
-hosp_dat <- hosp_file |>
-  readRDS() |>
-  dplyr::filter(date %in% study_seq) |>
-  dplyr::mutate(value = cases_in_hospital/3)
-if (exists('jurisdictions')) {
-  hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
-}
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(hosp_dat))
+# # hospitalisation counts
+# hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
+# hosp_dat <- hosp_file |>
+#   readRDS() |>
+#   dplyr::filter(date %in% study_seq) |>
+#   dplyr::mutate(value = cases_in_hospital/3)
+# if (exists('jurisdictions')) {
+#   hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
+# }
+# class(hosp_dat) <- c('epiwave_fixed_timeseries',
+#                      'epiwave_timeseries',
+#                      class(hosp_dat))
 
 # jurisdictions
 if (!exists('jurisdictions')) {
@@ -64,20 +85,29 @@ car <- 0.75
  # 1 for sero prop
 
 # create IHR
-chr <- greta::uniform(0, 1)
+#chr <- greta::uniform(0, 1)
 # ihr <- chr * car
 # wrapper for ihr specific flow
-ihr <- create_epiwave_greta_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  car = car,
-  chr_prior = chr)
+
+#### use this function below to get CAR prior set up when testing with sero
+
+# ihr <- create_epiwave_greta_timeseries(
+#   dates = infection_days,
+#   jurisdictions = jurisdictions,
+#   car = car,
+#   chr_prior = chr)
 
 
 ## delays
 incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
+
+sero_conversion <- readRDS("~/not_synced/data/sero_curve_test.RDS")
+
+class(sero_conversion) <- c("epiwave_distribution_massfun",
+                            "epiwave_massfun",
+                            class(notif_dat))
 # notification_to_hospitalisation <- lowerGPReff::data_to_distribution(delay_hospitalisation_timeseries)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
@@ -111,11 +141,16 @@ observation_models <- define_observation_model(
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection = epiwave.params::add_distributions(
-      incubation,
-      onset_to_notification),
+    delay_from_infection = onset_to_notification,
     proportion_infections = car,
-    dow_model = TRUE)
+    dow_model = TRUE),
+  sero = define_sero_data(
+    timeseries_data = sero_dat,
+    total_pop = c(8e6,7e6),
+    size_vec = sero_size_mat,
+    delay_from_infection = sero_conversion,
+    proportion_infections = 1
+  )
   # ,
   # hospitalisations = define_observation_data(
   #   timeseries_data = hosp_dat,
@@ -127,7 +162,7 @@ observation_models <- define_observation_model(
 
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'flat_prior' #define_infection_model() ...,'gp_growth_rate' ,#
+  infection_model = 'gp_growth_rate' #define_infection_model() ...,'gp_growth_rate' ,#
   # n_chains = 2,
   # max_convergence_tries = 2,
   # warmup = 100,

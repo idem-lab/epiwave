@@ -19,6 +19,7 @@ inits_by_jurisdiction <- function (n_juris_ID,
                                    target_infection_dates,
                                    smooth = FALSE) {
 
+  browser()
   case_dates <- as.Date(rownames(infection_inits_data))
   case_idx <- which(target_infection_dates %in% case_dates)
 

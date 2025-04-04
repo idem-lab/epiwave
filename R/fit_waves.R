@@ -60,11 +60,21 @@ fit_waves <- function (observations,
 
   # observation model objects in observations
   observation_model_data <- observations$observation_model_data
-  observation_models <- lapply(names(observation_model_data),
-                               create_observation_model,
-                               observation_model_data,
-                               target_infection_dates,
-                               incidence)
+  # observation_models <- lapply(names(observation_model_data),
+  #                              create_observation_model,
+  #                              observation_model_data,
+  #                              target_infection_dates,
+  #                              incidence)
+
+  case_obs_model <-   create_observation_model( 'cases',
+                                                observation_model_data,
+                                                target_infection_dates,
+                                                incidence)
+  sero_obs_model <-   create_small_sero_model( 'sero',
+                                                observation_model_data,
+                                                target_infection_dates,
+                                                incidence)
+  observation_models <- list(case_obs_model, sero_obs_model)
   names(observation_models) <- names(observation_model_data)
 
   # greta model fit
