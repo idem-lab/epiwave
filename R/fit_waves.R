@@ -18,8 +18,8 @@
 #'  would follow the most recent growth rate trend.
 #'
 #' @param observations prepared datasets
-#' @param infection_model_type options include 'flat_prior', 'infections', 'growth_rate',
-#'        'growth_rate_derivative'. See description for more info.
+#' @param infection_model_type options include 'flat_prior', 'infections',
+#'   'growth_rate', 'growth_rate_derivative'. See description for more info.
 #' @param n_chains number of chains to run MCMC
 #' @param max_convergence_tries number of times to repeat run to get convergence
 #' @param warmup how much samples to use in warmup
@@ -36,7 +36,7 @@ fit_waves <- function (observations,
                                                 'gp_growth_rate_deriv'),
                        n_chains = 4,
                        max_convergence_tries = 3,
-                       warmup = 1000,
+                       warmup = 2000,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
 
@@ -44,16 +44,19 @@ fit_waves <- function (observations,
   # prep the model objects
   # add check that ncol(infection_timeseries and below yield same. number of juris)
 
-  target_infection_dates <- observations$target_infection_dates
+  target_infection_dates <- observations$target_infection_dates # Ihat
   n_days_infection <- length(target_infection_dates)
 
   jurisdictions <- observations$target_jurisdictions
   n_jurisdictions <- length(jurisdictions)
 
+  observable_infection <- observations$incidence_observable
+
   # set up the greta model
   # infection timeseries model
   incidence_greta_arrays <- create_infection_timeseries(
     n_days_infection,
+    observable_infection,
     n_jurisdictions,
     effect_type = infection_model_type)
   incidence <- incidence_greta_arrays$infection_timeseries
@@ -72,15 +75,23 @@ fit_waves <- function (observations,
 
   if (infection_model_type == 'flat_prior') {
 
-    inits_values_mat <- observations$inits_values_mat
-    inits <- greta::initials(
-      incidence = inits_values_mat)
+    incidence_observable_inits <- observations$incidence_observable_inits
 
-  } else { inits <- greta::initials() }
+    indexed_incidence_observable_inits <-
+      incidence_observable_inits[observable_infection]
+
+    incidence_observable <- incidence_greta_arrays$infection_timeseries_observable
+
+    inits <- greta::initials(
+      incidence_observable = indexed_incidence_observable_inits)
+
+  } else {
+    inits <- greta::initials()
+  }
 
   fit <- greta::mcmc(
     m,
-    sampler = greta::hmc(Lmin = 25, Lmax = 30),
+    # sampler = greta::hmc(Lmin = 25, Lmax = 30), #greta::adaptive_hmc(),
     chains = n_chains,
     warmup = warmup,
     n_samples = n_samples,
