@@ -1,15 +1,17 @@
 ## header
-library(epiwave)
+# library(epiwave)
 library(epiwave.params)
 library(dplyr)
 library(greta)
-
+devtools::load_all()
 ## user modified
-# infection_days <- seq(from = as.Date('2021-05-01'),
+# infection_days <- seq(from = as.Date('2021-04-01'),
 #                  to = as.Date('2022-01-01'), 'days')
-study_seq <- seq(from = as.Date('2021-06-01'),
+infection_days <- seq(from = as.Date('2021-03-09'),
                       to = as.Date('2021-12-01'), 'days')
-infection_days <- seq(from = as.Date('2021-06-01') - 6,
+# infection_days <- seq(from = as.Date('2021-06-01' - 6),
+#                       to = as.Date('2021-12-01'), 'days')
+study_seq <- seq(from = as.Date('2021-06-01'),
                       to = as.Date('2021-12-01'), 'days')
 jurisdictions <- c('NSW', 'VIC')
 
@@ -31,6 +33,7 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       'epiwave_timeseries',
                       class(notif_dat))
 # notif_dat <- notif_dat[3:nrow(notif_dat),]
+# notif_dat$value[notif_dat$value == 0] <- 1
 
 # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -73,7 +76,6 @@ ihr <- create_epiwave_greta_timeseries(
   car = car,
   chr_prior = chr)
 
-
 ## delays
 incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
@@ -102,65 +104,67 @@ hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
 # constructor function case_col = X, .... for each argument you can have clear
 #   format specifications. errors early
 # what to do with missing dates/missing jurisdictions
-
+# set.seed(1114)
 observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
   target_jurisdictions = jurisdictions,
-  data_inform_inits = 'cases',
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection = epiwave.params::add_distributions(
+    delay_from_infection =
+      epiwave.params::add_distributions(
       incubation,
       onset_to_notification),
     proportion_infections = car,
-    dow_model = TRUE)
-  # ,
-  # hospitalisations = define_observation_data(
-  #   timeseries_data = hosp_dat,
-  #   delay_from_infection = hosp_delay_ecdf,
-  #   proportion_infections = ihr)
+    dow_model = TRUE),
+
+  hospitalisations = define_observation_data(
+    timeseries_data = hosp_dat,
+    delay_from_infection = hosp_delay_ecdf,
+    proportion_infections = ihr)#,
+    # inform_inits = FALSE)
   # ,
   # other
 )
 
+
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'flat_prior' #define_infection_model() ...,'gp_growth_rate' ,#
+  infection_model = 'flat_prior',# define_infection_model()'gp_growth_rate' #
   # n_chains = 2,
   # max_convergence_tries = 2,
-  # warmup = 100,
+  # warmup = 1e5#,
   # n_samples = 100,
   # n_extra_samples = 100
 )
 
-# inits_idx <- observation_models$inits_idx_mat
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)
+bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,2]')
+
+coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 
 
-
-test <- greta::calculate(fit_object$infection_model$infection_timeseries,
-                         values = fit_object$fit, nsim = 10)
-
-
-fitted_reff <- compute_reff(fit_object, gi)
-
-
-# outputs
-infections_out <- epiwave.pipelines::generate_long_estimates(
-  fit_object$infection_model$infection_timeseries,
-  fit_object$fit,
-  infection_days,
-  jurisdictions)
+#
+# fitted_reff <- compute_reff(fit_object, gi)
+#
+#
+# # outputs
+# infections_out <- epiwave.pipelines::generate_long_estimates(
+#   fit_object$infection_model$infection_timeseries,
+#   fit_object$fit,
+#   infection_days,
+#   jurisdictions)
 
 infection_traj <- epiwave.pipelines::build_trajectories(
-  param = fit_object$infection_model$infection_timeseries,
+  param = fit_object$infection_model,
   infection_days,
   fit_object$fit,
   nsim = 1000,
   jurisdictions)
+
+infection_traj_diagnostic_vis(infection_traj)
 
 epiwave.pipelines::plot_reff_interval_curves(
   'gp_both_reff_9Oct.pdf',
