@@ -15,7 +15,7 @@ jurisdictions <- 'study_area'
 
 ## data prep
 # notification counts
-notif_dat <- 'simdata/sim_study_cases(in).csv' |>
+notif_dat <- 'simdata/sim_study_cases.csv' |>
   read.csv() |>
   t() |>
   as.data.frame()
@@ -28,7 +28,7 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       class(notif_dat))
 
 # hospitalisation counts
-hosp_dat <- 'simdata/sim_study_hosp(in).csv' |>
+hosp_dat <- 'simdata/sim_study_hosp.csv' |>
   read.csv() |>
   t() |>
   as.data.frame()
@@ -94,19 +94,27 @@ observation_models <- define_observation_model(
 
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'flat_prior',# define_infection_model()'gp_growth_rate' #
-  # n_chains = 2,
+  infection_model_type = 'gp_growth_rate')#,# define_infection_model()'gp_growth_rate' #
+  # n_chains = 4,
   # max_convergence_tries = 2,
-  # warmup = 1e5#,
-  # n_samples = 100,
-  # n_extra_samples = 100
-)
+  # warmup = 1000,
+  # n_samples = 1000,
+  # # n_extra_samples = 100
+#)
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)
-bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,2]')
+bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,1]')
 
 coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
+
+
+
+ihr_out <- greta::calculate(ihr$ihr, values = fit_object$fit, nsim = 1000)
+
+mean(ihr_out$`ihr$ihr`)
+
+mean_ihr <- data.frame(apply(ihr_out$`ihr$ihr`[,,1], 2, mean))
 
 # greta::calculate()
 
@@ -144,14 +152,13 @@ infection_sims <- greta::calculate(
   nsim = 1000)
 
 epiwave.pipelines::plot_timeseries_sims(
-  'test.png',
+  'infections_gp_growth_rate_cases.png',
   infection_sims[[1]],
   type = "infection",
   dates = infection_days,
   states = jurisdictions,
   start_date = study_seq[1],
-  end_date = study_seq[length(study_seq)],
+  end_date = study_seq[length(study_seq)] - 14,
   dim_sim = "2",
-  infection_nowcast = TRUE,
-  nowcast_start = as.Date('2021-12-08'))
+  infection_nowcast = FALSE)
 
