@@ -86,12 +86,22 @@ fit_waves <- function (observations,
       incidence_observable = indexed_incidence_observable_inits)
 
   } else {
+
+    hospitalisations_sqrt_inv_size_important <- observation_models$hospitalisations$hospitalisations_sqrt_inv_size_important
+    cases_sqrt_inv_size_important <- observation_models$cases$cases_sqrt_inv_size_important
+    gp_lengthscale <- incidence_greta_arrays$gp_lengthscale
+
+    inits <- greta::initials(
+     hospitalisations_sqrt_inv_size_important = rep(10, n_jurisdictions),
+      cases_sqrt_inv_size_important = rep(10, n_jurisdictions),
+      gp_lengthscale = rep(0.5, n_jurisdictions))
+
     inits <- greta::initials()
   }
 
   fit <- greta::mcmc(
     m,
-    # sampler = greta::hmc(Lmin = 25, Lmax = 30), #greta::adaptive_hmc(),
+    #greta::hmc(Lmin = 25, Lmax = 30), #greta::adaptive_hmc(),
     chains = n_chains,
     warmup = warmup,
     n_samples = n_samples,
@@ -104,7 +114,9 @@ fit_waves <- function (observations,
     infection_model = incidence,
     fit = fit,
     infection_days = target_infection_dates,
-    jurisdictions = jurisdictions)
+    jurisdictions = jurisdictions,
+    observation_models = observation_models,
+    incidence_greta_arrays = incidence_greta_arrays)
 
   return(fit_output)
 
