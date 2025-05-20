@@ -1,19 +1,15 @@
 ## header
-# library(epiwave)
+library(epiwave)
 library(epiwave.params)
 library(dplyr)
 library(greta)
-devtools::load_all()
+# devtools::load_all()
 ## user modified
 infection_days <- seq(from = as.Date('2021-04-01'),
                  to = as.Date('2022-01-01'), 'days')
-# infection_days <- seq(from = as.Date('2021-03-09'),
-#                       to = as.Date('2021-12-01'), 'days')
-# infection_days <- seq(from = as.Date('2021-06-01' - 6),
-#                       to = as.Date('2021-12-01'), 'days')
 study_seq <- seq(from = as.Date('2021-06-01'),
                       to = as.Date('2021-12-01'), 'days')
-jurisdictions <- 'NSW'#c('NSW', 'VIC')
+jurisdictions <- 'VIC' #c('NSW', 'VIC')
 
 # specific folder with not synced data
 not_synced_folder <- '../data'
@@ -32,8 +28,6 @@ if (exists('jurisdictions')) {
 class(notif_dat) <- c('epiwave_fixed_timeseries',
                       'epiwave_timeseries',
                       class(notif_dat))
-# notif_dat <- notif_dat[3:nrow(notif_dat),]
-# notif_dat$value[notif_dat$value == 0] <- 1
 
 # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -58,18 +52,10 @@ n_jurisdictions <- length(jurisdictions)
 n_days_infection <- length(infection_days)
 
 # proportions
-# car_constant <- 0.75
-# car <- create_epiwave_timeseries(
-#   dates = infection_days,
-#   jurisdictions = jurisdictions,
-#   value = car_constant) # 1 for sero prop
 car <- 0.75
- # 1 for sero prop
 
 # create IHR
 chr <- greta::uniform(0, 1)
-# ihr <- chr * car
-# wrapper for ihr specific flow
 ihr <- create_epiwave_greta_timeseries(
   dates = infection_days,
   jurisdictions = jurisdictions,
@@ -80,31 +66,9 @@ ihr <- create_epiwave_greta_timeseries(
 incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
-# notification_to_hospitalisation <- lowerGPReff::data_to_distribution(delay_hospitalisation_timeseries)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
-# hosp_full_delay_dist <- create_epiwave_massfun_timeseries(
-#   dates = infection_days,
-#   jurisdictions = jurisdictions,
-#   value = hosp_delay_ecdf)
 
-
-
-# create schematic for user
-# observation model and process model
-# consistent language
-# constructor function for process model "define...xxxx"
-# simpler map for user that the observation and process model are parallel
-# help user conceptualise different phases by pulling define_obs adn define_inf
-#   out of fit_waves
-# define subobject earlier to assist with logic
-# STEPS model has several complicated steps - check out documentation
-## data
-# users happy to submit data in very specified format that is clearly explained
-# constructor function case_col = X, .... for each argument you can have clear
-#   format specifications. errors early
-# what to do with missing dates/missing jurisdictions
-# set.seed(1114)
 observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
@@ -122,21 +86,14 @@ observation_models <- define_observation_model(
   hospitalisations = define_observation_data(
     timeseries_data = hosp_dat,
     delay_from_infection = hosp_delay_ecdf,
-    proportion_infections = ihr)#,
-    # inform_inits = FALSE)
+    proportion_infections = ihr)
   # ,
   # other
 )
 
-
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'gp_growth_rate'#'flat_prior',# define_infection_model() #
-  # n_chains = 2,
-  # max_convergence_tries = 2,
-  # warmup = 1e5#,
-  # n_samples = 100,
-  # n_extra_samples = 100
+  infection_model = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
