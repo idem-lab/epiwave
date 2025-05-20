@@ -5,15 +5,15 @@ library(dplyr)
 library(greta)
 devtools::load_all()
 ## user modified
-# infection_days <- seq(from = as.Date('2021-04-01'),
-#                  to = as.Date('2022-01-01'), 'days')
-infection_days <- seq(from = as.Date('2021-03-09'),
-                      to = as.Date('2021-12-01'), 'days')
+infection_days <- seq(from = as.Date('2021-04-01'),
+                 to = as.Date('2022-01-01'), 'days')
+# infection_days <- seq(from = as.Date('2021-03-09'),
+#                       to = as.Date('2021-12-01'), 'days')
 # infection_days <- seq(from = as.Date('2021-06-01' - 6),
 #                       to = as.Date('2021-12-01'), 'days')
 study_seq <- seq(from = as.Date('2021-06-01'),
                       to = as.Date('2021-12-01'), 'days')
-jurisdictions <- c('NSW', 'VIC')
+jurisdictions <- 'NSW'#c('NSW', 'VIC')
 
 # specific folder with not synced data
 not_synced_folder <- '../data'
@@ -131,7 +131,7 @@ observation_models <- define_observation_model(
 
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'flat_prior',# define_infection_model()'gp_growth_rate' #
+  infection_model = 'gp_growth_rate'#'flat_prior',# define_infection_model() #
   # n_chains = 2,
   # max_convergence_tries = 2,
   # warmup = 1e5#,
@@ -141,9 +141,19 @@ fit_object <- fit_waves(
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)
-bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,2]')
+bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[170,1]')
 
 coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
+
+posterior_area_plots <- function(draws, select_pars, label = "Posterior") {
+  plot_title <- ggtitle(
+    paste0(label, " distributions"),
+    "with medians and 90% intervals"
+  )
+  mcmc_areas(draws, pars = select_pars, prob = 0.9, point_est = "median") +
+    plot_title +
+    labs(y = "parameter")
+}
 
 
 #
@@ -191,3 +201,48 @@ epiwave.pipelines::plot_timeseries_sims(
   infection_nowcast = TRUE,
   nowcast_start = as.Date('2021-12-08'))
 
+#XXX
+#
+# infection_traj <- epiwave.pipelines::build_trajectories(
+#   param = fit_object$infection_model$infection_timeseries,
+#   infection_days,
+#   fit_object$fit,
+#   nsim = 1000,
+#   jurisdictions)
+#
+# epiwave.pipelines::plot_reff_interval_curves(
+#   'gp_both_reff_9Oct.pdf',
+#   fitted_reff,
+#   dates = infection_days,
+#   start_date = min(study_seq),
+#   end_date = max(study_seq),
+#   jurisdictions = jurisdictions)
+# infection_sims <- greta::calculate(
+#   fit_object$infection_model$infection_timeseries,
+#   values = fit_object$fit,
+#   nsim = 1000)
+#
+# epiwave.pipelines::plot_timeseries_sims(
+#   'outputs/gp_reff.png',
+#   infection_sims[[1]],
+#   type = "reff",
+#   dates = infection_days,
+#   states = jurisdictions,
+#   start_date = study_seq[1],
+#   end_date = study_seq[length(study_seq)],
+#   dim_sim = "2",
+#   infection_nowcast = TRUE,
+#   nowcast_start = as.Date('2021-12-08'))
+#
+#
+# epiwave.pipelines::plot_timeseries_sims(
+#   'outputs/gp_both_infections_Kate-9Oct.png',
+#   infection_sims[[1]],
+#   type = "infection",
+#   dates = infection_days,
+#   states = jurisdictions,
+#   start_date = study_seq[1],
+#   end_date = study_seq[length(study_seq)],
+#   dim_sim = "2",
+#   infection_nowcast = TRUE,
+#   nowcast_start = as.Date('2021-12-08'))
