@@ -7,6 +7,7 @@
 #' @param target_infection_dates infection date sequence
 #'
 #' @importFrom mgcv gam predict.gam
+#' @importFrom dplyr filter
 #'
 #' @return initial values as matrix
 #' @export
@@ -36,8 +37,8 @@ inits_by_jurisdiction <- function (n_juris_ID,
   # if delays are time-varying it is still only using the average delay
   # to shift observation data for calculation of inits
   delays_juris <- delays |>
-    filter(jurisdiction == delays$jurisdiction[n_juris_ID],
-           date %in% case_dates)
+    dplyr::filter(jurisdiction == delays$jurisdiction[n_juris_ID],
+                  date %in% case_dates)
 
   expected_delay_vals <- unlist(lapply(delays_juris$value, function (x)
     round(
