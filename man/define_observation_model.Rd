@@ -7,7 +7,6 @@
 define_observation_model(
   target_infection_dates = NULL,
   target_jurisdictions,
-  data_inform_inits,
   x,
   ...
 )
@@ -16,8 +15,6 @@ define_observation_model(
 \item{target_infection_dates}{sequence of infection dates}
 
 \item{target_jurisdictions}{jurisdictions}
-
-\item{data_inform_inits}{which dataset to inform inits with}
 
 \item{x}{observation data set}
 

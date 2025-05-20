@@ -6,6 +6,7 @@
 \usage{
 create_infection_timeseries(
   n_days_infection,
+  observable_infection,
   n_jurisdictions = 1,
   effect_type = c("flat_prior", "gp_infections", "gp_growth_rate",
     "gp_growth_rate_deriv")
@@ -13,6 +14,9 @@ create_infection_timeseries(
 }
 \arguments{
 \item{n_days_infection}{length of full date sequence of infection timeseries}
+
+\item{observable_infection}{index of target_infection_dates that
+includes observable data}
 
 \item{n_jurisdictions}{number of jurisdictions, defaults to 1}
 
