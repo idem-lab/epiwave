@@ -8,6 +8,8 @@
 #' @param x observation data set
 #' @param ... optional additional observation data sets
 #'
+#' @importFrom abind abind
+#'
 #' @return list of datasets
 #' @export
 #'
