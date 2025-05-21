@@ -25,7 +25,7 @@ prepare_observation_data <- function (observation_data,
   # can check for juris and dates for all input data
 
   delays <- observation_data$delay_from_infection
-  if (!('epiwave_distribution_massfun' %in% class(delays))) {
+  if (!('epiwave_massfun_timeseries' %in% class(delays))) {
     delays <- epiwave.params::create_epiwave_massfun_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
@@ -41,31 +41,65 @@ prepare_observation_data <- function (observation_data,
   }
 
   case_mat <- as_matrix(observation_data$timeseries_data)
+
   prop_mat <- as_matrix(prop)
 
   # check jurisdictions
   jurisdictions_cases_mismatch <- !setequal(colnames(case_mat), target_jurisdictions)
-  jurisdictions_prop_mismatch <- !setequal(colnames(prop_mat), target_jurisdictions)
-  if (jurisdictions_cases_mismatch | jurisdictions_prop_mismatch) {
+  # jurisdictions_prop_mismatch <- !setequal(colnames(prop_mat), target_jurisdictions)
+  if (jurisdictions_cases_mismatch){ # | jurisdictions_prop_mismatch) {
     stop('Jurisdictions in data do not match specified jurisdictions')
   }
 
   # reorder columns if necessary
   case_mat <- as.matrix(as.data.frame(case_mat[, target_jurisdictions]))
-  prop_mat <- as.matrix(as.data.frame(prop_mat[, target_jurisdictions]))
+  # prop_mat <- as.matrix(as.data.frame(prop_mat[, target_jurisdictions]))
 
   # check dates
-  # case_dates <- as.Date(rownames(prop_mat))
-  prop_dates <- as.Date(rownames(prop_mat))
+  # prop_dates <- as.Date(rownames(prop_mat))
+  #
+  # if (!identical(prop_dates, target_infection_dates)) {
+  #   stop('dates supplied in proportion_infections should match target_infection_dates')
+  # }
 
-  if (!identical(prop_dates, target_infection_dates)) {
-    stop('dates supplied in proportion_infections should match target_infection_dates')
-  }
+
   ## we want to check the case dates are within the infection sequence, and also
   ## that with delays it covers the right period
   # if (case_dates ....)
 
-  inits_prop_vec <- colMeans(prop_mat)
+    # check the data is a valid timeseries object (or can be coerced to one) and
+  # that it contains data consistent with the observation model type
+
+  # add if statements to check that infection_days is long enough to cover
+  # the right period
+
+
+
+
+
+  n_jurisdictions <- length(target_jurisdictions)
+  inits_list <- lapply(1:n_jurisdictions,
+                       inits_by_jurisdiction,
+                       case_mat, # obs_mat
+                       delays,
+                       obs_prop = prop_mat,
+                       target_infection_dates)
+
+  inits_values_mat <- matrix(NA,
+                             length(target_infection_dates),
+                             n_jurisdictions)
+  observable_idx_mat <- matrix(FALSE,
+                               length(target_infection_dates),
+                               n_jurisdictions)
+
+  for (juris in 1:n_jurisdictions) {
+
+    idx <- inits_list[[juris]]$observable_idx
+    inits <- inits_list[[juris]]$inits_values
+    inits_values_mat[idx, juris] <- inits
+    observable_idx_mat[idx, juris] <- TRUE
+
+  }
 
   if (observation_data$dow_model) {
     dow_priors <- create_dow_priors(length(target_jurisdictions))
@@ -73,11 +107,13 @@ prepare_observation_data <- function (observation_data,
     prop_mat <- prop_mat * dow_correction
   }
 
-    out <- list(timeseries_data = observation_data$timeseries_data,
-                delays = delays,
-                case_mat = case_mat,
-                prop_mat = prop_mat,
-                inits_prop_vec = inits_prop_vec)
+  out <- list(timeseries_data = observation_data$timeseries_data,
+              delays = delays,
+              case_mat = case_mat,
+              prop_mat = prop_mat,
+              inform_inits = observation_data$inform_inits,
+              inits_values_mat = inits_values_mat,
+              observable_idx_mat = observable_idx_mat)
 
   out
 

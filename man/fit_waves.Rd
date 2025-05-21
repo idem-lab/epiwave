@@ -10,7 +10,7 @@ fit_waves(
     "gp_growth_rate_deriv"),
   n_chains = 4,
   max_convergence_tries = 3,
-  warmup = 1000,
+  warmup = 2000,
   n_samples = 2000,
   n_extra_samples = 1000
 )
@@ -18,8 +18,8 @@ fit_waves(
 \arguments{
 \item{observations}{prepared datasets}
 
-\item{infection_model_type}{options include 'flat_prior', 'infections', 'growth_rate',
-'growth_rate_derivative'. See description for more info.}
+\item{infection_model_type}{options include 'flat_prior', 'infections',
+'growth_rate', 'growth_rate_derivative'. See description for more info.}
 
 \item{n_chains}{number of chains to run MCMC}
 

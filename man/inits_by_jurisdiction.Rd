@@ -6,26 +6,22 @@
 \usage{
 inits_by_jurisdiction(
   n_juris_ID,
-  infection_inits_data,
+  obs_data,
   delays,
   obs_prop,
-  target_infection_dates,
-  smooth = FALSE
+  target_infection_dates
 )
 }
 \arguments{
 \item{n_juris_ID}{numbered jurisdiction index}
 
-\item{infection_inits_data}{matrix form of data to inform infection initials}
+\item{obs_data}{matrix form of data to inform infection initials}
 
 \item{delays}{epiwave timeseries delay object}
 
 \item{obs_prop}{single numeric value of proportion}
 
 \item{target_infection_dates}{infection date sequence}
-
-\item{smooth}{logical whether to apply smoothing function of data to inform
-initials}
 }
 \value{
 initial values as matrix

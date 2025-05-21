@@ -8,7 +8,7 @@ define_observation_data(
   timeseries_data,
   delay_from_infection,
   proportion_infections,
-  dow_model = NULL
+  dow_model = FALSE
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ define_observation_data(
 
 \item{proportion_infections}{proportion data}
 
-\item{dow_model}{logical indicating whether to apply at DOW}
+\item{dow_model}{logical indicating whether to apply a DOW}
 }
 \value{
 list of observation data for one data type
