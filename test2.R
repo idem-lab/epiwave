@@ -90,15 +90,17 @@ observation_models <- define_observation_model(
         incubation, onset_to_hospitalisation),
     proportion_infections = ihr)
 )
-
+# set seed for DSE so we can reproduce
+set.seed(20250512)
 
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model_type = 'gp_growth_rate')#,# define_infection_model()'gp_growth_rate' #
-  # n_chains = 4,
-  # max_convergence_tries = 2,
-  # warmup = 1000,
-  # n_samples = 1000,
+  infection_model_type = 'flat_prior',#,# define_infection_model()'gp_growth_rate' #
+  n_chains = 10,
+  max_convergence_tries = 2,
+  warmup = 2000,
+  n_samples = 2000
+)
   # # n_extra_samples = 100
 #)
 
@@ -109,12 +111,33 @@ bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,1]')
 coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 
 
+### output IHR and CAR for DSE
+library(readr)
 
-ihr_out <- greta::calculate(ihr$ihr, values = fit_object$fit, nsim = 1000)
+ihr_traj <- epiwave.pipelines::build_trajectories(
+  param = ihr$ihr,
+  infection_days,
+  fit_object$fit,
+  nsim = 1000,
+  jurisdictions)
 
-mean(ihr_out$`ihr$ihr`)
+ihr_traj <- data.frame(ihr_traj$study_area) |>
+  filter(date %in% study_seq)
 
-mean_ihr <- data.frame(apply(ihr_out$`ihr$ihr`[,,1], 2, mean))
+write_csv(ihr_traj, file = "outputs/ihr_draws.csv")
+
+ihr_mean <- ihr_traj |>
+  rowwise() |>
+  mutate(IHR_mean = mean(c_across(c(3:1002)))) |>
+  select(jurisdiction, date, IHR_mean)
+
+write_csv(ihr_mean, file = "outputs/ihr_mean_estimate.csv")
+
+car_output <- ihr_mean |>
+  mutate(CAR = car) |>
+  select(jurisdiction, date, CAR)
+
+write_csv(car_output, file = "outputs/car_fixed_timeseries.csv")
 
 # greta::calculate()
 
@@ -129,6 +152,8 @@ mean_ihr <- data.frame(apply(ihr_out$`ihr$ihr`[,,1], 2, mean))
 #   infection_days,
 #   jurisdictions)
 
+library(ggplot2)
+
 infection_traj <- epiwave.pipelines::build_trajectories(
   param = fit_object$infection_model,
   infection_days,
@@ -136,15 +161,26 @@ infection_traj <- epiwave.pipelines::build_trajectories(
   nsim = 1000,
   jurisdictions)
 
-infection_traj_diagnostic_vis(infection_traj)
+infection_traj_diagnostic_vis(infection_traj) + labs(x = "Date", y = "Infections", subtitle = NULL) +
+  theme(strip.text.x = element_blank())
 
-epiwave.pipelines::plot_reff_interval_curves(
-  'gp_both_reff_9Oct.pdf',
-  fitted_reff,
-  dates = infection_days,
-  start_date = min(study_seq),
-  end_date = max(study_seq),
-  jurisdictions = jurisdictions)
+
+ggplot2::ggsave(filename = "outputs/infection_trajectories_flatprior.tiff",
+                width = 25, height = 15, units = "cm")
+
+
+infection_traj <- data.frame(infection_traj$study_area)
+
+write_csv(infection_traj, file = "outputs/estimated_infections_flat_prior.csv")
+
+
+# epiwave.pipelines::plot_reff_interval_curves(
+#   'gp_both_reff_9Oct.pdf',
+#   fitted_reff,
+#   dates = infection_days,
+#   start_date = min(study_seq),
+#   end_date = max(study_seq),
+#   jurisdictions = jurisdictions)
 
 infection_sims <- greta::calculate(
   fit_object$infection_model,
@@ -152,7 +188,7 @@ infection_sims <- greta::calculate(
   nsim = 1000)
 
 epiwave.pipelines::plot_timeseries_sims(
-  'infections_gp_growth_rate_cases.png',
+  'outputs/infections_flat_prior.png',
   infection_sims[[1]],
   type = "infection",
   dates = infection_days,
