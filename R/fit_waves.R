@@ -96,7 +96,6 @@ fit_waves <- function (observations,
       cases_sqrt_inv_size_important = rep(10, n_jurisdictions),
       gp_lengthscale = rep(0.5, n_jurisdictions))
 
-    inits <- greta::initials()
   }
 
   fit <- greta::mcmc(

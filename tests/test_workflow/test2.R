@@ -15,7 +15,7 @@ jurisdictions <- 'study_area'
 
 ## data prep
 # notification counts
-notif_dat <- 'simdata/sim_study_cases(in).csv' |>
+notif_dat <- 'simdata/sim_study_cases.csv' |>
   read.csv() |>
   t() |>
   as.data.frame()
@@ -28,7 +28,7 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       class(notif_dat))
 
 # hospitalisation counts
-hosp_dat <- 'simdata/sim_study_hosp(in).csv' |>
+hosp_dat <- 'simdata/sim_study_hosp.csv' |>
   read.csv() |>
   t() |>
   as.data.frame()
@@ -90,23 +90,54 @@ observation_models <- define_observation_model(
         incubation, onset_to_hospitalisation),
     proportion_infections = ihr)
 )
-
+# set seed for DSE so we can reproduce
+set.seed(20250512)
 
 fit_object <- fit_waves(
   observations = observation_models,
-  infection_model = 'flat_prior',# define_infection_model()'gp_growth_rate' #
-  # n_chains = 2,
-  # max_convergence_tries = 2,
-  # warmup = 1e5#,
-  # n_samples = 100,
-  # n_extra_samples = 100
+  infection_model_type = 'flat_prior',#,# define_infection_model()'gp_growth_rate' #
+  n_chains = 10,
+  max_convergence_tries = 2,
+  warmup = 2000,
+  n_samples = 2000
 )
+  # # n_extra_samples = 100
+#)
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)
-bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,2]')
+bayesplot::mcmc_trace(fit_object$fit, pars = 'incidence[157,1]')
 
 coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
+
+
+### output IHR and CAR for DSE
+library(readr)
+
+ihr_traj <- epiwave.pipelines::build_trajectories(
+  param = ihr$ihr,
+  infection_days,
+  fit_object$fit,
+  nsim = 1000,
+  jurisdictions)
+
+ihr_traj <- data.frame(ihr_traj$study_area) |>
+  filter(date %in% study_seq)
+
+write_csv(ihr_traj, file = "outputs/ihr_draws.csv")
+
+ihr_mean <- ihr_traj |>
+  rowwise() |>
+  mutate(IHR_mean = mean(c_across(c(3:1002)))) |>
+  select(jurisdiction, date, IHR_mean)
+
+write_csv(ihr_mean, file = "outputs/ihr_mean_estimate.csv")
+
+car_output <- ihr_mean |>
+  mutate(CAR = car) |>
+  select(jurisdiction, date, CAR)
+
+write_csv(car_output, file = "outputs/car_fixed_timeseries.csv")
 
 # greta::calculate()
 
@@ -121,6 +152,8 @@ coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 #   infection_days,
 #   jurisdictions)
 
+library(ggplot2)
+
 infection_traj <- epiwave.pipelines::build_trajectories(
   param = fit_object$infection_model,
   infection_days,
@@ -128,15 +161,26 @@ infection_traj <- epiwave.pipelines::build_trajectories(
   nsim = 1000,
   jurisdictions)
 
-infection_traj_diagnostic_vis(infection_traj)
+infection_traj_diagnostic_vis(infection_traj) + labs(x = "Date", y = "Infections", subtitle = NULL) +
+  theme(strip.text.x = element_blank())
 
-epiwave.pipelines::plot_reff_interval_curves(
-  'gp_both_reff_9Oct.pdf',
-  fitted_reff,
-  dates = infection_days,
-  start_date = min(study_seq),
-  end_date = max(study_seq),
-  jurisdictions = jurisdictions)
+
+ggplot2::ggsave(filename = "outputs/infection_trajectories_flatprior.tiff",
+                width = 25, height = 15, units = "cm")
+
+
+infection_traj <- data.frame(infection_traj$study_area)
+
+write_csv(infection_traj, file = "outputs/estimated_infections_flat_prior.csv")
+
+
+# epiwave.pipelines::plot_reff_interval_curves(
+#   'gp_both_reff_9Oct.pdf',
+#   fitted_reff,
+#   dates = infection_days,
+#   start_date = min(study_seq),
+#   end_date = max(study_seq),
+#   jurisdictions = jurisdictions)
 
 infection_sims <- greta::calculate(
   fit_object$infection_model,
@@ -144,14 +188,13 @@ infection_sims <- greta::calculate(
   nsim = 1000)
 
 epiwave.pipelines::plot_timeseries_sims(
-  'test.png',
+  'outputs/infections_flat_prior.png',
   infection_sims[[1]],
   type = "infection",
   dates = infection_days,
   states = jurisdictions,
   start_date = study_seq[1],
-  end_date = study_seq[length(study_seq)],
+  end_date = study_seq[length(study_seq)] - 14,
   dim_sim = "2",
-  infection_nowcast = TRUE,
-  nowcast_start = as.Date('2021-12-08'))
+  infection_nowcast = FALSE)
 
