@@ -22,6 +22,8 @@
 #'  infections.
 #'
 #' @param n_days_infection length of full date sequence of infection timeseries
+#' @param observable_infection index of target_infection_dates that
+#'        includes observable data
 #' @param n_jurisdictions number of jurisdictions, defaults to 1
 #' @param effect_type options include 'flat_prior', 'gp_infections', 'gp_growth_rate',
 #'        'gp_growth_rate_derivative'. See description for more info.
@@ -32,6 +34,7 @@
 #' @return greta arrays for infection timeseries
 #' @export
 create_infection_timeseries <- function (n_days_infection,
+                                         observable_infection,
                                          n_jurisdictions = 1,
                                          effect_type = c('flat_prior',
                                                          'gp_infections',
@@ -40,13 +43,28 @@ create_infection_timeseries <- function (n_days_infection,
 
   # improper flat prior for infection incidence
   if (effect_type == 'flat_prior') {
-    infection_timeseries <- greta::variable(lower = 0,
-                                            dim = c(n_days_infection,
-                                                    n_jurisdictions))
+
+    infection_timeseries <- greta::zeros(n_days_infection,
+                                         n_jurisdictions)
+
+    no_true_observable_idx <- sum(observable_infection)
+    # infection_timeseries_observable <- greta::variable(lower = 0,
+    #                                                    upper = 8e5,
+    #                                                    dim = no_true_observable_idx)
+    # infection_timeseries_observable <- greta::normal(1e3, 1e3, truncation = c(0, Inf),
+    #                                                  dim = no_true_observable_idx)
+    infection_timeseries_observable <- greta::exponential(
+      1e-4,
+      dim = no_true_observable_idx)
+
+    infection_timeseries[observable_infection] <- infection_timeseries_observable
+
     greta_arrays <- module(
+      infection_timeseries_observable,
       infection_timeseries
     )
     return(greta_arrays)
+
   }
 
   # kernel hyperparams
