@@ -1,6 +1,20 @@
-infection_traj_diagnostic_vis <- function(infection_traj,
-                                          n_shown = 10,
-                                          right_truncate = 14) {
+#' Infection trajectory visualisation
+#'
+#' @param infection_traj simulated trajectories
+#' @param n_shown how many to visualise
+#' @param right_truncate how many days to truncate at the end
+#'
+#' @returns plot
+#'
+#' @importFrom dplyr bind_rows mutate filter
+#' @importFrom tidyr pivot_longer any_of starts_with
+#' @importFrom ggplot2 ggplot facet_wrap geom_line scale_x_date theme
+#' @importFrom cowplot theme_cowplot panel_border
+#'
+#' @export
+plot_infection_traj <- function (infection_traj,
+                                 n_shown = 10,
+                                 right_truncate = 14) {
 
   # combine into one data frame
   infection_traj_df <- dplyr::bind_rows(infection_traj) %>%
@@ -9,7 +23,7 @@ infection_traj_diagnostic_vis <- function(infection_traj,
                         names_to = "draw",
                         values_to = "value") %>%
     # turn draw label back to numeric
-    dplyr::mutate(draw = gsub("draw","",draw)) %>%
+    dplyr::mutate(draw = gsub("draw", "", draw)) %>%
     dplyr::mutate(draw = as.numeric(draw),
            date = as.Date(date))
 
@@ -18,7 +32,7 @@ infection_traj_diagnostic_vis <- function(infection_traj,
     sampled_traj <- sample(max(infection_traj_df$draw),
                            n_shown)
     infection_traj_df <- infection_traj_df %>%
-      filter(draw %in% sampled_traj)
+      dplyr::filter(draw %in% sampled_traj)
   }
 
   # remove most recent days, if wanted
@@ -30,7 +44,7 @@ infection_traj_diagnostic_vis <- function(infection_traj,
 
   # plot
   infection_traj_df %>%
-    mutate(draw = as.factor(draw)) %>%
+    dplyr::mutate(draw = as.factor(draw)) %>%
     ggplot2::ggplot(ggplot2::aes(x = date, y = value, colour = draw)) +
     ggplot2::facet_wrap(~jurisdiction) +
     ggplot2::geom_line(alpha = 0.5) +
