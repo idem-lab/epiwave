@@ -25,7 +25,7 @@
 #'
 #' @return greta arrays of observation model
 #' @export
-create_observation_model <- function (data_id = 'sero',
+create_small_sero_model <- function (data_id = 'sero',
                                       observation_model_data,
                                       infection_days,
                                       infection_model
@@ -71,7 +71,7 @@ create_observation_model <- function (data_id = 'sero',
 
   # remember to MAKE this
   # a vector of population by jurisdiction (static)
-  total_pop <- observation_model_data$total_pop
+  total_pop <- observation_model_data[[data_id]]$total_pop
 
   prob <- sweep(expected_cases_idx,2,total_pop,"/")
 
