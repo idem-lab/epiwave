@@ -105,9 +105,9 @@ onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification
 
 sero_conversion <- readRDS("~/not_synced/data/sero_curve_test.RDS")
 
-class(sero_conversion) <- c("epiwave_distribution_massfun",
-                            "epiwave_massfun",
-                            class(notif_dat))
+names(sero_conversion) <- c("delay","mass")
+
+class(sero_conversion) <- class(onset_to_notification)
 # notification_to_hospitalisation <- lowerGPReff::data_to_distribution(delay_hospitalisation_timeseries)
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
