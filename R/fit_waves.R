@@ -87,13 +87,9 @@ fit_waves <- function (observations,
 
   } else {
 
-    hospitalisations_sqrt_inv_size_important <- observation_models$hospitalisations$hospitalisations_sqrt_inv_size_important
-    cases_sqrt_inv_size_important <- observation_models$cases$cases_sqrt_inv_size_important
     gp_lengthscale <- incidence_greta_arrays$gp_lengthscale
 
     inits <- greta::initials(
-     hospitalisations_sqrt_inv_size_important = rep(10, n_jurisdictions),
-      cases_sqrt_inv_size_important = rep(10, n_jurisdictions),
       gp_lengthscale = rep(0.5, n_jurisdictions))
 
   }

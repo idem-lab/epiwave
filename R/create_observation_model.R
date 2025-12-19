@@ -68,7 +68,7 @@ create_observation_model <- function (data_id = 'cases',
   n_days <- nrow(case_mat)
 
   # negative binomial parameters
-  sqrt_inv_size_important <- greta::normal(0, 0.5,
+  sqrt_inv_size_important <- greta::normal(0, 0.0003,
                                  truncation = c(0, Inf),
                                  dim = n_jurisdictions)
   sqrt_inv_size <- greta::sweep(greta::zeros(n_days,
