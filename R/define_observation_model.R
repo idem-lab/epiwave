@@ -23,39 +23,6 @@ define_observation_model <- function (target_infection_dates = NULL,
                                             prepare_observation_data,
                                             target_infection_dates,
                                             target_jurisdictions)
-<<<<<<< HEAD
-#
-#   # NEW COMMENTS
-#   # maybe here can allow for indexing of infection dates vs. case dates for informing inits
-#   # move creation of inits here
-#
-#   inits_data_mat <- prepared_observation_model_data[[data_inform_inits]]$case_mat
-#   inits_delays <- prepared_observation_model_data[[data_inform_inits]]$delays
-#   inits_prop <- prepared_observation_model_data[[data_inform_inits]]$inits_prop_vec
-#   n_jurisdictions <- length(target_jurisdictions)
-#   inits_list <- lapply(1:n_jurisdictions,
-#                        inits_by_jurisdiction,
-#                        inits_data_mat,
-#                        inits_delays$value,
-#                        obs_prop = inits_prop,
-#                        target_infection_dates)
-#
-#   inits_values_mat <- as.matrix(do.call(cbind, inits_list))
-  # inits_values_list <- lapply(inits_list,
-  #                             function(x) x$inits_values)
-  # inits_values_mat <- as.matrix(do.call(cbind, inits_values_list))
-
-  # inits_idx_list <- lapply(inits_list,
-  #                          function(x) x$inits_idx)
-  # inits_idx_mat <- as.matrix(do.call(cbind, inits_idx_list))
-
-  observations <- list(observation_model_data = prepared_observation_model_data,
-                       target_infection_dates = target_infection_dates,
-                       target_jurisdictions = target_jurisdictions#,
-                       #inits_values_mat = inits_values_mat
-                       )#,
-                       # inits_idx_mat = inits_idx_mat)
-=======
 
   # CONSIDER could also use `any` in place of `pmax` if they are 0,1
   # HERE MAY NEED TO HAVE A USE FOR INITS FLAG
@@ -76,7 +43,6 @@ define_observation_model <- function (target_infection_dates = NULL,
                        target_jurisdictions = target_jurisdictions,
                        incidence_observable_inits = incidence_observable_inits, # mean init across data types per juris
                        incidence_observable = incidence_observable) # 1 if any juris has data that day
->>>>>>> origin/main
 
 # check these are valid objects
   # observation_list <- lapply(observation_list,

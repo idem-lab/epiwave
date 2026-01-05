@@ -13,13 +13,14 @@ study_seq <- seq(from = as.Date('2021-06-01'),
 jurisdictions <- 'VIC' #c('NSW', 'VIC')
 
 # specific folder with not synced data
-not_synced_folder <- '~/not_synced/data/'
+# not_synced_folder <- '~/not_synced/data/' # AH folder
+not_synced_folder <- '../data'
 
 
 ## data prep
 
 # sero simulated data
-sero_file <- readRDS(file = paste0(not_synced_folder,"sero_data_test.RDS"))
+sero_file <- readRDS(file = paste0(not_synced_folder, "sero_data_test.RDS"))
 
 sero_dat <- sero_file %>%
   select(jurisdiction,value,date)
@@ -51,17 +52,17 @@ class(notif_dat) <- c('epiwave_fixed_timeseries',
                       class(notif_dat))
 
 # # hospitalisation counts
-# hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
-# hosp_dat <- hosp_file |>
-#   readRDS() |>
-#   dplyr::filter(date %in% study_seq) |>
-#   dplyr::mutate(value = cases_in_hospital/3)
-# if (exists('jurisdictions')) {
-#   hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
-# }
-# class(hosp_dat) <- c('epiwave_fixed_timeseries',
-#                      'epiwave_timeseries',
-#                      class(hosp_dat))
+hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
+hosp_dat <- hosp_file |>
+  readRDS() |>
+  dplyr::filter(date %in% study_seq) |>
+  dplyr::mutate(value = cases_in_hospital/3)
+if (exists('jurisdictions')) {
+  hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
+}
+class(hosp_dat) <- c('epiwave_fixed_timeseries',
+                     'epiwave_timeseries',
+                     class(hosp_dat))
 
 # jurisdictions
 if (!exists('jurisdictions')) {
@@ -76,27 +77,21 @@ n_days_infection <- length(infection_days)
 car <- 0.75
 
 # create IHR
-#chr <- greta::uniform(0, 1)
-# ihr <- chr * car
-# wrapper for ihr specific flow
-
-#### use this function below to get CAR prior set up when testing with sero
-
-# ihr <- create_epiwave_greta_timeseries(
-#   dates = infection_days,
-#   jurisdictions = jurisdictions,
-#   car = car,
-#   chr_prior = chr)
+chr <- greta::uniform(0, 1)
+ihr <- create_epiwave_greta_timeseries(
+  dates = infection_days,
+  jurisdictions = jurisdictions,
+  car = car,
+  chr_prior = chr)
 
 ## delays
 incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
 
-sero_conversion <- readRDS("~/not_synced/data/sero_curve_test.RDS")
+sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
 names(sero_conversion) <- c("delay","mass")
 class(sero_conversion) <- class(onset_to_notification)
-# notification_to_hospitalisation <- lowerGPReff::data_to_distribution(delay_hospitalisation_timeseries)
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
@@ -119,8 +114,12 @@ basic_observation_models <- define_observation_model(
     timeseries_data = hosp_dat,
     delay_from_infection = hosp_delay_ecdf,
     proportion_infections = ihr)
-  # ,
-  # other
+
+)
+
+fit_object <- fit_waves(
+  observations = basic_observation_models,
+  infection_model = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 
 with_sero_observation_models <- define_observation_model(
@@ -145,9 +144,6 @@ with_sero_observation_models <- define_observation_model(
     proportion_infections = 1
   )
 )
-
-
-
 
 
 fit_object <- fit_waves(
