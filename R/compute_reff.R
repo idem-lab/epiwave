@@ -9,7 +9,7 @@
 compute_reff <- function (fit_output, gi) {
 
   reff_model_objects <- estimate_reff(
-    infection_timeseries = fit_output$infection_model$infection_timeseries,
+    infection_timeseries = fit_output$infection_model,
     generation_interval_mass_fxns = gi)
 
   reff_out <- epiwave.pipelines::generate_long_estimates(
