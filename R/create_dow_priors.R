@@ -52,8 +52,6 @@ create_dow_priors <- function (n_jurisdictions = 1) {
 
   dow_dist <- greta::imultilogit(dow_alpha)
 
-  dow_effect <- t(dow_dist * 7)
-
   greta_arrays <- module(
     dow_dist)
 
