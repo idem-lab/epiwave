@@ -48,7 +48,7 @@ create_small_sero_model <- function (data_id = 'sero',
   convolution_matrices <- lapply(
     unique(delays$jurisdiction),
     function(x) {
-      get_convolution_matrix(delays,
+      new_convolution_matrix(delays,
                              x,
                              n_dates)
     })

@@ -42,7 +42,7 @@ create_observation_model <- function (data_id = 'cases',
   convolution_matrices <- lapply(
     unique(delays$jurisdiction),
     function(x) {
-      get_convolution_matrix(delays,
+      new_convolution_matrix(delays,
                              x,
                              n_dates)
     })
