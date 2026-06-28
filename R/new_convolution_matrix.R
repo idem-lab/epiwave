@@ -1,9 +1,11 @@
 #' Construct a forward convolution matrix from a discrete PMF
 #'
-#' @description Constructs a forward convolution matrix from a `discrete_pmf`
-#' or `discrete_pmf_series` object. The resulting matrix can be multiplied
-#' by a time series vector to convolve it forward through a delay
-#' distribution.
+#' @description A common operation in discrete-time epidemic models is forward
+#' convolution through a delay distribution. This can be represented as a
+#' linear operator in matrix form. This function constructs a forward
+#' convolution matrix from a `discrete_pmf` or `discrete_pmf_series` object.
+#' The resulting matrix can be multiplied by a time series vector to convolve
+#' it forward through a delay distribution.
 #'
 #' When `pmf` is a single `discrete_pmf`, the same PMF is applied at every
 #' timepoint and `n` must be supplied. When `pmf` is a `discrete_pmf_series`,

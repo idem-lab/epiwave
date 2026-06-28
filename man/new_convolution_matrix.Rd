@@ -23,10 +23,12 @@ the matrix by a time series vector of length \code{n}, e.g.
 \code{new_convolution_matrix(pmf, n) \%*\% time_series}.
 }
 \description{
-Constructs a forward convolution matrix from a \code{discrete_pmf}
-or \code{discrete_pmf_series} object. The resulting matrix can be multiplied
-by a time series vector to convolve it forward through a delay
-distribution.
+A common operation in discrete-time epidemic models is forward
+convolution through a delay distribution. This can be represented as a
+linear operator in matrix form. This function constructs a forward
+convolution matrix from a \code{discrete_pmf} or \code{discrete_pmf_series} object.
+The resulting matrix can be multiplied by a time series vector to convolve
+it forward through a delay distribution.
 
 When \code{pmf} is a single \code{discrete_pmf}, the same PMF is applied at every
 timepoint and \code{n} must be supplied. When \code{pmf} is a \code{discrete_pmf_series},
