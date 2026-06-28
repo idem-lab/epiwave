@@ -11,20 +11,23 @@ Authors@R: c(
     person("Nick", "Golding", role = "aut",
            comment = c(ORCID = "0000-0001-8916-5570")),
     person("Kate", "Senior", role = "ctb",
-           comment = c(ORCID = "0000-0003-1123-1472")))
+           comment = c(ORCID = "0000-0003-1123-1472")),
+    person("June", "Yang", role = "ctb"))
 Description: This package exists as a toolbox to create the greta arrays 
     necessary to model infections as a gaussian process over time. The resulting
     infection timeseries can be used to estimate epidemiological parameters. 
 License: Apache License (>= 2) 
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+Roxygen: list (markdown = TRUE, roclets = c ("namespace", "rd", "srr::srr_stats_roclet"))
+RoxygenNote: 7.3.3
 URL: https://github.com/idem-lab/epiwave
 BugReports: https://github.com/idem-lab/epiwave/issues
 Suggests: 
+    knitr,
     R.rsp,
+    rmarkdown,
     testthat (>= 3.0.0)
-VignetteBuilder: R.rsp
+VignetteBuilder: R.rsp, knitr
 Imports:
     abind,
     cowplot,
