@@ -104,7 +104,7 @@ basic_observation_models <- define_observation_model(
   cases = define_observation_data(
     timeseries_data = notif_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      add_distributions(
         incubation,
         onset_to_notification),
     proportion_infections = car,
@@ -115,7 +115,7 @@ basic_observation_models <- define_observation_model(
     delay_from_infection = hosp_delay_ecdf,
     proportion_infections = ihr)
 
-)
+) # this gets looped over by juris.
 
 fit_object <- fit_waves(
   observations = basic_observation_models,
@@ -129,11 +129,9 @@ with_sero_observation_models <- define_observation_model(
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection = onset_to_notification,
-    # delay_from_infection =.   ### WHY NOT ADDED TOGETHER?
-    #   epiwave.params::add_distributions(
-    #     incubation,
-    #     onset_to_notification),
+    delay_from_infection = add_distributions(
+      incubation,
+      onset_to_notification),
     proportion_infections = car,
     dow_model = TRUE),
   sero = define_sero_data(
