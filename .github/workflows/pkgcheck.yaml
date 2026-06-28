@@ -1,0 +1,23 @@
+name: pkgcheck
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  pkgcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      issues: write
+      contents: read
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ropensci-review-tools/pkgcheck-action@main
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
