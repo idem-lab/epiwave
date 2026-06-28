@@ -7,7 +7,6 @@
 #' @param target_jurisdictions jurisdictions
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
-#' @importFrom epiwave.params create_epiwave_massfun_timeseries create_epiwave_timeseries
 #'
 #' @return greta arrays of observation model
 #' @export
