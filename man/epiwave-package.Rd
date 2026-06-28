@@ -28,6 +28,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Kate Senior (\href{https://orcid.org/0000-0003-1123-1472}{ORCID}) [contributor]
+  \item June Yang [contributor]
 }
 
 }
