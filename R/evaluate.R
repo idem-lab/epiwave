@@ -1,46 +1,44 @@
-#' Evaluate the mass for given delay
+#' Evaluate probability mass for a matrix of delay values
 #'
-#' @param lookup epiwave_distribution object with mass functions
-#' @param day_diff matrix of
-#' @param ... extra args
+#' Looks up the probability mass values corresponding to a matrix of delay
+#' values from a `discrete_pmf` object, returning a numeric matrix of the
+#' same dimensions. Delay values not present in the lookup return 0.
 #'
-#' @return matrix of delay days with mass vals filled in
+#' @param pmf a `discrete_pmf` object
+#' @param day_diff a matrix of integer delay values
+#' @param ... unused
 #'
-#' @export
-evaluate <- function(lookup,
-                     day_diff, ...) {
+#' @return a numeric matrix of probability mass values with the same
+#'   dimensions as `day_diff`
+#'
+#' @noRd
+evaluate <- function(pmf, day_diff, ...) {
   UseMethod("evaluate")
 }
 
-#' @export
-evaluate.epiwave_distribution_massfun <- function (lookup,
-                                                   day_diff,
-                                                   ...) {
-
-  lookup <- as.data.frame(lookup)
-  day_diff[] <- lookup$mass[
-    match(unlist(day_diff),
-          lookup$delay)]
+#' @noRd
+evaluate.discrete_pmf <- function(pmf, day_diff, ...) {
+  pmf <- as.data.frame(pmf)
+  day_diff[] <- pmf$prob[
+    match(unlist(day_diff), pmf$step)
+  ]
   day_diff[is.na(day_diff)] <- 0
-
-  class(day_diff) <- 'numeric' # check and correct
   day_diff
-
 }
 
-#' @export
-evaluate.epiwave_massfun_timeseries <- function (lookup,
-                                                 day_diff,
-                                                 ...) {
-
+#' Evaluate probability mass column-wise for a time-varying PMF series
+#'
+#' @param pmf a `discrete_pmf_series` object
+#' @param day_diff a matrix of integer delay values
+#' @param ... unused
+#'
+#' @noRd
+evaluate.discrete_pmf_series <- function(pmf, day_diff, ...) {
   con_list <- lapply(
-    1:ncol(day_diff),
-    function (x) {
-      distribution <- lookup[x, 'value'][[1]]
-      evaluate(distribution, day_diff[, x])
+    seq_len(ncol(day_diff)),
+    function(col_idx) {
+      evaluate(pmf$values[[col_idx]], day_diff[, col_idx])
     }
   )
-  con_mat <- do.call(cbind, con_list)
-  con_mat
-
+  do.call(cbind, con_list)
 }
