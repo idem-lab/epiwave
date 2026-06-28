@@ -3,3 +3,6 @@
 ^LICENSE\.md$
 ^doc$
 ^Meta$
+^README\.Rmd$
+^\.positai$
+^\.claude$
