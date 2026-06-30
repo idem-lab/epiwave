@@ -28,16 +28,17 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder: R.rsp, knitr
+Depends:
+    R (>= 4.1.0)
 Imports:
     abind,
     cowplot,
     dplyr,
-    epiwave.params, 
+    epiwave.params,
     epiwave.pipelines,
     ggplot2,
     greta,
     greta.gp,
-    magrittr,
     methods,
     mgcv,
     rlang,

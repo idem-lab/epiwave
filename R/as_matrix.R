@@ -27,14 +27,14 @@ as_matrix.numeric <- function (data, ...) {
 as_matrix.epiwave_timeseries <- function (data, ...) {
 
   keep_df <- as.data.frame(data[c('date', 'jurisdiction', 'value')])
-  wide_data <- keep_df %>%
+  wide_data <- keep_df |>
     tidyr::pivot_wider(id_cols = .data$date,
                        names_from = .data$jurisdiction,
                        values_from = .data$value,
                        values_fill = NA)
   wide_all_dates <- tibble::tibble(date = fill_date_gaps(wide_data)) |>
     dplyr::left_join(wide_data) |>
-    tibble::column_to_rownames(var = 'date') %>%
+    tibble::column_to_rownames(var = 'date') |>
     as.matrix()
 
   wide_all_dates

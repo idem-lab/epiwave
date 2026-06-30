@@ -22,15 +22,15 @@ not_synced_folder <- '../data'
 # sero simulated data
 sero_file <- readRDS(file = paste0(not_synced_folder, "sero_data_test.RDS"))
 
-sero_dat <- sero_file %>%
+sero_dat <- sero_file |>
   select(jurisdiction,value,date)
 
 class(sero_dat) <- c('epiwave_fixed_timeseries',
                      'epiwave_timeseries',
                      class(sero_dat))
 
-size_dummy <- sero_file %>%
-  select(jurisdiction,size,date) %>%
+size_dummy <- sero_file |>
+  select(jurisdiction,size,date) |>
   rename(value = size)
 
 class(size_dummy) <- c('epiwave_fixed_timeseries',
