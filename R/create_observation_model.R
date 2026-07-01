@@ -41,11 +41,15 @@ create_observation_model <- function (data_id = 'cases',
 
   convolution_matrices <- lapply(
     unique(delays$jurisdiction),
-    function(x) {
-      new_convolution_matrix(delays,
-                             x,
-                             n_dates)
-    })
+    function(j) {
+      rows <- delays[delays$jurisdiction == j, ]
+      pmf_series <- new_discrete_series(
+        values = rows$value,
+        index = rows$date
+      )
+      new_convolution_matrix(pmf_series)
+    }
+  )
 
   n_jurisdictions <- length(unique(delays$jurisdiction))
 

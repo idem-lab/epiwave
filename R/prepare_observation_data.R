@@ -25,7 +25,7 @@ prepare_observation_data <- function (observation_data,
 
   delays <- observation_data$delay_from_infection
   if (!('epiwave_massfun_timeseries' %in% class(delays))) {
-    delays <- epiwave.params::create_epiwave_massfun_timeseries(
+    delays <- create_epiwave_massfun_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
       value = delays)
@@ -33,7 +33,7 @@ prepare_observation_data <- function (observation_data,
 
   prop <- observation_data$proportion_infections
   if (!('epiwave_timeseries' %in% class(prop))) {
-    prop <- epiwave.params::create_epiwave_timeseries(
+    prop <- create_epiwave_timeseries(
       dates = target_infection_dates,
       jurisdictions = target_jurisdictions,
       value = prop)

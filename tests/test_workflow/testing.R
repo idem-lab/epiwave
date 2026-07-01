@@ -19,24 +19,24 @@ not_synced_folder <- '../data'
 
 ## data prep
 
-# sero simulated data
-sero_file <- readRDS(file = paste0(not_synced_folder, "sero_data_test.RDS"))
-
-sero_dat <- sero_file |>
-  select(jurisdiction,value,date)
-
-class(sero_dat) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(sero_dat))
-
-size_dummy <- sero_file |>
-  select(jurisdiction,size,date) |>
-  rename(value = size)
-
-class(size_dummy) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(size_dummy))
-sero_size_mat <- as_matrix(size_dummy)
+## sero simulated data
+# sero_file <- readRDS(file = paste0(not_synced_folder, "sero_data_test.RDS"))
+#
+# sero_dat <- sero_file |>
+#   select(jurisdiction,value,date)
+#
+# class(sero_dat) <- c('epiwave_fixed_timeseries',
+#                      'epiwave_timeseries',
+#                      class(sero_dat))
+#
+# size_dummy <- sero_file |>
+#   select(jurisdiction,size,date) |>
+#   rename(value = size)
+#
+# class(size_dummy) <- c('epiwave_fixed_timeseries',
+#                      'epiwave_timeseries',
+#                      class(size_dummy))
+# sero_size_mat <- as_matrix(size_dummy)
 
 # notification counts
 notif_file <- paste0(not_synced_folder, '/COVID_live_cases.rds')
@@ -89,12 +89,17 @@ incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
 
-sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
-names(sero_conversion) <- c("delay","mass")
-class(sero_conversion) <- class(onset_to_notification)
+# sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
+# names(sero_conversion) <- c("delay","mass")
+# class(sero_conversion) <- class(onset_to_notification)
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
-hosp_delay_ecdf <- parametric_dist_to_distribution(hosp_dist)
+hosp_delay_ecdf <- as_discrete_pmf(hosp_dist)
+
+delay_from_infection <- create_epiwave_massfun_timeseries(
+  dates = infection_days,
+  jurisdictions = jurisdictions,
+  value = incubation + onset_to_notification)
 
 basic_observation_models <- define_observation_model(
 
@@ -103,10 +108,7 @@ basic_observation_models <- define_observation_model(
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection =
-      add_distributions(
-        incubation,
-        onset_to_notification),
+    delay_from_infection = delay_from_infection,
     proportion_infections = car,
     dow_model = TRUE),
 
@@ -115,7 +117,7 @@ basic_observation_models <- define_observation_model(
     delay_from_infection = hosp_delay_ecdf,
     proportion_infections = ihr)
 
-) # this gets looped over by juris.
+)
 
 fit_object <- fit_waves(
   observations = basic_observation_models,
