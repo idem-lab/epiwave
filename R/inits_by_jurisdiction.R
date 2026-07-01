@@ -18,16 +18,16 @@ inits_by_jurisdiction <- function (n_juris_ID,
                                    target_infection_dates) {
 
   #### AH VERSION
-  case_dates <- as.Date(rownames(infection_inits_data))
-  case_idx <- which(target_infection_dates %in% case_dates)
+  # case_dates <- as.Date(rownames(infection_inits_data))
+  # case_idx <- which(target_infection_dates %in% case_dates)
   ##### END AH version
 
   ##### PREV VERSION
   # currently creates inits to cover observable idx.
-  # if (inherits(obs_prop, 'greta_array')) {
-  #   obs_prop_sim <- greta::calculate(obs_prop, nsim = 100)
-  #   obs_prop <- apply(obs_prop_sim$obs_prop, 2:3, mean)
-  # }
+  if (inherits(obs_prop, 'greta_array')) {
+    obs_prop_sim <- greta::calculate(obs_prop, nsim = 100)
+    obs_prop <- apply(obs_prop_sim$obs_prop, 2:3, mean)
+  }
   ##### END PREV VERSION
 
   cases_by_juris <- obs_data[, n_juris_ID]
@@ -53,7 +53,7 @@ inits_by_jurisdiction <- function (n_juris_ID,
     )))
 
   max_delay_vals <- unlist(lapply(delays_juris$value, function (x)
-    max(x$delay)
+    max(x$step)
   ))
   df <- data.frame(max_delay_vals, case_dates) # consider max_delay_vals + 1
 
