@@ -75,7 +75,7 @@ jurisdiction_observation_models <- define_observation_model(
   cases = define_observation_data(
     timeseries_data = notif_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation,
         onset_to_notification),
     proportion_infections = car,
@@ -84,7 +84,7 @@ jurisdiction_observation_models <- define_observation_model(
   hospitalisations = define_observation_data(
     timeseries_data = hosp_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation, onset_to_hospitalisation),
     proportion_infections = ihr)
 )

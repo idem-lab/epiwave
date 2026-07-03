@@ -5,7 +5,13 @@
 #'  `create_observation_model()`: a timeseries of expected observations is
 #'  computed from the infection timeseries, the infection-to-seroconversion
 #'  delay distribution(s), and the proportion of infections to be observed.
-#'  The expected observation timeseries, divided by jurisdiction population,
+#'  Unlike case/hospitalisation notification (a one-time event best modelled
+#'  as a `discrete_pmf`), seroconversion is typically persistent -- an
+#'  infected person may test positive for many consecutive days -- so
+#'  `delay_from_infection` for a sero stream is usually a `discrete_weights`/
+#'  `discrete_weights_series` object (e.g. probability of testing seropositive
+#'  by day since infection), rather than a normalised `discrete_pmf`. The
+#'  expected observation timeseries, divided by jurisdiction population,
 #'  is treated as the probability of a binomial distribution over the survey
 #'  sample size, from which the observed seropositive count is drawn.
 #'

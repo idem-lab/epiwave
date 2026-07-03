@@ -6,7 +6,9 @@
 #'
 #' @param timeseries_data timeseries data for data of interest, for one
 #'  jurisdiction
-#' @param delay_from_infection delay data
+#' @param delay_from_infection a `discrete_pmf`/`discrete_weights` object
+#'  (replicated across dates), or an already time-varying
+#'  `discrete_pmf_series`/`discrete_weights_series` object
 #' @param proportion_infections proportion data
 #' @param dow_model logical indicating whether to apply a DOW
 #'
@@ -37,7 +39,12 @@ define_observation_data <- function (timeseries_data,
 #'  value)
 #' @param size_vec sample size of the seroprevalence survey, for one
 #'  jurisdiction
-#' @param delay_from_infection delay data
+#' @param delay_from_infection typically a `discrete_weights`/
+#'  `discrete_weights_series` object (e.g. probability of testing
+#'  seropositive by day since infection, which need not sum to 1 -- unlike
+#'  case/hospitalisation notification, seroconversion is usually persistent
+#'  rather than a one-time event). A `discrete_pmf`/`discrete_pmf_series` is
+#'  also accepted if a normalised delay is more appropriate.
 #' @param proportion_infections proportion data
 #' @param dow_model logical indicating whether to apply a DOW
 #'

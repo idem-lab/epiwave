@@ -89,15 +89,14 @@ gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
 
 # sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
-# names(sero_conversion) <- c("delay","mass")
-# class(sero_conversion) <- class(onset_to_notification)
+# sero_conversion <- as_discrete_weights(
+#   x = sero_conversion$delay,
+#   y = sero_conversion$mass)
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- as_discrete_pmf(hosp_dist)
 
-delay_from_infection <- create_epiwave_massfun_timeseries(
-  dates = infection_days,
-  value = incubation + onset_to_notification)
+delay_from_infection <- incubation + onset_to_notification
 
 jurisdiction_basic_observation_models <- define_observation_model(
 
@@ -132,7 +131,7 @@ jurisdiction_with_sero_observation_models <- define_observation_model(
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection = add_distributions(
+    delay_from_infection = add_discrete(
       incubation,
       onset_to_notification),
     proportion_infections = car,
