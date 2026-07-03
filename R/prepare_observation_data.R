@@ -5,7 +5,11 @@
 #'  jurisdictions are combined later, by `stack_jurisdictions()`.
 #'
 #' @param observation_data data for one jurisdiction, one stream, as
-#'  returned by `define_observation_data()`/`define_sero_data()`
+#'  returned by `define_observation_data()`/`define_sero_data()`.
+#'  `delay_from_infection` may be a single `discrete_pmf`/`discrete_weights`
+#'  object (replicated across `target_infection_dates`), or an already
+#'  time-varying `discrete_pmf_series`/`discrete_weights_series` (aligned to
+#'  `target_infection_dates`)
 #' @param target_infection_dates full date sequence of infection timeseries,
 #'  shared across all jurisdictions in a fit
 #'
@@ -17,12 +21,18 @@ prepare_observation_data <- function (observation_data,
                                       target_infection_dates) {
 
   delays <- observation_data$delay_from_infection
-  if (!('epiwave_massfun_timeseries' %in% class(delays))) {
-    delays <- create_epiwave_massfun_timeseries(
-      dates = target_infection_dates,
-      value = delays)
-  } else if (!identical(as.Date(delays$date), as.Date(target_infection_dates))) {
-    stop('`delay_from_infection` dates must match `target_infection_dates`')
+  if (inherits(delays, c('discrete_pmf_series', 'discrete_weights_series'))) {
+    delays <- delays[as.Date(target_infection_dates)]
+    if (!identical(as.Date(delays$index), as.Date(target_infection_dates))) {
+      stop('`delay_from_infection` dates must match `target_infection_dates`')
+    }
+  } else if (inherits(delays, c('discrete_pmf', 'discrete_weights'))) {
+    delays <- epiwave.params::new_discrete_series(
+      values = delays,
+      index = target_infection_dates)
+  } else {
+    stop('`delay_from_infection` must be a discrete_pmf, discrete_weights, ',
+         'discrete_pmf_series, or discrete_weights_series object')
   }
 
   prop <- observation_data$proportion_infections
@@ -37,11 +47,7 @@ prepare_observation_data <- function (observation_data,
   case_vec <- as_matrix(observation_data$timeseries_data, target_infection_dates)
   prop_vec <- as_matrix(prop, target_infection_dates)
 
-  pmf_series <- epiwave.params::new_discrete_series(
-    values = delays$value,
-    index = delays$date
-  )
-  convolution_matrix <- new_convolution_matrix(pmf_series)
+  convolution_matrix <- new_convolution_matrix(delays)
 
   inits <- inits_by_jurisdiction(
     case_vec,

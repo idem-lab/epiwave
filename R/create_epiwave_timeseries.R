@@ -22,33 +22,6 @@ create_epiwave_timeseries <- function(dates,
   long_combined
 }
 
-#' Expand a discrete PMF into a long tibble
-#'
-#' @description The epiwave model functions expect data in a long format,
-#'   structured to have a value for every date. This function creates a
-#'   tibble of this structure from a single `discrete_pmf` or
-#'   `discrete_pmf_series` object that is replicated in each cell.
-#'
-#' @param dates infection dates sequence
-#' @param value a `discrete_pmf` or `discrete_pmf_series` object to be
-#'   replicated in each cell
-#'
-#' @return a long tibble with the distribution replicated across all
-#'   dates, with class `epiwave_massfun_timeseries`
-#' @export
-create_epiwave_massfun_timeseries <- function(dates,
-                                              value) {
-  timeseries <- create_epiwave_timeseries(
-    dates = dates,
-    value = list(value)
-  )
-
-  class(timeseries) <- c("epiwave_massfun_timeseries",
-                         class(value)[1],
-                         class(timeseries))
-  timeseries
-}
-
 #' Expand a fixed value into a long tibble
 #'
 #' @description The epiwave model functions expect data in a long format,
