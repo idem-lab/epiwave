@@ -17,8 +17,8 @@
 #'  the data to the unknown infection timeseries.
 #'
 #' @param data_id name of observation model data in list
-#' @param observation_model_data list of observation model data lists
-#' @param infection_days infection dates that cover more than the data dates
+#' @param observation_model_data list of observation model data lists, as
+#'  produced by `stack_jurisdictions()`
 #' @param infection_model greta arrays that define the infection model
 #'
 #' @importFrom greta %*% as_data negative_binomial normal sweep zeros
@@ -27,31 +27,15 @@
 #' @export
 create_observation_model <- function (data_id = 'cases',
                                       observation_model_data,
-                                      infection_days,
                                       infection_model) {
 
   observations <- observation_model_data[[data_id]]
 
-  timeseries_data <- observations$timeseries_data
-  delays <- observations$delays
   case_mat <- observations$case_mat
   prop_mat <- observations$prop_mat
+  convolution_matrices <- observations$convolution_matrices
 
-  n_dates <- length(infection_days)
-
-  convolution_matrices <- lapply(
-    unique(delays$jurisdiction),
-    function(j) {
-      rows <- delays[delays$jurisdiction == j, ]
-      pmf_series <- new_discrete_series(
-        values = rows$value,
-        index = rows$date
-      )
-      new_convolution_matrix(pmf_series)
-    }
-  )
-
-  n_jurisdictions <- length(unique(delays$jurisdiction))
+  n_jurisdictions <- length(convolution_matrices)
 
   # compute expected cases of the same length
   expected_cases_list <- lapply(
@@ -65,10 +49,6 @@ create_observation_model <- function (data_id = 'cases',
     expected_cases_list
   )
 
-
-  data_idx <- infection_days %in% as.Date(rownames(case_mat))
-  expected_cases_idx <- expected_cases[data_idx, ]
-
   n_days <- nrow(case_mat)
 
   # negative binomial parameters
@@ -81,7 +61,7 @@ create_observation_model <- function (data_id = 'cases',
                                 FUN = "+")
 
   size <- 1 / sqrt(sqrt_inv_size)
-  prob <- 1 / (1 + expected_cases_idx / size)
+  prob <- 1 / (1 + expected_cases / size)
 
   valid_mat <- case_mat
   valid_mat[is.na(case_mat)] <- FALSE
