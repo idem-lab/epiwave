@@ -7,16 +7,14 @@
 create_observation_model(
   data_id = "cases",
   observation_model_data,
-  infection_days,
   infection_model
 )
 }
 \arguments{
 \item{data_id}{name of observation model data in list}
 
-\item{observation_model_data}{list of observation model data lists}
-
-\item{infection_days}{infection dates that cover more than the data dates}
+\item{observation_model_data}{list of observation model data lists, as
+produced by \code{stack_jurisdictions()}}
 
 \item{infection_model}{greta arrays that define the infection model}
 }

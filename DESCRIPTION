@@ -31,7 +31,6 @@ VignetteBuilder: R.rsp, knitr
 Depends:
     R (>= 4.1.0)
 Imports:
-    abind,
     cowplot,
     dplyr,
     epiwave.params,
@@ -39,9 +38,7 @@ Imports:
     ggplot2,
     greta,
     greta.gp,
-    methods,
     mgcv,
-    rlang,
     tibble,
     tidyr
 Config/testthat/edition: 3

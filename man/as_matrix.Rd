@@ -2,20 +2,26 @@
 % Please edit documentation in R/as_matrix.R
 \name{as_matrix}
 \alias{as_matrix}
-\title{Turn wide data to matrix}
+\title{Turn long form data into a date-aligned vector}
 \usage{
-as_matrix(data, ...)
+as_matrix(data, target_infection_dates, ...)
 }
 \arguments{
 \item{data}{long data form}
 
+\item{target_infection_dates}{full date sequence to align the data to}
+
 \item{...}{extra args}
 }
 \value{
-data in wide matrix form, with continuous seq of dates
+a numeric vector of length \code{length(target_infection_dates)},
+named by date
 }
 \description{
-Take long form input data and turn into wide form matrix with
-continuous sequence of dates. This function assumes that users supply long
-form count data where dates with 0 cases are explicit.
+Take long form input data and align it to a shared master
+date sequence (\code{target_infection_dates}), returning a numeric vector with
+one entry per date. This function assumes that users supply long form
+count data where dates with 0 cases are explicit; dates in
+\code{target_infection_dates} without a corresponding row in \code{data} are
+returned as \code{NA}.
 }

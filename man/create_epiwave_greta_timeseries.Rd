@@ -4,12 +4,10 @@
 \alias{create_epiwave_greta_timeseries}
 \title{Create a greta-compatible timeseries object}
 \usage{
-create_epiwave_greta_timeseries(dates, jurisdictions, car, chr_prior)
+create_epiwave_greta_timeseries(dates, car, chr_prior)
 }
 \arguments{
 \item{dates}{infection dates sequence}
-
-\item{jurisdictions}{jurisdiction names}
 
 \item{car}{case ascertainment rate; either a numeric value or an
 \code{epiwave_timeseries} object}
@@ -19,12 +17,12 @@ the case hospitalisation rate}
 }
 \value{
 a list with class \code{epiwave_greta_timeseries} containing
-components \code{timeseries} (a tibble of date/jurisdiction combinations)
-and \code{ihr} (a greta array of implied hospitalisation rates)
+components \code{timeseries} (a tibble of dates) and \code{ihr} (a greta array of
+implied hospitalisation rates)
 }
 \description{
 The epiwave model functions expect data in a long format,
-structured to have a value for every unique date and jurisdiction pair.
-This function creates a greta-compatible timeseries from a case
-ascertainment rate and a hospitalisation rate prior.
+structured to have a value for every date. This function creates a
+greta-compatible timeseries from a case ascertainment rate and a
+hospitalisation rate prior.
 }
