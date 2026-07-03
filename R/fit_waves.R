@@ -17,7 +17,12 @@
 #'  gp_growth_rate_derivative: in now-cast/forecast the infection trajectory
 #'  would follow the most recent growth rate trend.
 #'
-#' @param observations prepared datasets
+#' @param observations_by_jurisdiction a named list of per-jurisdiction
+#'   observation model bundles (output of `define_observation_model()`),
+#'   named by jurisdiction. A single-jurisdiction fit is a length-1 list.
+#'   Combined internally via `stack_jurisdictions()`; jurisdictions sharing
+#'   one fit are partially pooled (shared GP kernel hyperparameters, and
+#'   shared/hierarchical DOW priors where requested).
 #' @param infection_model_type options include 'flat_prior', 'infections',
 #'   'growth_rate', 'growth_rate_derivative'. See description for more info.
 #' @param n_chains number of chains to run MCMC
@@ -29,7 +34,7 @@
 #' @return list of infection_model, fit, infection_days, and jurisdictions
 #' @export
 #'
-fit_waves <- function (observations,
+fit_waves <- function (observations_by_jurisdiction,
                        infection_model_type = c('flat_prior',
                                                 'gp_infections',
                                                 'gp_growth_rate',
@@ -40,10 +45,9 @@ fit_waves <- function (observations,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
 
+  observations <- stack_jurisdictions(observations_by_jurisdiction)
 
   # prep the model objects
-  # add check that ncol(infection_timeseries and below yield same. number of juris)
-
   target_infection_dates <- observations$target_infection_dates # Ihat
   n_days_infection <- length(target_infection_dates)
 
@@ -63,21 +67,15 @@ fit_waves <- function (observations,
 
   # observation model objects in observations
   observation_model_data <- observations$observation_model_data
-  observation_models <- lapply(names(observation_model_data),
-                               create_observation_model,
-                               observation_model_data,
-                               target_infection_dates,
-                               incidence)
-
-  # case_obs_model <-   create_observation_model( 'cases',
-  #                                               observation_model_data,
-  #                                               target_infection_dates,
-  #                                               incidence)
-  # sero_obs_model <-   create_small_sero_model( 'sero',
-  #                                               observation_model_data,
-  #                                               target_infection_dates,
-  #                                               incidence)
-  # observation_models <- list(case_obs_model, sero_obs_model)
+  observation_models <- lapply(names(observation_model_data), function(id) {
+    stream <- observation_model_data[[id]]
+    model_fn <- if (!is.null(stream$total_pop)) {
+      create_small_sero_model
+    } else {
+      create_observation_model
+    }
+    model_fn(id, observation_model_data, incidence)
+  })
   names(observation_models) <- names(observation_model_data)
 
   # greta model fit
@@ -100,7 +98,7 @@ fit_waves <- function (observations,
     gp_lengthscale <- incidence_greta_arrays$gp_lengthscale
 
     inits <- greta::initials(
-      gp_lengthscale = rep(0.5, n_jurisdictions))
+      gp_lengthscale = 0.5)
 
   }
 
