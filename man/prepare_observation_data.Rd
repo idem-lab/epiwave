@@ -8,7 +8,11 @@ prepare_observation_data(observation_data, target_infection_dates)
 }
 \arguments{
 \item{observation_data}{data for one jurisdiction, one stream, as
-returned by \code{define_observation_data()}/\code{define_sero_data()}}
+returned by \code{define_observation_data()}/\code{define_sero_data()}.
+\code{delay_from_infection} may be a single \code{discrete_pmf}/\code{discrete_weights}
+object (replicated across \code{target_infection_dates}), or an already
+time-varying \code{discrete_pmf_series}/\code{discrete_weights_series} (aligned to
+\code{target_infection_dates})}
 
 \item{target_infection_dates}{full date sequence of infection timeseries,
 shared across all jurisdictions in a fit}

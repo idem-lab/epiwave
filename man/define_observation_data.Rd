@@ -15,7 +15,9 @@ define_observation_data(
 \item{timeseries_data}{timeseries data for data of interest, for one
 jurisdiction}
 
-\item{delay_from_infection}{delay data}
+\item{delay_from_infection}{a \code{discrete_pmf}/\code{discrete_weights} object
+(replicated across dates), or an already time-varying
+\code{discrete_pmf_series}/\code{discrete_weights_series} object}
 
 \item{proportion_infections}{proportion data}
 

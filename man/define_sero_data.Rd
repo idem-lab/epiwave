@@ -23,7 +23,12 @@ value)}
 \item{size_vec}{sample size of the seroprevalence survey, for one
 jurisdiction}
 
-\item{delay_from_infection}{delay data}
+\item{delay_from_infection}{typically a \code{discrete_weights}/
+\code{discrete_weights_series} object (e.g. probability of testing
+seropositive by day since infection, which need not sum to 1 -- unlike
+case/hospitalisation notification, seroconversion is usually persistent
+rather than a one-time event). A \code{discrete_pmf}/\code{discrete_pmf_series} is
+also accepted if a normalised delay is more appropriate.}
 
 \item{proportion_infections}{proportion data}
 
