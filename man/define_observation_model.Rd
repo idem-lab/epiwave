@@ -4,25 +4,19 @@
 \alias{define_observation_model}
 \title{Define observation model}
 \usage{
-define_observation_model(
-  target_infection_dates = NULL,
-  target_jurisdictions,
-  x,
-  ...
-)
+define_observation_model(target_infection_dates = NULL, ...)
 }
 \arguments{
 \item{target_infection_dates}{sequence of infection dates}
 
-\item{target_jurisdictions}{jurisdictions}
-
-\item{x}{observation data set}
-
-\item{...}{optional additional observation data sets}
+\item{...}{observation data sets for this jurisdiction (as returned by
+\code{define_observation_data()}/\code{define_sero_data()}), named by stream}
 }
 \value{
-list of datasets
+list describing one jurisdiction's observation model
 }
 \description{
-Placeholder function for now to create list of the observation datasets.
+Bundle one jurisdiction's observation streams (e.g. cases,
+hospitalisations, sero) together. Call this once per jurisdiction;
+combine multiple jurisdictions later via \code{stack_jurisdictions()}.
 }

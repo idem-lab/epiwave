@@ -5,7 +5,7 @@
 \title{Fit waves to observations}
 \usage{
 fit_waves(
-  observations,
+  observations_by_jurisdiction,
   infection_model_type = c("flat_prior", "gp_infections", "gp_growth_rate",
     "gp_growth_rate_deriv"),
   n_chains = 4,
@@ -16,7 +16,12 @@ fit_waves(
 )
 }
 \arguments{
-\item{observations}{prepared datasets}
+\item{observations_by_jurisdiction}{a named list of per-jurisdiction
+observation model bundles (output of \code{define_observation_model()}),
+named by jurisdiction. A single-jurisdiction fit is a length-1 list.
+Combined internally via \code{stack_jurisdictions()}; jurisdictions sharing
+one fit are partially pooled (shared GP kernel hyperparameters, and
+shared/hierarchical DOW priors where requested).}
 
 \item{infection_model_type}{options include 'flat_prior', 'infections',
 'growth_rate', 'growth_rate_derivative'. See description for more info.}

@@ -2,24 +2,22 @@
 % Please edit documentation in R/create_epiwave_timeseries.R
 \name{create_epiwave_timeseries}
 \alias{create_epiwave_timeseries}
-\title{Expand constant value into long tibble}
+\title{Expand constant value into a long tibble}
 \usage{
-create_epiwave_timeseries(dates, jurisdictions, value)
+create_epiwave_timeseries(dates, value)
 }
 \arguments{
 \item{dates}{infection dates sequence}
-
-\item{jurisdictions}{jurisdiction names}
 
 \item{value}{value to be replicated in each cell}
 }
 \value{
 a long tibble with the constant value replicated across all
-date and jurisdiction combinations
+dates
 }
 \description{
 The epiwave model functions expect data in a long format,
-structured to have a value for every unique date and jurisdiction pair.
-This function creates a tibble of this structure from a single value
-that is replicated in each cell.
+structured to have a value for every date. This function creates a
+tibble of this structure from a single value that is replicated in each
+cell.
 }

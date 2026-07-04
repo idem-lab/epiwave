@@ -53,7 +53,6 @@ chr <- greta::uniform(0, 1)
 # wrapper for ihr specific flow
 ihr <- create_epiwave_greta_timeseries(
   dates = infection_days,
-  jurisdictions = jurisdictions,
   car = car,
   chr_prior = chr)
 
@@ -69,15 +68,14 @@ onset_to_hospitalisation <- distributional::dist_gamma(shape = 5, rate = 1) |>
   parametric_dist_to_distribution()
 # Gamma(shape = 5, scale = 1)
 
-observation_models <- define_observation_model(
+jurisdiction_observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
-  target_jurisdictions = jurisdictions,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation,
         onset_to_notification),
     proportion_infections = car,
@@ -86,15 +84,21 @@ observation_models <- define_observation_model(
   hospitalisations = define_observation_data(
     timeseries_data = hosp_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation, onset_to_hospitalisation),
     proportion_infections = ihr)
 )
+
+# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
+observations_by_jurisdiction <- setNames(
+  list(jurisdiction_observation_models),
+  jurisdictions)
+
 # set seed for DSE so we can reproduce
 set.seed(20250512)
 
 fit_object <- fit_waves(
-  observations = observation_models,
+  observations_by_jurisdiction = observations_by_jurisdiction,
   infection_model_type = 'flat_prior',#,# define_infection_model()'gp_growth_rate' #
   n_chains = 10,
   max_convergence_tries = 2,

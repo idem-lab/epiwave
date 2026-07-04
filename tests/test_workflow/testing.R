@@ -80,7 +80,6 @@ car <- 0.75
 chr <- greta::uniform(0, 1)
 ihr <- create_epiwave_greta_timeseries(
   dates = infection_days,
-  jurisdictions = jurisdictions,
   car = car,
   chr_prior = chr)
 
@@ -90,21 +89,18 @@ gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
 
 # sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
-# names(sero_conversion) <- c("delay","mass")
-# class(sero_conversion) <- class(onset_to_notification)
+# sero_conversion <- as_discrete_weights(
+#   x = sero_conversion$delay,
+#   y = sero_conversion$mass)
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- as_discrete_pmf(hosp_dist)
 
-delay_from_infection <- create_epiwave_massfun_timeseries(
-  dates = infection_days,
-  jurisdictions = jurisdictions,
-  value = incubation + onset_to_notification)
+delay_from_infection <- incubation + onset_to_notification
 
-basic_observation_models <- define_observation_model(
+jurisdiction_basic_observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
-  target_jurisdictions = jurisdictions,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
@@ -119,36 +115,43 @@ basic_observation_models <- define_observation_model(
 
 )
 
+# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
+basic_observations_by_jurisdiction <- setNames(
+  list(jurisdiction_basic_observation_models),
+  jurisdictions)
+
 fit_object <- fit_waves(
-  observations = basic_observation_models,
-  infection_model = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
+  observations_by_jurisdiction = basic_observations_by_jurisdiction,
+  infection_model_type = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 
-with_sero_observation_models <- define_observation_model(
+jurisdiction_with_sero_observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
-  target_jurisdictions = jurisdictions,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
-    delay_from_infection = add_distributions(
+    delay_from_infection = add_discrete(
       incubation,
       onset_to_notification),
     proportion_infections = car,
     dow_model = TRUE),
   sero = define_sero_data(
     timeseries_data = sero_dat,
-    total_pop = c(8e6,7e6),
+    total_pop = 8e6,
     size_vec = sero_size_mat,
     delay_from_infection = sero_conversion,
     proportion_infections = 1
   )
 )
 
+with_sero_observations_by_jurisdiction <- setNames(
+  list(jurisdiction_with_sero_observation_models),
+  jurisdictions)
 
 fit_object <- fit_waves(
-  observations = with_sero_observation_models,
-  infection_model = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
+  observations_by_jurisdiction = with_sero_observations_by_jurisdiction,
+  infection_model_type = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)

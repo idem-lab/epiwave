@@ -2,21 +2,19 @@
 % Please edit documentation in R/create_small_sero_model.R
 \name{create_small_sero_model}
 \alias{create_small_sero_model}
-\title{copied from the main function here}
+\title{Create small seroprevalence observation model}
 \usage{
 create_small_sero_model(
   data_id = "sero",
   observation_model_data,
-  infection_days,
   infection_model
 )
 }
 \arguments{
 \item{data_id}{name of observation model data in list}
 
-\item{observation_model_data}{list of observation model data lists}
-
-\item{infection_days}{infection dates that cover more than the data dates}
+\item{observation_model_data}{list of observation model data lists, as
+produced by \code{stack_jurisdictions()}}
 
 \item{infection_model}{greta arrays that define the infection model}
 }
@@ -25,18 +23,17 @@ greta arrays of observation model
 }
 \description{
 This function constructs the observation model and defines
-likelihood over the observational data (e.g. cases, hospital
-admissions...). It first begets a timeseries of expected observations from
-a timeseries of new infections, the infection-to-observation delay
-distribution(s), and the proportion of infections to be observed.
-Specifically, the model uses the delay distribution(s) to convolve the
-infection timeseries into the expected observation timeseries, thus
-accounting for the probability of observation over time-since-infection. An
-additional multiplication by observation proportion is applied to the
-convolved timeseries, to adjust for effects such as case ascertainment.
-Optionally, a day-of-week effect may be included in the convolution process
-to introduce weekly periodicity. The expected observation timeseries is
-treated as the mean of a negative binomial distribution from which the data
-is observed, thus allowing us to define likelihood over the data, and link
-the data to the unknown infection timeseries.
+likelihood over seroprevalence survey data. It mirrors
+\code{create_observation_model()}: a timeseries of expected observations is
+computed from the infection timeseries, the infection-to-seroconversion
+delay distribution(s), and the proportion of infections to be observed.
+Unlike case/hospitalisation notification (a one-time event best modelled
+as a \code{discrete_pmf}), seroconversion is typically persistent -- an
+infected person may test positive for many consecutive days -- so
+\code{delay_from_infection} for a sero stream is usually a \code{discrete_weights}/
+\code{discrete_weights_series} object (e.g. probability of testing seropositive
+by day since infection), rather than a normalised \code{discrete_pmf}. The
+expected observation timeseries, divided by jurisdiction population,
+is treated as the probability of a binomial distribution over the survey
+sample size, from which the observed seropositive count is drawn.
 }

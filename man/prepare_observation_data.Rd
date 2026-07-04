@@ -4,22 +4,26 @@
 \alias{prepare_observation_data}
 \title{Prepare observation data}
 \usage{
-prepare_observation_data(
-  observation_data,
-  target_infection_dates,
-  target_jurisdictions
-)
+prepare_observation_data(observation_data, target_infection_dates)
 }
 \arguments{
-\item{observation_data}{long form data of counts of notifications}
+\item{observation_data}{data for one jurisdiction, one stream, as
+returned by \code{define_observation_data()}/\code{define_sero_data()}.
+\code{delay_from_infection} may be a single \code{discrete_pmf}/\code{discrete_weights}
+object (replicated across \code{target_infection_dates}), or an already
+time-varying \code{discrete_pmf_series}/\code{discrete_weights_series} (aligned to
+\code{target_infection_dates})}
 
-\item{target_infection_dates}{full date sequence of infection timeseries}
-
-\item{target_jurisdictions}{jurisdictions}
+\item{target_infection_dates}{full date sequence of infection timeseries,
+shared across all jurisdictions in a fit}
 }
 \value{
-greta arrays of observation model
+a list describing this jurisdiction's stream: \code{convolution_matrix},
+\code{case_vec}, \code{prop_vec}, \code{dow_model}, \code{inits_values}, \code{observable_idx}, and
+(for seroprevalence streams) \code{total_pop}/\code{size_vec}
 }
 \description{
-Prepare list of data objects needed for observation model.
+Prepare the data objects needed for one jurisdiction's
+observation model for a single data stream (e.g. cases). Multiple
+jurisdictions are combined later, by \code{stack_jurisdictions()}.
 }

@@ -4,23 +4,20 @@
 \alias{create_epiwave_fixed_timeseries}
 \title{Expand a fixed value into a long tibble}
 \usage{
-create_epiwave_fixed_timeseries(dates, jurisdictions, value)
+create_epiwave_fixed_timeseries(dates, value)
 }
 \arguments{
 \item{dates}{infection dates sequence}
-
-\item{jurisdictions}{jurisdiction names}
 
 \item{value}{a fixed numeric value to be replicated in each cell}
 }
 \value{
 a long tibble with the fixed value replicated across all
-date and jurisdiction combinations, with class
-\code{epiwave_fixed_timeseries}
+dates, with class \code{epiwave_fixed_timeseries}
 }
 \description{
 The epiwave model functions expect data in a long format,
-structured to have a value for every unique date and jurisdiction pair.
-This function creates a tibble of this structure from a single fixed
-numeric value that is replicated in each cell.
+structured to have a value for every date. This function creates a
+tibble of this structure from a single fixed numeric value that is
+replicated in each cell.
 }

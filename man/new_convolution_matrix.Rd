@@ -2,20 +2,21 @@
 % Please edit documentation in R/new_convolution_matrix.R
 \name{new_convolution_matrix}
 \alias{new_convolution_matrix}
-\title{Construct a forward convolution matrix from a discrete PMF}
+\title{Construct a forward convolution matrix from a discrete PMF or weights}
 \usage{
 new_convolution_matrix(pmf, n = NULL)
 }
 \arguments{
-\item{pmf}{a \code{discrete_pmf} or \code{discrete_pmf_series} object. A single
-\code{discrete_pmf} is applied uniformly across all timepoints. A
-\code{discrete_pmf_series} enables time-varying delays, with \code{n} derived
-from the series index.}
+\item{pmf}{a \code{discrete_pmf}, \code{discrete_weights}, \code{discrete_pmf_series}, or
+\code{discrete_weights_series} object. A single \code{discrete_pmf}/
+\code{discrete_weights} is applied uniformly across all timepoints. A
+\code{discrete_pmf_series}/\code{discrete_weights_series} enables time-varying
+delays, with \code{n} derived from the series index.}
 
 \item{n}{a positive integer giving the number of timepoints, determining
-the dimensions of the output matrix. Required when \code{pmf} is a
-\code{discrete_pmf}; inferred from timeseries index when \code{pmf} is a
-\code{discrete_pmf_series}.}
+the dimensions of the output matrix. Required when \code{pmf} is a single
+\code{discrete_pmf}/\code{discrete_weights} object; inferred from the timeseries
+index when \code{pmf} is a series object.}
 }
 \value{
 an \code{n} by \code{n} numeric matrix. To apply the convolution, multiply
@@ -26,13 +27,17 @@ the matrix by a time series vector of length \code{n}, e.g.
 A common operation in discrete-time epidemic models is forward
 convolution through a delay distribution. This can be represented as a
 linear operator in matrix form. This function constructs a forward
-convolution matrix from a \code{discrete_pmf} or \code{discrete_pmf_series} object.
-The resulting matrix can be multiplied by a time series vector to convolve
-it forward through a delay distribution.
+convolution matrix from a \code{discrete_pmf}/\code{discrete_pmf_series} object, or
+from a \code{discrete_weights}/\code{discrete_weights_series} object (e.g. an
+unnormalised persistence/detectability curve, such as the probability of
+testing seropositive by day since infection). The resulting matrix can be
+multiplied by a time series vector to convolve it forward through a delay
+distribution.
 
-When \code{pmf} is a single \code{discrete_pmf}, the same PMF is applied at every
-timepoint and \code{n} must be supplied. When \code{pmf} is a \code{discrete_pmf_series},
-\code{n} is derived from the series index and does not need to be supplied.
+When \code{pmf} is a single \code{discrete_pmf}/\code{discrete_weights}, the same object
+is applied at every timepoint and \code{n} must be supplied. When \code{pmf} is a
+\code{discrete_pmf_series}/\code{discrete_weights_series}, \code{n} is derived from the
+series index and does not need to be supplied.
 }
 \examples{
 pmf <- epiwave.params::as_discrete_pmf(

@@ -2,30 +2,25 @@
 % Please edit documentation in R/inits_by_jurisdiction.R
 \name{inits_by_jurisdiction}
 \alias{inits_by_jurisdiction}
-\title{Define initials values by jurisdiction}
+\title{Define initial values for the infection timeseries}
 \usage{
-inits_by_jurisdiction(
-  n_juris_ID,
-  obs_data,
-  delays,
-  obs_prop,
-  target_infection_dates
-)
+inits_by_jurisdiction(obs_data, delays, obs_prop, target_infection_dates)
 }
 \arguments{
-\item{n_juris_ID}{numbered jurisdiction index}
+\item{obs_data}{numeric vector of observed data, aligned to
+\code{target_infection_dates} (\code{NA} for dates without observations)}
 
-\item{obs_data}{matrix form of data to inform infection initials}
+\item{delays}{a \code{discrete_pmf_series} or \code{discrete_weights_series} delay
+object, aligned to \code{target_infection_dates}}
 
-\item{delays}{epiwave timeseries delay object}
-
-\item{obs_prop}{single numeric value of proportion}
+\item{obs_prop}{numeric vector of proportions, aligned to
+\code{target_infection_dates}, or a greta array of the same}
 
 \item{target_infection_dates}{infection date sequence}
 }
 \value{
-initial values as matrix
+initial values as a list
 }
 \description{
-Define initials values by jurisdiction
+Define initial values for the infection timeseries
 }

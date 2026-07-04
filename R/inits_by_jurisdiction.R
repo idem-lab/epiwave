@@ -1,41 +1,35 @@
-#' Define initials values by jurisdiction
+#' Define initial values for the infection timeseries
 #'
-#' @param n_juris_ID numbered jurisdiction index
-#' @param obs_data matrix form of data to inform infection initials
-#' @param delays epiwave timeseries delay object
-#' @param obs_prop single numeric value of proportion
+#' @param obs_data numeric vector of observed data, aligned to
+#'   `target_infection_dates` (`NA` for dates without observations)
+#' @param delays a `discrete_pmf_series` or `discrete_weights_series` delay
+#'   object, aligned to `target_infection_dates`
+#' @param obs_prop numeric vector of proportions, aligned to
+#'   `target_infection_dates`, or a greta array of the same
 #' @param target_infection_dates infection date sequence
 #'
 #' @importFrom mgcv gam predict.gam
-#' @importFrom dplyr filter
 #'
-#' @return initial values as matrix
+#' @return initial values as a list
 #' @export
-inits_by_jurisdiction <- function (n_juris_ID,
-                                   obs_data,
+inits_by_jurisdiction <- function (obs_data,
                                    delays,
                                    obs_prop,
                                    target_infection_dates) {
 
-  #### AH VERSION
-  # case_dates <- as.Date(rownames(infection_inits_data))
-  # case_idx <- which(target_infection_dates %in% case_dates)
-  ##### END AH version
-
-  ##### PREV VERSION
   # currently creates inits to cover observable idx.
   if (inherits(obs_prop, 'greta_array')) {
     obs_prop_sim <- greta::calculate(obs_prop, nsim = 100)
-    obs_prop <- apply(obs_prop_sim$obs_prop, 2:3, mean)
+    obs_prop <- as.numeric(apply(obs_prop_sim$obs_prop, 2:3, mean))
   }
-  ##### END PREV VERSION
 
-  cases_by_juris <- obs_data[, n_juris_ID]
-  inits_prop_by_juris <- obs_prop[n_juris_ID]
+  observed <- !is.na(obs_data)
+  cases_by_juris <- obs_data[observed]
+  inits_prop_by_juris <- obs_prop[observed]
   infection_approx <- cases_by_juris / inits_prop_by_juris
 
   # dates observable for this data type
-  case_dates <- as.Date(rownames(obs_data))
+  case_dates <- as.Date(target_infection_dates)[observed]
 
   # NOTE here we are using forward delay distribution as if it's a backward delay for purpose of imputation
   # since we are only taking the mean and only specifying inits, it doesn't affect model
@@ -43,16 +37,23 @@ inits_by_jurisdiction <- function (n_juris_ID,
 
   # if delays are time-varying it is still only using the average delay
   # to shift observation data for calculation of inits
-  delays_juris <- delays |>
-    dplyr::filter(jurisdiction == delays$jurisdiction[n_juris_ID],
-                  date %in% case_dates)
+  delays_juris <- delays[case_dates]
 
-  expected_delay_vals <- unlist(lapply(delays_juris$value, function (x)
-    round(
-      sum(x$delay * x$mass)
-    )))
+  # discrete_weights aren't a proper distribution (don't sum to 1), so
+  # normalise to a discrete_pmf first to get a meaningful mean step
+  mean_step <- function (x) {
+    if (inherits(x, 'discrete_pmf')) {
+      mean(x)
+    } else {
+      mean(epiwave.params::normalise(x))
+    }
+  }
 
-  max_delay_vals <- unlist(lapply(delays_juris$value, function (x)
+  expected_delay_vals <- unlist(lapply(delays_juris$values, function (x)
+    round(mean_step(x))
+  ))
+
+  max_delay_vals <- unlist(lapply(delays_juris$values, function (x)
     max(x$step)
   ))
   df <- data.frame(max_delay_vals, case_dates) # consider max_delay_vals + 1
@@ -63,9 +64,6 @@ inits_by_jurisdiction <- function (n_juris_ID,
   # inputing infection dates by average delay
   inferred_infection_dates <- case_dates - expected_delay_vals
   inferred_infection_idx <- match(inferred_infection_dates, observable_dates)
-
-  # dates_not_in <- any(!(observable_dates %in% target_infection_dates))
-  # if(dates_not_in) stop("target_infection_dates does not cover the entire range of observable dates.")
 
   smooth_approx <- mgcv::gam(
     val ~ s(idx),
@@ -79,23 +77,18 @@ inits_by_jurisdiction <- function (n_juris_ID,
     type = "response"
   )
 
-  inits_values <- smooth_pred + 1#infection_approx #
-  # len_iv <- length(inits_values)
-  # inits_values[(len_iv + 1) : (len_iv + avg_delay)] <- 0
-  #
-  # # inits_values <- smooth_pred# ???
-  # # inits_values <- rep(0, length(observable_idx))
-  # # inits_values[] <- smooth_pred
-  # # inits_values[is.na(inits_values)] <- 0
-  # inits_values <- pmax(inits_values, .Machine$double.eps)
-  #
-  #
+  inits_values <- smooth_pred + 1
+
   observable_idx <- match(observable_dates, target_infection_dates)
 
+  # drop observable dates that fall outside target_infection_dates (e.g. a
+  # delay-shifted date walking off the front edge of the window)
+  keep <- !is.na(observable_idx)
+  observable_idx <- observable_idx[keep]
+  inits_values <- inits_values[keep]
 
   out <- list(inits_values = inits_values,
               observable_idx = observable_idx)
-
 
   return(out)
 }
