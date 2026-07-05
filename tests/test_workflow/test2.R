@@ -85,16 +85,13 @@ jurisdiction_observation_models <- define_observation_model(
     proportion_infections = ihr)
 )
 
-# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
-observations_by_jurisdiction <- setNames(
-  list(jurisdiction_observation_models),
-  jurisdictions)
-
 # set seed for DSE so we can reproduce
 set.seed(20250512)
 
+# a single jurisdiction's define_observation_model() output goes straight to
+# fit_waves() -- no list()/naming step needed
 fit_object <- fit_waves(
-  observations_by_jurisdiction = observations_by_jurisdiction,
+  observations = jurisdiction_observation_models,
   infection_model_type = 'flat_prior',#,# define_infection_model()'gp_growth_rate' #
   n_chains = 10,
   max_convergence_tries = 2,

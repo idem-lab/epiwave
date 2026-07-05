@@ -13,10 +13,13 @@ define_observation_model(target_infection_dates = NULL, ...)
 \code{define_observation_data()}), named by stream}
 }
 \value{
-list describing one jurisdiction's observation model
+list describing one jurisdiction's observation model, with class
+\code{epiwave_observation_model}
 }
 \description{
 Bundle one jurisdiction's observation streams (e.g. cases,
-hospitalisations) together. Call this once per jurisdiction;
-combine multiple jurisdictions later via \code{stack_jurisdictions()}.
+hospitalisations) together. Call this once per jurisdiction. A
+single-jurisdiction fit can pass this straight to \code{fit_waves()}; to
+combine multiple jurisdictions, pass several of these to
+\code{stack_jurisdictions()} first.
 }

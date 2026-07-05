@@ -84,13 +84,10 @@ jurisdiction_basic_observation_models <- define_observation_model(
 
 )
 
-# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
-basic_observations_by_jurisdiction <- setNames(
-  list(jurisdiction_basic_observation_models),
-  jurisdictions)
-
+# a single jurisdiction's define_observation_model() output goes straight to
+# fit_waves() -- no list()/naming step needed
 fit_object <- fit_waves(
-  observations_by_jurisdiction = basic_observations_by_jurisdiction,
+  observations = jurisdiction_basic_observation_models,
   infection_model_type = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 

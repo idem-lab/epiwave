@@ -21,7 +21,9 @@ shared across all jurisdictions in a fit}
 }
 \value{
 a list describing this jurisdiction's stream: \code{convolution_matrix},
-\code{case_vec}, \code{prop_vec}, \code{dow_model}, \code{inits_values}, \code{observable_idx}
+\code{case_vec}, \code{prop_vec}, \code{delays}, \code{dow_model}. Does not include GAM-based
+initial values -- those are only needed for \code{infection_model_type = 'flat_prior'}, so they're computed lazily by \code{compute_flat_prior_inits()}
+when \code{fit_waves()} actually needs them, rather than unconditionally here.
 }
 \description{
 Prepare the data objects needed for one jurisdiction's

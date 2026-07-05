@@ -2,11 +2,11 @@
 ##
 ## A fully self-contained example fitting two jurisdictions jointly, using
 ## fabricated data. Demonstrates:
-##   - jurisdiction is only ever a dimension at the fit_waves() step: each
-##     jurisdiction's data is prepared independently via
+##   - jurisdiction is only ever a dimension at the stack_jurisdictions()
+##     step: each jurisdiction's data is prepared independently via
 ##     define_observation_data()/define_observation_model() (exactly like the
-##     single-jurisdiction workflow), then combined into a *named* list keyed
-##     by jurisdiction and passed to fit_waves()
+##     single-jurisdiction workflow), then combined via stack_jurisdictions(),
+##     named by jurisdiction, before being passed to fit_waves()
 ##   - jurisdictions can have different/staggered date coverage -- every
 ##     per-jurisdiction vector is aligned to the same shared
 ##     target_infection_dates axis, so this is safe
@@ -50,15 +50,15 @@ observation_model_B <- define_observation_model(
   cases = make_jurisdiction_cases(60, 140, lambda = 30, dow_model = TRUE)
 )
 
-# named list, named by jurisdiction -- this is the only place jurisdiction
-# becomes a dimension
-observations_by_jurisdiction <- list(
+# named arguments to stack_jurisdictions(), named by jurisdiction -- this is
+# the only place jurisdiction becomes a dimension
+stacked <- stack_jurisdictions(
   jurisdiction_a = observation_model_A,
   jurisdiction_b = observation_model_B
 )
 
 fit_object <- fit_waves(
-  observations_by_jurisdiction = observations_by_jurisdiction,
+  observations = stacked,
   infection_model_type = "gp_growth_rate",
   n_chains = 2,
   warmup = 200,
@@ -74,7 +74,6 @@ stopifnot(identical(fit_object$jurisdictions, c("jurisdiction_a", "jurisdiction_
 ## NA for B in the underlying case matrix, and vice versa -- confirming row i
 ## means the same calendar date for every jurisdiction's column.
 
-case_mat <- observation_model_A$observation_model_data$cases$case_vec
 row_only_a <- 20   # within A's 10-90 window, outside B's 60-140 window
 row_only_b <- 135  # within B's window, outside A's
 

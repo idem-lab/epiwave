@@ -16,7 +16,10 @@
 #'  shared across all jurisdictions in a fit
 #'
 #' @return a list describing this jurisdiction's stream: `convolution_matrix`,
-#'  `case_vec`, `prop_vec`, `dow_model`, `inits_values`, `observable_idx`
+#'  `case_vec`, `prop_vec`, `delays`, `dow_model`. Does not include GAM-based
+#'  initial values -- those are only needed for `infection_model_type =
+#'  'flat_prior'`, so they're computed lazily by `compute_flat_prior_inits()`
+#'  when `fit_waves()` actually needs them, rather than unconditionally here.
 #' @export
 prepare_observation_data <- function (observation_data,
                                       target_infection_dates) {
@@ -61,21 +64,9 @@ prepare_observation_data <- function (observation_data,
 
   convolution_matrix <- new_convolution_matrix(delays)
 
-  inits <- inits_by_jurisdiction(
-    case_vec,
-    delays,
-    prop_vec,
-    target_infection_dates)
-
-  inits_values <- rep(NA_real_, length(target_infection_dates))
-  observable_idx <- rep(FALSE, length(target_infection_dates))
-  inits_values[inits$observable_idx] <- inits$inits_values
-  observable_idx[inits$observable_idx] <- TRUE
-
   list(convolution_matrix = convolution_matrix,
        case_vec = case_vec,
        prop_vec = prop_vec,
-       dow_model = observation_data$dow_model,
-       inits_values = inits_values,
-       observable_idx = observable_idx)
+       delays = delays,
+       dow_model = observation_data$dow_model)
 }

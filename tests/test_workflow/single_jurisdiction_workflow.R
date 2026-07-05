@@ -80,18 +80,19 @@ observation_model <- define_observation_model(
     proportion_infections = ihr)
 )
 
-# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
-observations_by_jurisdiction <- list(example_jurisdiction = observation_model)
-
 ## -- fit ----------------------------------------------------------------
 
+# a single jurisdiction's define_observation_model() output goes straight to
+# fit_waves() -- no list()/naming step needed. For multiple jurisdictions,
+# see multi_jurisdiction_workflow.R's explicit stack_jurisdictions() step.
+#
 # flat_prior is the fastest infection model, good for a quick check like this
 # one; for a real analysis, 'gp_infections'/'gp_growth_rate'/
 # 'gp_growth_rate_deriv' model infections as a Gaussian Process instead (see
 # create_infection_timeseries()'s docs for how the three GP formulations
 # differ). Warmup/n_samples are kept small here for speed, not convergence.
 fit_object <- fit_waves(
-  observations_by_jurisdiction = observations_by_jurisdiction,
+  observations = observation_model,
   infection_model_type = "flat_prior",
   n_chains = 2,
   warmup = 200,
@@ -113,8 +114,8 @@ cat("posterior median infections range:",
 ## -- advanced: a time-varying delay distribution -----------------------------
 ##
 ## delay_from_infection can also be an already time-varying
-## discrete_pmf_series/discrete_weights_series, e.g. representing a change in
-## testing/reporting delay partway through the study period.
+## discrete_pmf_series, e.g. representing a change in testing/reporting
+## delay partway through the study period.
 
 notification_delay_early <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
 notification_delay_late <- as_discrete_pmf(distributional::dist_gamma(shape = 2, rate = 0.6))
