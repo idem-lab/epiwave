@@ -8,22 +8,20 @@ prepare_observation_data(observation_data, target_infection_dates)
 }
 \arguments{
 \item{observation_data}{data for one jurisdiction, one stream, as
-returned by \code{define_observation_data()}/\code{define_sero_data()}.
-\code{timeseries_data} (and \code{size_vec}, for sero streams) may be a plain
-data.frame/tibble with \code{date} and \code{value} columns -- it doesn't need to
-be pre-classed as \code{epiwave_timeseries}, see \code{as_epiwave_timeseries()}.
-\code{delay_from_infection} may be a single \code{discrete_pmf}/\code{discrete_weights}
-object (replicated across \code{target_infection_dates}), or an already
-time-varying \code{discrete_pmf_series}/\code{discrete_weights_series} (aligned to
-\code{target_infection_dates})}
+returned by \code{define_observation_data()}.
+\code{timeseries_data} may be a plain data.frame/tibble with \code{date} and
+\code{value} columns -- it doesn't need to be pre-classed as
+\code{epiwave_timeseries}, see \code{as_epiwave_timeseries()}.
+\code{delay_from_infection} may be a single \code{discrete_pmf} object (replicated
+across \code{target_infection_dates}), or an already time-varying
+\code{discrete_pmf_series} (aligned to \code{target_infection_dates})}
 
 \item{target_infection_dates}{full date sequence of infection timeseries,
 shared across all jurisdictions in a fit}
 }
 \value{
 a list describing this jurisdiction's stream: \code{convolution_matrix},
-\code{case_vec}, \code{prop_vec}, \code{dow_model}, \code{inits_values}, \code{observable_idx}, and
-(for seroprevalence streams) \code{total_pop}/\code{size_vec}
+\code{case_vec}, \code{prop_vec}, \code{dow_model}, \code{inits_values}, \code{observable_idx}
 }
 \description{
 Prepare the data objects needed for one jurisdiction's

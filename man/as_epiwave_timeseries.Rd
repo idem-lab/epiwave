@@ -14,9 +14,9 @@ data.frame/tibble with \code{date} and \code{value} columns}
 an \code{epiwave_timeseries} or numeric object, ready for \code{as_matrix()}
 }
 \description{
-Observation data (case counts, hospitalisation counts,
-seroprevalence survey counts/sample sizes) is naturally a table of
-\code{date}/\code{value} pairs with real per-date observations, rather than a
+Observation data (case counts, hospitalisation counts) is
+naturally a table of \code{date}/\code{value} pairs with real per-date
+observations, rather than a
 single value replicated across dates -- unlike delay distributions or
 proportions, which usually apply uniformly. This function takes such a
 table (with genuinely partial date coverage, e.g. missing weekends, is

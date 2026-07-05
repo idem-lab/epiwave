@@ -10,8 +10,8 @@ inits_by_jurisdiction(obs_data, delays, obs_prop, target_infection_dates)
 \item{obs_data}{numeric vector of observed data, aligned to
 \code{target_infection_dates} (\code{NA} for dates without observations)}
 
-\item{delays}{a \code{discrete_pmf_series} or \code{discrete_weights_series} delay
-object, aligned to \code{target_infection_dates}}
+\item{delays}{a \code{discrete_pmf_series} delay object, aligned to
+\code{target_infection_dates}}
 
 \item{obs_prop}{numeric vector of proportions, aligned to
 \code{target_infection_dates}, or a greta array of the same}
