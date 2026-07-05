@@ -3,6 +3,7 @@
 S3method(as_matrix,epiwave_greta_timeseries)
 S3method(as_matrix,epiwave_timeseries)
 S3method(as_matrix,numeric)
+export(as_epiwave_timeseries)
 export(as_matrix)
 export(compute_reff)
 export(create_dow_priors)

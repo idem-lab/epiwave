@@ -15,13 +15,15 @@ define_sero_data(
 }
 \arguments{
 \item{timeseries_data}{seroprevalence survey timeseries data, for one
-jurisdiction}
+jurisdiction. A plain data.frame/tibble with \code{date} and \code{value} columns
+is fine, see \code{as_epiwave_timeseries()}}
 
 \item{total_pop}{population size of this jurisdiction (a single numeric
 value)}
 
 \item{size_vec}{sample size of the seroprevalence survey, for one
-jurisdiction}
+jurisdiction. A plain data.frame/tibble with \code{date} and \code{value} columns
+is fine, see \code{as_epiwave_timeseries()}}
 
 \item{delay_from_infection}{typically a \code{discrete_weights}/
 \code{discrete_weights_series} object (e.g. probability of testing

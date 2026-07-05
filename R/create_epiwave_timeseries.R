@@ -86,3 +86,42 @@ create_epiwave_greta_timeseries <- function(dates,
                             class(long_combined))
   long_combined
 }
+
+#' Coerce a date/value table to an epiwave_fixed_timeseries object
+#'
+#' @description Observation data (case counts, hospitalisation counts,
+#'   seroprevalence survey counts/sample sizes) is naturally a table of
+#'   `date`/`value` pairs with real per-date observations, rather than a
+#'   single value replicated across dates -- unlike delay distributions or
+#'   proportions, which usually apply uniformly. This function takes such a
+#'   table (with genuinely partial date coverage, e.g. missing weekends, is
+#'   fine -- gaps are handled downstream by `as_matrix()`) and classes it as
+#'   an `epiwave_fixed_timeseries` object, so it doesn't need to be
+#'   hand-classed with `class(x) <- c(...)`.
+#'
+#'   Already-classed `epiwave_timeseries` objects and plain numeric
+#'   values/vectors are returned unchanged, so this is safe to call
+#'   unconditionally on anything accepted as observation data.
+#'
+#' @param data an `epiwave_timeseries` object, a numeric value/vector, or a
+#'   data.frame/tibble with `date` and `value` columns
+#'
+#' @return an `epiwave_timeseries` or numeric object, ready for `as_matrix()`
+#' @export
+as_epiwave_timeseries <- function(data) {
+
+  if (inherits(data, "epiwave_timeseries") || is.numeric(data)) {
+    return(data)
+  }
+
+  if (!all(c("date", "value") %in% names(data))) {
+    stop("`data` must have `date` and `value` columns to be used as ",
+         "observation data")
+  }
+
+  data <- tibble::as_tibble(data[c("date", "value")])
+  data$date <- as.Date(data$date)
+
+  class(data) <- c("epiwave_fixed_timeseries", "epiwave_timeseries", class(data))
+  data
+}

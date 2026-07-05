@@ -5,7 +5,9 @@
 #'  multiple jurisdictions later via `stack_jurisdictions()`.
 #'
 #' @param timeseries_data timeseries data for data of interest, for one
-#'  jurisdiction
+#'  jurisdiction. A plain data.frame/tibble with `date` and `value` columns
+#'  is fine (gaps in date coverage are fine too) -- it doesn't need to be
+#'  pre-classed, see `as_epiwave_timeseries()`
 #' @param delay_from_infection a `discrete_pmf`/`discrete_weights` object
 #'  (replicated across dates), or an already time-varying
 #'  `discrete_pmf_series`/`discrete_weights_series` object
@@ -34,11 +36,13 @@ define_observation_data <- function (timeseries_data,
 #'  `stack_jurisdictions()`.
 #'
 #' @param timeseries_data seroprevalence survey timeseries data, for one
-#'  jurisdiction
+#'  jurisdiction. A plain data.frame/tibble with `date` and `value` columns
+#'  is fine, see `as_epiwave_timeseries()`
 #' @param total_pop population size of this jurisdiction (a single numeric
 #'  value)
 #' @param size_vec sample size of the seroprevalence survey, for one
-#'  jurisdiction
+#'  jurisdiction. A plain data.frame/tibble with `date` and `value` columns
+#'  is fine, see `as_epiwave_timeseries()`
 #' @param delay_from_infection typically a `discrete_weights`/
 #'  `discrete_weights_series` object (e.g. probability of testing
 #'  seropositive by day since infection, which need not sum to 1 -- unlike

@@ -6,6 +6,9 @@
 #'
 #' @param observation_data data for one jurisdiction, one stream, as
 #'  returned by `define_observation_data()`/`define_sero_data()`.
+#'  `timeseries_data` (and `size_vec`, for sero streams) may be a plain
+#'  data.frame/tibble with `date` and `value` columns -- it doesn't need to
+#'  be pre-classed as `epiwave_timeseries`, see `as_epiwave_timeseries()`.
 #'  `delay_from_infection` may be a single `discrete_pmf`/`discrete_weights`
 #'  object (replicated across `target_infection_dates`), or an already
 #'  time-varying `discrete_pmf_series`/`discrete_weights_series` (aligned to
@@ -54,7 +57,8 @@ prepare_observation_data <- function (observation_data,
     }
   }
 
-  case_vec <- as_matrix(observation_data$timeseries_data, target_infection_dates)
+  timeseries_data <- as_epiwave_timeseries(observation_data$timeseries_data)
+  case_vec <- as_matrix(timeseries_data, target_infection_dates)
   prop_vec <- as_matrix(prop, target_infection_dates)
 
   convolution_matrix <- new_convolution_matrix(delays)
@@ -81,7 +85,8 @@ prepare_observation_data <- function (observation_data,
     out$total_pop <- observation_data$total_pop
   }
   if ('size_vec' %in% names(observation_data)) {
-    out$size_vec <- as_matrix(observation_data$size_vec, target_infection_dates)
+    size_vec <- as_epiwave_timeseries(observation_data$size_vec)
+    out$size_vec <- as_matrix(size_vec, target_infection_dates)
   }
 
   out
