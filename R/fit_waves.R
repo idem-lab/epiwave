@@ -67,15 +67,10 @@ fit_waves <- function (observations_by_jurisdiction,
 
   # observation model objects in observations
   observation_model_data <- observations$observation_model_data
-  observation_models <- lapply(names(observation_model_data), function(id) {
-    stream <- observation_model_data[[id]]
-    model_fn <- if (!is.null(stream$total_pop)) {
-      create_small_sero_model
-    } else {
-      create_observation_model
-    }
-    model_fn(id, observation_model_data, incidence)
-  })
+  observation_models <- lapply(names(observation_model_data),
+                               create_observation_model,
+                               observation_model_data,
+                               incidence)
   names(observation_models) <- names(observation_model_data)
 
   # greta model fit

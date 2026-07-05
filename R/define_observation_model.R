@@ -2,12 +2,12 @@
 #'
 #' @description
 #' Bundle one jurisdiction's observation streams (e.g. cases,
-#' hospitalisations, sero) together. Call this once per jurisdiction;
+#' hospitalisations) together. Call this once per jurisdiction;
 #' combine multiple jurisdictions later via `stack_jurisdictions()`.
 #'
 #' @param target_infection_dates sequence of infection dates
 #' @param ... observation data sets for this jurisdiction (as returned by
-#'  `define_observation_data()`/`define_sero_data()`), named by stream
+#'  `define_observation_data()`), named by stream
 #'
 #' @return list describing one jurisdiction's observation model
 #' @export

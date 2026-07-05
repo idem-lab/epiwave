@@ -30,7 +30,8 @@ stack_jurisdictions <- function (observations_by_jurisdiction) {
   target_infection_dates <- observations_by_jurisdiction[[1]]$target_infection_dates
   dates_match <- vapply(
     observations_by_jurisdiction,
-    function(x) identical(as.Date(x$target_infection_dates), as.Date(target_infection_dates)),
+    function(x) identical(as.Date(x$target_infection_dates),
+                          as.Date(target_infection_dates)),
     logical(1))
   if (!all(dates_match)) {
     stop('All jurisdictions must share the same target_infection_dates')
@@ -112,27 +113,9 @@ stack_stream <- function (stream_id,
 
   convolution_matrices <- lapply(per_jurisdiction, `[[`, "convolution_matrix")
 
-  sero_flags <- vapply(per_jurisdiction, function(x) !is.null(x$total_pop), logical(1))
-  if (length(unique(sero_flags)) > 1) {
-    stop(sprintf(
-      'Jurisdictions disagree on whether "%s" is a seroprevalence stream ',
-      '(define_sero_data() vs define_observation_data())',
-      stream_id))
-  }
-
-  out <- list(
+  list(
     convolution_matrices = convolution_matrices,
     case_mat = case_mat,
     prop_mat = prop_mat
   )
-
-  if (isTRUE(sero_flags[1])) {
-    out$total_pop <- vapply(per_jurisdiction, `[[`, numeric(1), "total_pop")
-    names(out$total_pop) <- jurisdictions
-    out$size_mat <- do.call(cbind, lapply(per_jurisdiction, `[[`, "size_vec"))
-    colnames(out$size_mat) <- jurisdictions
-    rownames(out$size_mat) <- as.character(target_infection_dates)
-  }
-
-  out
 }

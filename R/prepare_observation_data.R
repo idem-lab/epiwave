@@ -5,37 +5,35 @@
 #'  jurisdictions are combined later, by `stack_jurisdictions()`.
 #'
 #' @param observation_data data for one jurisdiction, one stream, as
-#'  returned by `define_observation_data()`/`define_sero_data()`.
-#'  `timeseries_data` (and `size_vec`, for sero streams) may be a plain
-#'  data.frame/tibble with `date` and `value` columns -- it doesn't need to
-#'  be pre-classed as `epiwave_timeseries`, see `as_epiwave_timeseries()`.
-#'  `delay_from_infection` may be a single `discrete_pmf`/`discrete_weights`
-#'  object (replicated across `target_infection_dates`), or an already
-#'  time-varying `discrete_pmf_series`/`discrete_weights_series` (aligned to
-#'  `target_infection_dates`)
+#'  returned by `define_observation_data()`.
+#'  `timeseries_data` may be a plain data.frame/tibble with `date` and
+#'  `value` columns -- it doesn't need to be pre-classed as
+#'  `epiwave_timeseries`, see `as_epiwave_timeseries()`.
+#'  `delay_from_infection` may be a single `discrete_pmf` object (replicated
+#'  across `target_infection_dates`), or an already time-varying
+#'  `discrete_pmf_series` (aligned to `target_infection_dates`)
 #' @param target_infection_dates full date sequence of infection timeseries,
 #'  shared across all jurisdictions in a fit
 #'
 #' @return a list describing this jurisdiction's stream: `convolution_matrix`,
-#'  `case_vec`, `prop_vec`, `dow_model`, `inits_values`, `observable_idx`, and
-#'  (for seroprevalence streams) `total_pop`/`size_vec`
+#'  `case_vec`, `prop_vec`, `dow_model`, `inits_values`, `observable_idx`
 #' @export
 prepare_observation_data <- function (observation_data,
                                       target_infection_dates) {
 
   delays <- observation_data$delay_from_infection
-  if (inherits(delays, c('discrete_pmf_series', 'discrete_weights_series'))) {
+  if (inherits(delays, 'discrete_pmf_series')) {
     delays <- delays[as.Date(target_infection_dates)]
     if (!identical(as.Date(delays$index), as.Date(target_infection_dates))) {
       stop('`delay_from_infection` dates must match `target_infection_dates`')
     }
-  } else if (inherits(delays, c('discrete_pmf', 'discrete_weights'))) {
+  } else if (inherits(delays, 'discrete_pmf')) {
     delays <- epiwave.params::new_discrete_series(
       values = delays,
       index = target_infection_dates)
   } else {
-    stop('`delay_from_infection` must be a discrete_pmf, discrete_weights, ',
-         'discrete_pmf_series, or discrete_weights_series object')
+    stop('`delay_from_infection` must be a discrete_pmf or ',
+         'discrete_pmf_series object')
   }
 
   prop <- observation_data$proportion_infections
@@ -74,20 +72,10 @@ prepare_observation_data <- function (observation_data,
   inits_values[inits$observable_idx] <- inits$inits_values
   observable_idx[inits$observable_idx] <- TRUE
 
-  out <- list(convolution_matrix = convolution_matrix,
-              case_vec = case_vec,
-              prop_vec = prop_vec,
-              dow_model = observation_data$dow_model,
-              inits_values = inits_values,
-              observable_idx = observable_idx)
-
-  if ('total_pop' %in% names(observation_data)) {
-    out$total_pop <- observation_data$total_pop
-  }
-  if ('size_vec' %in% names(observation_data)) {
-    size_vec <- as_epiwave_timeseries(observation_data$size_vec)
-    out$size_vec <- as_matrix(size_vec, target_infection_dates)
-  }
-
-  out
+  list(convolution_matrix = convolution_matrix,
+       case_vec = case_vec,
+       prop_vec = prop_vec,
+       dow_model = observation_data$dow_model,
+       inits_values = inits_values,
+       observable_idx = observable_idx)
 }

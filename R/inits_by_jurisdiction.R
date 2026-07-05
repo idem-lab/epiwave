@@ -2,8 +2,8 @@
 #'
 #' @param obs_data numeric vector of observed data, aligned to
 #'   `target_infection_dates` (`NA` for dates without observations)
-#' @param delays a `discrete_pmf_series` or `discrete_weights_series` delay
-#'   object, aligned to `target_infection_dates`
+#' @param delays a `discrete_pmf_series` delay object, aligned to
+#'   `target_infection_dates`
 #' @param obs_prop numeric vector of proportions, aligned to
 #'   `target_infection_dates`, or a greta array of the same
 #' @param target_infection_dates infection date sequence
@@ -39,18 +39,8 @@ inits_by_jurisdiction <- function (obs_data,
   # to shift observation data for calculation of inits
   delays_juris <- delays[case_dates]
 
-  # discrete_weights aren't a proper distribution (don't sum to 1), so
-  # normalise to a discrete_pmf first to get a meaningful mean step
-  mean_step <- function (x) {
-    if (inherits(x, 'discrete_pmf')) {
-      mean(x)
-    } else {
-      mean(epiwave.params::normalise(x))
-    }
-  }
-
   expected_delay_vals <- unlist(lapply(delays_juris$values, function (x)
-    round(mean_step(x))
+    round(mean(x))
   ))
 
   max_delay_vals <- unlist(lapply(delays_juris$values, function (x)

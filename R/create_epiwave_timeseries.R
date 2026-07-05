@@ -89,9 +89,9 @@ create_epiwave_greta_timeseries <- function(dates,
 
 #' Coerce a date/value table to an epiwave_fixed_timeseries object
 #'
-#' @description Observation data (case counts, hospitalisation counts,
-#'   seroprevalence survey counts/sample sizes) is naturally a table of
-#'   `date`/`value` pairs with real per-date observations, rather than a
+#' @description Observation data (case counts, hospitalisation counts) is
+#'   naturally a table of `date`/`value` pairs with real per-date
+#'   observations, rather than a
 #'   single value replicated across dates -- unlike delay distributions or
 #'   proportions, which usually apply uniformly. This function takes such a
 #'   table (with genuinely partial date coverage, e.g. missing weekends, is
