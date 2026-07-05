@@ -36,12 +36,22 @@ prepare_observation_data <- function (observation_data,
   }
 
   prop <- observation_data$proportion_infections
-  if (!('epiwave_timeseries' %in% class(prop))) {
+  if (!inherits(prop, 'epiwave_timeseries')) {
     prop <- create_epiwave_timeseries(
       dates = target_infection_dates,
       value = prop)
-  } else if (!identical(as.Date(prop$date), as.Date(target_infection_dates))) {
-    stop('`proportion_infections` dates must match `target_infection_dates`')
+  } else {
+    # epiwave_greta_timeseries stores dates nested under $timeseries$date
+    # (it wraps a greta array alongside the date tibble), rather than a
+    # flat $date column like epiwave_timeseries/epiwave_fixed_timeseries
+    prop_dates <- if (inherits(prop, 'epiwave_greta_timeseries')) {
+      prop$timeseries$date
+    } else {
+      prop$date
+    }
+    if (!identical(as.Date(prop_dates), as.Date(target_infection_dates))) {
+      stop('`proportion_infections` dates must match `target_infection_dates`')
+    }
   }
 
   case_vec <- as_matrix(observation_data$timeseries_data, target_infection_dates)
