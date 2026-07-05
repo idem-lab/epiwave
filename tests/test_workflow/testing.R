@@ -47,9 +47,8 @@ notif_dat <- notif_file |>
 if (exists('jurisdictions')) {
   notif_dat <- notif_dat[notif_dat$jurisdiction %in% jurisdictions,]
 }
-class(notif_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(notif_dat))
+# no manual class(notif_dat) <- c(...) needed -- define_observation_data()
+# accepts a plain date/value data.frame directly (see as_epiwave_timeseries())
 
 # # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -60,9 +59,6 @@ hosp_dat <- hosp_file |>
 if (exists('jurisdictions')) {
   hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
 }
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(hosp_dat))
 
 # jurisdictions
 if (!exists('jurisdictions')) {

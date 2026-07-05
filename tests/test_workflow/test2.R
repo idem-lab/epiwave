@@ -23,9 +23,8 @@ notif_dat$date <- study_seq
 colnames(notif_dat) <- c('study_area', 'date')
 notif_dat <- notif_dat |>
   tidyr::pivot_longer(!date, names_to = "jurisdiction", values_to = "value")
-class(notif_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(notif_dat))
+# no manual class(notif_dat) <- c(...) needed -- define_observation_data()
+# accepts a plain date/value data.frame directly (see as_epiwave_timeseries())
 
 # hospitalisation counts
 hosp_dat <- 'simdata/sim_study_hosp.csv' |>
@@ -36,9 +35,6 @@ hosp_dat$date <- study_seq
 colnames(hosp_dat) <- c('study_area', 'date')
 hosp_dat <- hosp_dat |>
   tidyr::pivot_longer(!date, names_to = "jurisdiction", values_to = "value")
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(hosp_dat))
 
 # jurisdictions
 jurisdictions <- unique(notif_dat$jurisdiction)
