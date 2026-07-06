@@ -104,6 +104,14 @@ stack_stream <- function (stream_id,
   colnames(case_mat) <- colnames(prop_mat) <- jurisdictions
   rownames(case_mat) <- rownames(prop_mat) <- as.character(target_infection_dates)
 
+  # kept alongside the (possibly DOW-corrected) prop_mat below specifically
+  # for compute_flat_prior_inits(): GAM-based inits must be computed from the
+  # raw proportion, not the DOW-corrected one (DOW correction wasn't even
+  # known/applicable at the point inits used to be computed, pre-refactor;
+  # using the corrected version here would make inits depend on a
+  # prior-predictive draw of the DOW effect instead of being deterministic)
+  prop_mat_raw <- prop_mat
+
   dow_flags <- vapply(per_jurisdiction, `[[`, logical(1), "dow_model")
   if (length(unique(dow_flags)) > 1) {
     stop(sprintf(
@@ -123,6 +131,7 @@ stack_stream <- function (stream_id,
     convolution_matrices = convolution_matrices,
     delays = delays,
     case_mat = case_mat,
-    prop_mat = prop_mat
+    prop_mat = prop_mat,
+    prop_mat_raw = prop_mat_raw
   )
 }

@@ -30,10 +30,14 @@ compute_flat_prior_inits <- function (observations) {
 
     stream_inits <- lapply(stream_ids, function (stream_id) {
       stream <- observations$observation_model_data[[stream_id]]
+      # prop_mat_raw, not prop_mat: inits must use the pre-DOW-correction
+      # proportion (see stack_stream()) -- using the corrected one would make
+      # this depend on a prior-predictive draw of the DOW effect instead of
+      # being a deterministic approximation
       inits_by_jurisdiction(
         stream$case_mat[, j],
         stream$delays[[j]],
-        stream$prop_mat[, j],
+        stream$prop_mat_raw[, j],
         target_infection_dates)
     })
 
