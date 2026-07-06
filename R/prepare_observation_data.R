@@ -1,7 +1,8 @@
 #' Prepare observation data
 #'
 #' @description Prepare the data objects needed for one jurisdiction's
-#'  observation model for a single data stream (e.g. cases). Multiple
+#'  observation model for a single data stream (e.g. cases), called
+#'  internally by `define_observation_model()` once per stream. Multiple
 #'  jurisdictions are combined later, by `stack_jurisdictions()`.
 #'
 #' @param observation_data data for one jurisdiction, one stream, as
@@ -20,7 +21,7 @@
 #'  initial values -- those are only needed for `infection_model_type =
 #'  'flat_prior'`, so they're computed lazily by `compute_flat_prior_inits()`
 #'  when `fit_waves()` actually needs them, rather than unconditionally here.
-#' @export
+#' @noRd
 prepare_observation_data <- function (observation_data,
                                       target_infection_dates) {
 
