@@ -13,11 +13,12 @@ define_observation_data(
 }
 \arguments{
 \item{timeseries_data}{timeseries data for data of interest, for one
-jurisdiction}
+jurisdiction. A plain data.frame/tibble with \code{date} and \code{value} columns
+is fine (gaps in date coverage are fine too) -- it's coerced
+automatically, no need to pre-class it}
 
-\item{delay_from_infection}{a \code{discrete_pmf}/\code{discrete_weights} object
-(replicated across dates), or an already time-varying
-\code{discrete_pmf_series}/\code{discrete_weights_series} object}
+\item{delay_from_infection}{a \code{discrete_pmf} object (replicated across
+dates), or an already time-varying \code{discrete_pmf_series} object}
 
 \item{proportion_infections}{proportion data}
 

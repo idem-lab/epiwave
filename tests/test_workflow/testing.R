@@ -1,10 +1,9 @@
 ## header
-#library(epiwave)
 devtools::load_all()
 library(epiwave.params)
 library(dplyr)
 library(greta)
-# devtools::load_all()
+
 ## user modified
 infection_days <- seq(from = as.Date('2021-04-01'),
                  to = as.Date('2022-01-01'), 'days')
@@ -13,30 +12,11 @@ study_seq <- seq(from = as.Date('2021-06-01'),
 jurisdictions <- 'VIC' #c('NSW', 'VIC')
 
 # specific folder with not synced data
-# not_synced_folder <- '~/not_synced/data/' # AH folder
 not_synced_folder <- '../data'
-
 
 ## data prep
 
-## sero simulated data
-# sero_file <- readRDS(file = paste0(not_synced_folder, "sero_data_test.RDS"))
-#
-# sero_dat <- sero_file |>
-#   select(jurisdiction,value,date)
-#
-# class(sero_dat) <- c('epiwave_fixed_timeseries',
-#                      'epiwave_timeseries',
-#                      class(sero_dat))
-#
-# size_dummy <- sero_file |>
-#   select(jurisdiction,size,date) |>
-#   rename(value = size)
-#
-# class(size_dummy) <- c('epiwave_fixed_timeseries',
-#                      'epiwave_timeseries',
-#                      class(size_dummy))
-# sero_size_mat <- as_matrix(size_dummy)
+# seroprevalence support is deferred for now -- see dev/sero-integration-notes.md
 
 # notification counts
 notif_file <- paste0(not_synced_folder, '/COVID_live_cases.rds')
@@ -47,9 +27,6 @@ notif_dat <- notif_file |>
 if (exists('jurisdictions')) {
   notif_dat <- notif_dat[notif_dat$jurisdiction %in% jurisdictions,]
 }
-class(notif_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(notif_dat))
 
 # # hospitalisation counts
 hosp_file <- paste0(not_synced_folder, '/COVID_live_cases_in_hospital.rds')
@@ -60,9 +37,6 @@ hosp_dat <- hosp_file |>
 if (exists('jurisdictions')) {
   hosp_dat <- hosp_dat[hosp_dat$jurisdiction %in% jurisdictions,]
 }
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                     'epiwave_timeseries',
-                     class(hosp_dat))
 
 # jurisdictions
 if (!exists('jurisdictions')) {
@@ -78,7 +52,7 @@ car <- 0.75
 
 # create IHR
 chr <- greta::uniform(0, 1)
-ihr <- create_epiwave_greta_timeseries(
+ihr <- as_greta_timeseries(
   dates = infection_days,
   car = car,
   chr_prior = chr)
@@ -87,11 +61,6 @@ ihr <- create_epiwave_greta_timeseries(
 incubation <- readRDS('tests/test_distributions/incubation.rds')
 gi <- readRDS('tests/test_distributions/gi.rds')
 onset_to_notification <- readRDS('tests/test_distributions/onset_to_notification.rds')
-
-# sero_conversion <- readRDS(paste0(not_synced_folder, "sero_curve_test.RDS"))
-# sero_conversion <- as_discrete_weights(
-#   x = sero_conversion$delay,
-#   y = sero_conversion$mass)
 
 hosp_dist <- distributional::dist_weibull(shape = 2.51, scale = 10.17)
 hosp_delay_ecdf <- as_discrete_pmf(hosp_dist)
@@ -115,44 +84,15 @@ jurisdiction_basic_observation_models <- define_observation_model(
 
 )
 
-# a single-jurisdiction fit is a length-1 named list, named by jurisdiction
-basic_observations_by_jurisdiction <- setNames(
-  list(jurisdiction_basic_observation_models),
-  jurisdictions)
-
+# a single jurisdiction's define_observation_model() output goes straight to
+# fit_waves() -- no list()/naming step needed
 fit_object <- fit_waves(
-  observations_by_jurisdiction = basic_observations_by_jurisdiction,
+  observations = jurisdiction_basic_observation_models,
   infection_model_type = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
 )
 
-jurisdiction_with_sero_observation_models <- define_observation_model(
-
-  target_infection_dates = infection_days,
-
-  cases = define_observation_data(
-    timeseries_data = notif_dat,
-    delay_from_infection = add_discrete(
-      incubation,
-      onset_to_notification),
-    proportion_infections = car,
-    dow_model = TRUE),
-  sero = define_sero_data(
-    timeseries_data = sero_dat,
-    total_pop = 8e6,
-    size_vec = sero_size_mat,
-    delay_from_infection = sero_conversion,
-    proportion_infections = 1
-  )
-)
-
-with_sero_observations_by_jurisdiction <- setNames(
-  list(jurisdiction_with_sero_observation_models),
-  jurisdictions)
-
-fit_object <- fit_waves(
-  observations_by_jurisdiction = with_sero_observations_by_jurisdiction,
-  infection_model_type = 'gp_growth_rate'# 'flat_prior'#,define_infection_model() #
-)
+# a sero stream would go here as a third define_observation_data() block once
+# that pathway is re-integrated -- see dev/sero-integration-notes.md
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 max(rhats$psrf[, 1], na.rm = TRUE)

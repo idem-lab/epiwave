@@ -1,36 +1,51 @@
 #' Stack per-jurisdiction observation models together
 #'
-#' @description Combine a named list of per-jurisdiction observation model
-#'  bundles (each produced by `define_observation_model()`) into the
-#'  `date x jurisdiction` matrices used by the model-fitting functions. A
-#'  single-jurisdiction fit is just a length-1 list. This is where DOW
-#'  correction is actually applied (it needs to know `n_jurisdictions`, which
-#'  earlier, per-jurisdiction steps don't).
+#' @description Combine several per-jurisdiction observation model bundles
+#'  (each produced by `define_observation_model()`) into the
+#'  `date x jurisdiction` matrices used by the model-fitting functions. This
+#'  is where DOW correction is actually applied (it needs to know
+#'  `n_jurisdictions`, which earlier, per-jurisdiction steps don't).
+#'
+#'  Only needed when combining more than one jurisdiction -- a
+#'  single-jurisdiction fit can pass `define_observation_model()`'s output
+#'  straight to `fit_waves()` without calling this at all.
 #'
 #'  Every jurisdiction must supply the same set of observation streams, and
 #'  `dow_model` must agree across jurisdictions within a given stream; both
 #'  are intentional limitations for now rather than permanent design
 #'  decisions.
 #'
-#' @param observations_by_jurisdiction a named list of per-jurisdiction
-#'  observation model bundles (output of `define_observation_model()`),
-#'  named by jurisdiction
+#' @param ... per-jurisdiction observation model bundles (output of
+#'  `define_observation_model()`), named by jurisdiction, e.g.
+#'  `stack_jurisdictions(VIC = observation_model_vic, NSW = observation_model_nsw)`
 #'
 #' @return list of stacked observation model data, in the shape expected by
-#'  `fit_waves()`
+#'  `fit_waves()`, with class `epiwave_stacked_observations`
 #' @export
-stack_jurisdictions <- function (observations_by_jurisdiction) {
+stack_jurisdictions <- function (...) {
+  stack_jurisdictions_list(list(...))
+}
+
+#' @noRd
+stack_jurisdictions_list <- function (observations_by_jurisdiction) {
 
   jurisdictions <- names(observations_by_jurisdiction)
-  if (is.null(jurisdictions) || any(jurisdictions == "")) {
-    stop('`observations_by_jurisdiction` must be a fully named list, ',
-         'named by jurisdiction')
+
+  if (length(observations_by_jurisdiction) == 1 &&
+      (is.null(jurisdictions) || identical(jurisdictions, ""))) {
+    # a single jurisdiction has no real identity to preserve -- fit_waves()
+    # routes a raw define_observation_model() object through here unnamed
+    jurisdictions <- "1"
+  } else if (is.null(jurisdictions) || any(jurisdictions == "")) {
+    stop('when combining more than one jurisdiction, all arguments to ',
+         'stack_jurisdictions() must be named, named by jurisdiction')
   }
 
   target_infection_dates <- observations_by_jurisdiction[[1]]$target_infection_dates
   dates_match <- vapply(
     observations_by_jurisdiction,
-    function(x) identical(as.Date(x$target_infection_dates), as.Date(target_infection_dates)),
+    function(x) identical(as.Date(x$target_infection_dates),
+                          as.Date(target_infection_dates)),
     logical(1))
   if (!all(dates_match)) {
     stop('All jurisdictions must share the same target_infection_dates')
@@ -47,15 +62,6 @@ stack_jurisdictions <- function (observations_by_jurisdiction) {
     stop('Every jurisdiction must supply the same set of observation streams')
   }
 
-  incidence_observable <- do.call(
-    cbind,
-    lapply(observations_by_jurisdiction, `[[`, "incidence_observable"))
-  incidence_observable_inits <- do.call(
-    cbind,
-    lapply(observations_by_jurisdiction, `[[`, "incidence_observable_inits"))
-  colnames(incidence_observable) <- jurisdictions
-  colnames(incidence_observable_inits) <- jurisdictions
-
   observation_model_data <- lapply(
     stream_ids,
     stack_stream,
@@ -64,13 +70,13 @@ stack_jurisdictions <- function (observations_by_jurisdiction) {
     target_infection_dates)
   names(observation_model_data) <- stream_ids
 
-  list(
+  out <- list(
     observation_model_data = observation_model_data,
     target_infection_dates = target_infection_dates,
-    target_jurisdictions = jurisdictions,
-    incidence_observable = incidence_observable,
-    incidence_observable_inits = incidence_observable_inits
+    target_jurisdictions = jurisdictions
   )
+  class(out) <- c("epiwave_stacked_observations", class(out))
+  out
 }
 
 #' Stack one observation stream across jurisdictions
@@ -98,6 +104,14 @@ stack_stream <- function (stream_id,
   colnames(case_mat) <- colnames(prop_mat) <- jurisdictions
   rownames(case_mat) <- rownames(prop_mat) <- as.character(target_infection_dates)
 
+  # kept alongside the (possibly DOW-corrected) prop_mat below specifically
+  # for compute_flat_prior_inits(): GAM-based inits must be computed from the
+  # raw proportion, not the DOW-corrected one (DOW correction wasn't even
+  # known/applicable at the point inits used to be computed, pre-refactor;
+  # using the corrected version here would make inits depend on a
+  # prior-predictive draw of the DOW effect instead of being deterministic)
+  prop_mat_raw <- prop_mat
+
   dow_flags <- vapply(per_jurisdiction, `[[`, logical(1), "dow_model")
   if (length(unique(dow_flags)) > 1) {
     stop(sprintf(
@@ -111,28 +125,13 @@ stack_stream <- function (stream_id,
   }
 
   convolution_matrices <- lapply(per_jurisdiction, `[[`, "convolution_matrix")
+  delays <- lapply(per_jurisdiction, `[[`, "delays")
 
-  sero_flags <- vapply(per_jurisdiction, function(x) !is.null(x$total_pop), logical(1))
-  if (length(unique(sero_flags)) > 1) {
-    stop(sprintf(
-      'Jurisdictions disagree on whether "%s" is a seroprevalence stream ',
-      '(define_sero_data() vs define_observation_data())',
-      stream_id))
-  }
-
-  out <- list(
+  list(
     convolution_matrices = convolution_matrices,
+    delays = delays,
     case_mat = case_mat,
-    prop_mat = prop_mat
+    prop_mat = prop_mat,
+    prop_mat_raw = prop_mat_raw
   )
-
-  if (isTRUE(sero_flags[1])) {
-    out$total_pop <- vapply(per_jurisdiction, `[[`, numeric(1), "total_pop")
-    names(out$total_pop) <- jurisdictions
-    out$size_mat <- do.call(cbind, lapply(per_jurisdiction, `[[`, "size_vec"))
-    colnames(out$size_mat) <- jurisdictions
-    rownames(out$size_mat) <- as.character(target_infection_dates)
-  }
-
-  out
 }

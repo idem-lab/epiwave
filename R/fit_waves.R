@@ -17,11 +17,10 @@
 #'  gp_growth_rate_derivative: in now-cast/forecast the infection trajectory
 #'  would follow the most recent growth rate trend.
 #'
-#' @param observations_by_jurisdiction a named list of per-jurisdiction
-#'   observation model bundles (output of `define_observation_model()`),
-#'   named by jurisdiction. A single-jurisdiction fit is a length-1 list.
-#'   Combined internally via `stack_jurisdictions()`; jurisdictions sharing
-#'   one fit are partially pooled (shared GP kernel hyperparameters, and
+#' @param observations either a single jurisdiction's observation model
+#'   (output of `define_observation_model()`), or several jurisdictions
+#'   already combined via `stack_jurisdictions()`. Jurisdictions sharing one
+#'   fit are partially pooled (shared GP kernel hyperparameters, and
 #'   shared/hierarchical DOW priors where requested).
 #' @param infection_model_type options include 'flat_prior', 'infections',
 #'   'growth_rate', 'growth_rate_derivative'. See description for more info.
@@ -34,7 +33,7 @@
 #' @return list of infection_model, fit, infection_days, and jurisdictions
 #' @export
 #'
-fit_waves <- function (observations_by_jurisdiction,
+fit_waves <- function (observations,
                        infection_model_type = c('flat_prior',
                                                 'gp_infections',
                                                 'gp_growth_rate',
@@ -45,7 +44,9 @@ fit_waves <- function (observations_by_jurisdiction,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
 
-  observations <- stack_jurisdictions(observations_by_jurisdiction)
+  if (!inherits(observations, 'epiwave_stacked_observations')) {
+    observations <- stack_jurisdictions_list(list(observations))
+  }
 
   # prep the model objects
   target_infection_dates <- observations$target_infection_dates # Ihat
@@ -54,7 +55,15 @@ fit_waves <- function (observations_by_jurisdiction,
   jurisdictions <- observations$target_jurisdictions
   n_jurisdictions <- length(jurisdictions)
 
-  observable_infection <- observations$incidence_observable
+  # GAM-based inits/observable window are only meaningful for flat_prior --
+  # GP-based infection models never reference them -- so this is computed
+  # lazily, only when actually needed (see compute_flat_prior_inits()).
+  if (infection_model_type == 'flat_prior') {
+    flat_prior_inits <- compute_flat_prior_inits(observations)
+    observable_infection <- flat_prior_inits$incidence_observable
+  } else {
+    observable_infection <- NULL
+  }
 
   # set up the greta model
   # infection timeseries model
@@ -67,15 +76,10 @@ fit_waves <- function (observations_by_jurisdiction,
 
   # observation model objects in observations
   observation_model_data <- observations$observation_model_data
-  observation_models <- lapply(names(observation_model_data), function(id) {
-    stream <- observation_model_data[[id]]
-    model_fn <- if (!is.null(stream$total_pop)) {
-      create_small_sero_model
-    } else {
-      create_observation_model
-    }
-    model_fn(id, observation_model_data, incidence)
-  })
+  observation_models <- lapply(names(observation_model_data),
+                               create_observation_model,
+                               observation_model_data,
+                               incidence)
   names(observation_models) <- names(observation_model_data)
 
   # greta model fit
@@ -83,7 +87,7 @@ fit_waves <- function (observations_by_jurisdiction,
 
   if (infection_model_type == 'flat_prior') {
 
-    incidence_observable_inits <- observations$incidence_observable_inits
+    incidence_observable_inits <- flat_prior_inits$incidence_observable_inits
 
     indexed_incidence_observable_inits <-
       incidence_observable_inits[observable_infection]

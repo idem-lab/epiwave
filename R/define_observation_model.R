@@ -2,14 +2,17 @@
 #'
 #' @description
 #' Bundle one jurisdiction's observation streams (e.g. cases,
-#' hospitalisations, sero) together. Call this once per jurisdiction;
-#' combine multiple jurisdictions later via `stack_jurisdictions()`.
+#' hospitalisations) together. Call this once per jurisdiction. A
+#' single-jurisdiction fit can pass this straight to `fit_waves()`; to
+#' combine multiple jurisdictions, pass several of these to
+#' `stack_jurisdictions()` first.
 #'
 #' @param target_infection_dates sequence of infection dates
 #' @param ... observation data sets for this jurisdiction (as returned by
-#'  `define_observation_data()`/`define_sero_data()`), named by stream
+#'  `define_observation_data()`), named by stream
 #'
-#' @return list describing one jurisdiction's observation model
+#' @return list describing one jurisdiction's observation model, with class
+#'  `epiwave_observation_model`
 #' @export
 #'
 define_observation_model <- function (target_infection_dates = NULL, ...) {
@@ -20,18 +23,10 @@ define_observation_model <- function (target_infection_dates = NULL, ...) {
                                             prepare_observation_data,
                                             target_infection_dates)
 
-  incidence_observable <- Reduce(
-    `|`,
-    lapply(prepared_observation_model_data, function(x) x$observable_idx))
+  out <- list(observation_model_data = prepared_observation_model_data,
+             target_infection_dates = target_infection_dates)
 
-  inits_stream_mat <- do.call(
-    cbind,
-    lapply(prepared_observation_model_data, function(x) x$inits_values))
-  incidence_observable_inits <- rowMeans(inits_stream_mat, na.rm = TRUE)
-
-  list(observation_model_data = prepared_observation_model_data,
-       target_infection_dates = target_infection_dates,
-       incidence_observable_inits = incidence_observable_inits,
-       incidence_observable = incidence_observable)
+  class(out) <- c("epiwave_observation_model", class(out))
+  out
 
 }

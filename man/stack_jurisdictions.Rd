@@ -4,24 +4,27 @@
 \alias{stack_jurisdictions}
 \title{Stack per-jurisdiction observation models together}
 \usage{
-stack_jurisdictions(observations_by_jurisdiction)
+stack_jurisdictions(...)
 }
 \arguments{
-\item{observations_by_jurisdiction}{a named list of per-jurisdiction
-observation model bundles (output of \code{define_observation_model()}),
-named by jurisdiction}
+\item{...}{per-jurisdiction observation model bundles (output of
+\code{define_observation_model()}), named by jurisdiction, e.g.
+\code{stack_jurisdictions(VIC = observation_model_vic, NSW = observation_model_nsw)}}
 }
 \value{
 list of stacked observation model data, in the shape expected by
-\code{fit_waves()}
+\code{fit_waves()}, with class \code{epiwave_stacked_observations}
 }
 \description{
-Combine a named list of per-jurisdiction observation model
-bundles (each produced by \code{define_observation_model()}) into the
-\verb{date x jurisdiction} matrices used by the model-fitting functions. A
-single-jurisdiction fit is just a length-1 list. This is where DOW
-correction is actually applied (it needs to know \code{n_jurisdictions}, which
-earlier, per-jurisdiction steps don't).
+Combine several per-jurisdiction observation model bundles
+(each produced by \code{define_observation_model()}) into the
+\verb{date x jurisdiction} matrices used by the model-fitting functions. This
+is where DOW correction is actually applied (it needs to know
+\code{n_jurisdictions}, which earlier, per-jurisdiction steps don't).
+
+Only needed when combining more than one jurisdiction -- a
+single-jurisdiction fit can pass \code{define_observation_model()}'s output
+straight to \code{fit_waves()} without calling this at all.
 
 Every jurisdiction must supply the same set of observation streams, and
 \code{dow_model} must agree across jurisdictions within a given stream; both
