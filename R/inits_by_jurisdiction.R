@@ -1,5 +1,8 @@
 #' Define initial values for the infection timeseries
 #'
+#' @description Called internally by `compute_flat_prior_inits()`, once per
+#'  stream per jurisdiction.
+#'
 #' @param obs_data numeric vector of observed data, aligned to
 #'   `target_infection_dates` (`NA` for dates without observations)
 #' @param delays a `discrete_pmf_series` delay object, aligned to
@@ -11,7 +14,7 @@
 #' @importFrom mgcv gam predict.gam
 #'
 #' @return initial values as a list
-#' @export
+#' @noRd
 inits_by_jurisdiction <- function (obs_data,
                                    delays,
                                    obs_prop,
