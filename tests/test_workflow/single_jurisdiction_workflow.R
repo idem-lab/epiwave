@@ -4,7 +4,7 @@
 ## jurisdiction, using fabricated data (no external/not-synced files needed).
 ## Demonstrates the current API end to end:
 ##   - raw data.frames passed straight to define_observation_data() (no
-##     manual class(x) <- c(...) needed -- see as_epiwave_timeseries())
+##     manual class(x) <- c(...) needed -- no need to pre-class)
 ##   - delay distributions built with epiwave.params (discrete_pmf, combined
 ##     via `+`/add_discrete()), including a time-varying discrete_pmf_series
 ##   - proportion_infections as both a fixed value and a greta-array-derived
@@ -58,7 +58,7 @@ car <- 0.5
 # and CAR via a greta array, so it can be estimated jointly with the rest of
 # the model rather than fixed
 chr <- greta::uniform(0, 1)
-ihr <- create_epiwave_greta_timeseries(
+ihr <- as_greta_timeseries(
   dates = target_infection_dates,
   car = car,
   chr_prior = chr)

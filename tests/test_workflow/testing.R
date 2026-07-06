@@ -52,7 +52,7 @@ car <- 0.75
 
 # create IHR
 chr <- greta::uniform(0, 1)
-ihr <- create_epiwave_greta_timeseries(
+ihr <- as_greta_timeseries(
   dates = infection_days,
   car = car,
   chr_prior = chr)

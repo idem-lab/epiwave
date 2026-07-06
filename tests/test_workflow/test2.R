@@ -24,7 +24,7 @@ colnames(notif_dat) <- c('study_area', 'date')
 notif_dat <- notif_dat |>
   tidyr::pivot_longer(!date, names_to = "jurisdiction", values_to = "value")
 # no manual class(notif_dat) <- c(...) needed -- define_observation_data()
-# accepts a plain date/value data.frame directly (see as_epiwave_timeseries())
+# accepts a plain date/value data.frame directly (no need to pre-class)
 
 # hospitalisation counts
 hosp_dat <- 'simdata/sim_study_hosp.csv' |>
@@ -47,7 +47,7 @@ car <- 0.42 # minimum viable product scenario
 chr <- greta::uniform(0, 1)
 # ihr <- chr * car
 # wrapper for ihr specific flow
-ihr <- create_epiwave_greta_timeseries(
+ihr <- as_greta_timeseries(
   dates = infection_days,
   car = car,
   chr_prior = chr)

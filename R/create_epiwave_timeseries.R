@@ -13,13 +13,13 @@
 #'
 #' @importFrom tibble tibble
 #'
-#' @return a list with class `epiwave_greta_timeseries` containing
-#'   components `timeseries` (a tibble of dates) and `ihr` (a greta array of
-#'   implied hospitalisation rates)
+#' @return a list with class `greta_timeseries` containing components
+#'   `timeseries` (a tibble of dates) and `ihr` (a greta array of implied
+#'   hospitalisation rates)
 #' @export
-create_epiwave_greta_timeseries <- function(dates,
-                                            car,
-                                            chr_prior) {
+as_greta_timeseries <- function(dates,
+                                car,
+                                chr_prior) {
   long_unique <- tibble::tibble(date = dates)
 
   dim(chr_prior) <- length(dates)
@@ -33,7 +33,7 @@ create_epiwave_greta_timeseries <- function(dates,
   long_combined <- list(timeseries = long_unique,
                         ihr = ihr_greta)
 
-  class(long_combined) <- c("epiwave_greta_timeseries",
+  class(long_combined) <- c("greta_timeseries",
                             "epiwave_timeseries",
                             class(long_combined))
   long_combined
@@ -59,7 +59,7 @@ create_epiwave_greta_timeseries <- function(dates,
 #'   data.frame/tibble with `date` and `value` columns
 #'
 #' @return an `epiwave_timeseries` or numeric object, ready for `as_matrix()`
-#' @export
+#' @noRd
 as_epiwave_timeseries <- function(data) {
 
   if (inherits(data, "epiwave_timeseries") || is.numeric(data)) {

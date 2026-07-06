@@ -14,8 +14,8 @@ define_observation_data(
 \arguments{
 \item{timeseries_data}{timeseries data for data of interest, for one
 jurisdiction. A plain data.frame/tibble with \code{date} and \code{value} columns
-is fine (gaps in date coverage are fine too) -- it doesn't need to be
-pre-classed, see \code{as_epiwave_timeseries()}}
+is fine (gaps in date coverage are fine too) -- it's coerced
+automatically, no need to pre-class it}
 
 \item{delay_from_infection}{a \code{discrete_pmf} object (replicated across
 dates), or an already time-varying \code{discrete_pmf_series} object}

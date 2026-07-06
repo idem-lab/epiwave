@@ -6,8 +6,8 @@
 #'
 #' @param timeseries_data timeseries data for data of interest, for one
 #'  jurisdiction. A plain data.frame/tibble with `date` and `value` columns
-#'  is fine (gaps in date coverage are fine too) -- it doesn't need to be
-#'  pre-classed, see `as_epiwave_timeseries()`
+#'  is fine (gaps in date coverage are fine too) -- it's coerced
+#'  automatically, no need to pre-class it
 #' @param delay_from_infection a `discrete_pmf` object (replicated across
 #'  dates), or an already time-varying `discrete_pmf_series` object
 #' @param proportion_infections proportion data

@@ -43,14 +43,14 @@ prepare_observation_data <- function (observation_data,
   # a bare numeric prop (scalar or a vector already in date order) needs no
   # coercion at all -- as_matrix.numeric() recycles/validates it directly.
   # Only already-classed epiwave_timeseries objects (including
-  # epiwave_greta_timeseries) need their dates checked against
-  # target_infection_dates first.
+  # greta_timeseries) need their dates checked against target_infection_dates
+  # first.
   prop <- observation_data$proportion_infections
   if (inherits(prop, 'epiwave_timeseries')) {
-    # epiwave_greta_timeseries stores dates nested under $timeseries$date
-    # (it wraps a greta array alongside the date tibble), rather than a
-    # flat $date column like epiwave_timeseries/epiwave_fixed_timeseries
-    prop_dates <- if (inherits(prop, 'epiwave_greta_timeseries')) {
+    # greta_timeseries stores dates nested under $timeseries$date (it wraps
+    # a greta array alongside the date tibble), rather than a flat $date
+    # column like epiwave_timeseries/epiwave_fixed_timeseries
+    prop_dates <- if (inherits(prop, 'greta_timeseries')) {
       prop$timeseries$date
     } else {
       prop$date

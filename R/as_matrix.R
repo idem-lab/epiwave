@@ -51,11 +51,11 @@ as_matrix.epiwave_timeseries <- function (data, target_infection_dates, ...) {
 }
 
 #' @export
-as_matrix.epiwave_greta_timeseries <- function (data, target_infection_dates, ...) {
+as_matrix.greta_timeseries <- function (data, target_infection_dates, ...) {
 
   if (!identical(as.Date(data$timeseries$date), as.Date(target_infection_dates))) {
     stop('`data$timeseries$date` must match `target_infection_dates` ',
-         'exactly for an `epiwave_greta_timeseries` object.')
+         'exactly for a `greta_timeseries` object.')
   }
 
   ihr <- data$ihr
