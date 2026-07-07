@@ -1,42 +1,26 @@
-#' Create a greta-compatible timeseries object
+#' Bundle a case ascertainment rate and case-hospitalisation-rate prior
 #'
-#' @description The epiwave model functions expect data in a long format,
-#'   structured to have a value for every date. This function creates a
-#'   greta-compatible timeseries from a case ascertainment rate and a
-#'   hospitalisation rate prior.
+#' @description Builds a greta-backed `proportion_infections` input (e.g.
+#'   the implied hospitalisation rate, IHR = CAR x CHR) without needing a
+#'   date axis up front. The greta array this eventually becomes has to be
+#'   dimensioned to `target_infection_dates`, but that axis is emergent --
+#'   derived later, from the data, by `stack_jurisdictions()` -- so the
+#'   actual `car * chr_prior` multiplication and dimensioning is deferred
+#'   until then, once the axis is known.
 #'
-#' @param dates infection dates sequence
-#' @param car case ascertainment rate; either a numeric value or an
-#'   `epiwave_timeseries` object
+#' @param car case ascertainment rate; a fixed numeric value
 #' @param chr_prior a greta array representing the prior distribution for
 #'   the case hospitalisation rate
 #'
-#' @importFrom tibble tibble
-#'
-#' @return a list with class `greta_timeseries` containing components
-#'   `timeseries` (a tibble of dates) and `ihr` (a greta array of implied
-#'   hospitalisation rates)
+#' @return a list with class `greta_proportion` containing `car` and
+#'   `chr_prior`, unresolved until `stack_jurisdictions()`
 #' @export
-as_greta_timeseries <- function(dates,
-                                car,
+as_greta_timeseries <- function(car,
                                 chr_prior) {
-  long_unique <- tibble::tibble(date = dates)
 
-  dim(chr_prior) <- length(dates)
-
-  if ("epiwave_timeseries" %in% class(car)) {
-    car <- car$value
-  }
-
-  ihr_greta <- car * chr_prior
-
-  long_combined <- list(timeseries = long_unique,
-                        ihr = ihr_greta)
-
-  class(long_combined) <- c("greta_timeseries",
-                            "epiwave_timeseries",
-                            class(long_combined))
-  long_combined
+  out <- list(car = car, chr_prior = chr_prior)
+  class(out) <- c("greta_proportion", class(out))
+  out
 }
 
 #' Coerce a date/value table to an epiwave_fixed_timeseries object

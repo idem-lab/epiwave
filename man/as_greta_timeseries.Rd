@@ -2,27 +2,26 @@
 % Please edit documentation in R/create_epiwave_timeseries.R
 \name{as_greta_timeseries}
 \alias{as_greta_timeseries}
-\title{Create a greta-compatible timeseries object}
+\title{Bundle a case ascertainment rate and case-hospitalisation-rate prior}
 \usage{
-as_greta_timeseries(dates, car, chr_prior)
+as_greta_timeseries(car, chr_prior)
 }
 \arguments{
-\item{dates}{infection dates sequence}
-
-\item{car}{case ascertainment rate; either a numeric value or an
-\code{epiwave_timeseries} object}
+\item{car}{case ascertainment rate; a fixed numeric value}
 
 \item{chr_prior}{a greta array representing the prior distribution for
 the case hospitalisation rate}
 }
 \value{
-a list with class \code{greta_timeseries} containing components
-\code{timeseries} (a tibble of dates) and \code{ihr} (a greta array of implied
-hospitalisation rates)
+a list with class \code{greta_proportion} containing \code{car} and
+\code{chr_prior}, unresolved until \code{stack_jurisdictions()}
 }
 \description{
-The epiwave model functions expect data in a long format,
-structured to have a value for every date. This function creates a
-greta-compatible timeseries from a case ascertainment rate and a
-hospitalisation rate prior.
+Builds a greta-backed \code{proportion_infections} input (e.g.
+the implied hospitalisation rate, IHR = CAR x CHR) without needing a
+date axis up front. The greta array this eventually becomes has to be
+dimensioned to \code{target_infection_dates}, but that axis is emergent --
+derived later, from the data, by \code{stack_jurisdictions()} -- so the
+actual \code{car * chr_prior} multiplication and dimensioning is deferred
+until then, once the axis is known.
 }

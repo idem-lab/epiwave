@@ -4,11 +4,9 @@
 \alias{define_observation_model}
 \title{Define observation model}
 \usage{
-define_observation_model(target_infection_dates = NULL, ...)
+define_observation_model(...)
 }
 \arguments{
-\item{target_infection_dates}{sequence of infection dates}
-
 \item{...}{observation data sets for this jurisdiction (as returned by
 \code{define_observation_data()}), named by stream}
 }
@@ -22,4 +20,9 @@ hospitalisations) together. Call this once per jurisdiction. A
 single-jurisdiction fit can pass this straight to \code{fit_waves()}; to
 combine multiple jurisdictions, pass several of these to
 \code{stack_jurisdictions()} first.
+
+No \code{target_infection_dates} argument is needed here -- the date axis is
+emergent, derived later (by \code{stack_jurisdictions()}) from every stream's
+own data and delay distributions. This function just aggregates each
+stream's implied date range into one range for the whole jurisdiction.
 }

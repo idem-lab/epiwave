@@ -36,7 +36,13 @@ shared/hierarchical DOW priors where requested).}
 \item{n_extra_samples}{number of extra samples if original run didn't converge}
 }
 \value{
-list of infection_model, fit, infection_days, and jurisdictions
+list of infection_model, fit, infection_days, jurisdictions,
+observation_models, incidence_greta_arrays, and observation_model_data
+(the resolved, axis-aligned per-stream data -- e.g. \code{prop_mat} for a
+stream with a greta-backed \code{proportion_infections} like IHR-from-CHR is
+only ever computed once the emergent axis is known, so it's exposed
+here rather than remaining accessible on the object originally passed
+to \code{as_greta_timeseries()})
 }
 \description{
 Compute the number of infections per day either with an
