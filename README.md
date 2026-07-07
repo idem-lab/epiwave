@@ -37,7 +37,13 @@ remotes::install_github('idem-lab/epiwave')
 
 ## Usage
 
-### One jurisdiction
+Each jurisdiction’s data is prepared the same way:
+`define_observation_data()` per stream (e.g. `cases`,
+`hospitalisations`), bundled into one `define_observation_model()` call
+per jurisdiction. Jurisdictions are then combined explicitly, named by
+jurisdiction, via `stack_jurisdictions()`. Jurisdictions sharing one fit
+are partially pooled (shared GP kernel hyperparameters, and a shared
+hierarchical day-of-week prior where requested).
 
 ``` r
 library(epiwave)
@@ -46,50 +52,42 @@ library(distributional)
 
 dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
 
-# delay from infection to case notification
+# delay distributions, shared across jurisdictions
 cases_delay <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
+hosp_delay <- as_discrete_pmf(distributional::dist_weibull(shape = 2.51, scale = 10.17))
 
-# case counts: a plain date/value data.frame, no need to pre-class it
-notif_dat <- data.frame(
-  date = dates[20:130],
-  value = rpois(111, lambda = 50)
-)
-
-observation_model <- define_observation_model(
+# jurisdiction A: cases and hospitalisations, observed days 10-90
+observation_model_a <- define_observation_model(
   target_infection_dates = dates,
   cases = define_observation_data(
-    timeseries_data = notif_dat,
+    timeseries_data = data.frame(date = dates[10:90], value = rpois(81, lambda = 50)),
     delay_from_infection = cases_delay,
     proportion_infections = 0.5,
-    dow_model = TRUE)
+    dow_model = TRUE),
+  hospitalisations = define_observation_data(
+    timeseries_data = data.frame(date = dates[10:90], value = rpois(81, lambda = 5)),
+    delay_from_infection = hosp_delay,
+    proportion_infections = 0.05)
 )
 
-# a single jurisdiction goes straight to fit_waves(), no combining step needed
-fit_object <- fit_waves(
-  observations = observation_model,
-  infection_model_type = "flat_prior"
-)
-```
-
-### Multiple jurisdictions
-
-Jurisdictions are prepared independently, then combined explicitly via
-`stack_jurisdictions()`, named by jurisdiction. Jurisdictions sharing
-one fit are partially pooled (shared GP kernel hyperparameters, and a
-shared hierarchical day-of-week prior where requested).
-
-``` r
+# jurisdiction B: same two streams, observed days 60-140 -- coverage doesn't
+# need to match jurisdiction A
 observation_model_b <- define_observation_model(
   target_infection_dates = dates,
   cases = define_observation_data(
     timeseries_data = data.frame(date = dates[60:140], value = rpois(81, lambda = 30)),
     delay_from_infection = cases_delay,
     proportion_infections = 0.5,
-    dow_model = TRUE)
+    dow_model = TRUE),
+  hospitalisations = define_observation_data(
+    timeseries_data = data.frame(date = dates[60:140], value = rpois(81, lambda = 3)),
+    delay_from_infection = hosp_delay,
+    proportion_infections = 0.05)
 )
 
+# jurisdictions are combined explicitly, named by jurisdiction
 stacked <- stack_jurisdictions(
-  jurisdiction_a = observation_model,
+  jurisdiction_a = observation_model_a,
   jurisdiction_b = observation_model_b
 )
 
@@ -98,6 +96,9 @@ fit_object <- fit_waves(
   infection_model_type = "gp_growth_rate"
 )
 ```
+
+For a single jurisdiction, skip `stack_jurisdictions()` entirely and
+pass `define_observation_model()`’s output straight to `fit_waves()`.
 
 ## Citation
 
