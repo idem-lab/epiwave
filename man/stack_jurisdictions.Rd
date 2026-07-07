@@ -4,12 +4,18 @@
 \alias{stack_jurisdictions}
 \title{Stack per-jurisdiction observation models together}
 \usage{
-stack_jurisdictions(...)
+stack_jurisdictions(..., forecast_horizon = 0)
 }
 \arguments{
 \item{...}{per-jurisdiction observation model bundles (output of
 \code{define_observation_model()}), named by jurisdiction, e.g.
 \code{stack_jurisdictions(VIC = observation_model_vic, NSW = observation_model_nsw)}}
+
+\item{forecast_horizon}{optional number of days to extend the emergent
+date axis beyond the latest date implied by the data (e.g. for
+nowcasting/forecasting). Defaults to \code{0} (no extension) -- how far
+forward to estimate is a modelling choice, not something derivable from
+the data.}
 }
 \value{
 list of stacked observation model data, in the shape expected by
@@ -18,9 +24,19 @@ list of stacked observation model data, in the shape expected by
 \description{
 Combine several per-jurisdiction observation model bundles
 (each produced by \code{define_observation_model()}) into the
-\verb{date x jurisdiction} matrices used by the model-fitting functions. This
-is where DOW correction is actually applied (it needs to know
-\code{n_jurisdictions}, which earlier, per-jurisdiction steps don't).
+\verb{date x jurisdiction} matrices used by the model-fitting functions.
+
+This is where the shared \code{target_infection_dates} axis is actually
+decided -- it's emergent, not something the caller has to compute: it's
+the union of every jurisdiction's implied date range (each jurisdiction's
+own range is itself the union of its streams' implied ranges -- see
+\code{prepare_observation_data()}), optionally extended forward by
+\code{forecast_horizon}. Every stream's data stays in its own native,
+date-keyed form right up until this point (real \code{Date}s, not
+positions) -- this function is also where each stream is finally
+aligned to the shared axis (by matching dates, not by assuming
+pre-alignment) and where convolution matrices get built, since both
+need to know the axis, which isn't decided any earlier than this.
 
 Only needed when combining more than one jurisdiction -- a
 single-jurisdiction fit can pass \code{define_observation_model()}'s output
