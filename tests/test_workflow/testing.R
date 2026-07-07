@@ -5,6 +5,10 @@ library(dplyr)
 library(greta)
 
 ## user modified
+## note: infection_days below is only used to filter/window the raw data
+## before prep -- it is NOT target_infection_dates. The actual fitting axis
+## is emergent (derived by fit_waves() from the data and delay
+## distributions) and is available afterwards as fit_object$infection_days.
 infection_days <- seq(from = as.Date('2021-04-01'),
                  to = as.Date('2022-01-01'), 'days')
 study_seq <- seq(from = as.Date('2021-06-01'),
@@ -50,10 +54,9 @@ n_days_infection <- length(infection_days)
 # proportions
 car <- 0.75
 
-# create IHR
+# create IHR -- no dates needed, resolved once the emergent axis is known
 chr <- greta::uniform(0, 1)
 ihr <- as_greta_timeseries(
-  dates = infection_days,
   car = car,
   chr_prior = chr)
 
@@ -68,8 +71,6 @@ hosp_delay_ecdf <- as_discrete_pmf(hosp_dist)
 delay_from_infection <- incubation + onset_to_notification
 
 jurisdiction_basic_observation_models <- define_observation_model(
-
-  target_infection_dates = infection_days,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
@@ -119,12 +120,16 @@ posterior_area_plots <- function(draws, select_pars, label = "Posterior") {
 # infections_out <- epiwave.pipelines::generate_long_estimates(
 #   fit_object$infection_model$infection_timeseries,
 #   fit_object$fit,
-#   infection_days,
+#   fit_object$infection_days,
 #   jurisdictions)
 
+# note: fit_object$infection_days is the emergent axis fit_waves() actually
+# used -- not necessarily identical to the infection_days guessed above, use
+# it (not the earlier guess) for anything downstream that needs the real
+# per-date alignment
 infection_traj <- epiwave.pipelines::build_trajectories(
   param = fit_object$infection_model,
-  infection_days,
+  fit_object$infection_days,
   fit_object$fit,
   nsim = 1000,
   jurisdictions)
@@ -134,7 +139,7 @@ infection_traj_diagnostic_vis(infection_traj)
 epiwave.pipelines::plot_reff_interval_curves(
   'gp_both_reff_9Oct.pdf',
   fitted_reff,
-  dates = infection_days,
+  dates = fit_object$infection_days,
   start_date = min(study_seq),
   end_date = max(study_seq),
   jurisdictions = jurisdictions)
@@ -148,7 +153,7 @@ epiwave.pipelines::plot_timeseries_sims(
   'output/gp_both_infections_Kate-9Oct.png',
   infection_sims[[1]],
   type = "infection",
-  dates = infection_days,
+  dates = fit_object$infection_days,
   states = jurisdictions,
   start_date = study_seq[1],
   end_date = study_seq[length(study_seq)],

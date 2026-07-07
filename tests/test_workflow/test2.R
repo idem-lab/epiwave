@@ -8,6 +8,10 @@ devtools::load_all()
 
 study_seq <- seq(from = as.Date('2026-07-19'),
                       to = as.Date('2027-07-17'), 'days')
+# note: infection_days below is not target_infection_dates -- it's not used
+# for fitting at all any more, the fitting axis is emergent. It's kept here
+# only because it happens to still be a convenient date sequence to build
+# notif_dat/hosp_dat's date columns from below.
 infection_days <- seq(from = as.Date('2026-06-01'),
                        to = as.Date('2027-07-17'), 'days')
 jurisdictions <- 'study_area'
@@ -43,12 +47,11 @@ n_jurisdictions <- length(jurisdictions)
 # proportions
 car <- 0.42 # minimum viable product scenario
 # ihr <- 0.005
-# create IHR
+# create IHR -- no dates needed, resolved once the emergent axis is known
 chr <- greta::uniform(0, 1)
 # ihr <- chr * car
 # wrapper for ihr specific flow
 ihr <- as_greta_timeseries(
-  dates = infection_days,
   car = car,
   chr_prior = chr)
 
@@ -65,8 +68,6 @@ onset_to_hospitalisation <- distributional::dist_gamma(shape = 5, rate = 1) |>
 # Gamma(shape = 5, scale = 1)
 
 jurisdiction_observation_models <- define_observation_model(
-
-  target_infection_dates = infection_days,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
@@ -111,9 +112,15 @@ coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 ### output IHR and CAR for DSE
 library(readr)
 
+# ihr's own car/chr_prior can only be resolved (multiplied + dimensioned)
+# once the emergent axis is known -- that resolved array is exposed on the
+# fit object rather than on `ihr` itself, since `ihr` was built before the
+# axis existed
+ihr_resolved <- fit_object$observation_model_data$hospitalisations$prop_mat
+
 ihr_traj <- epiwave.pipelines::build_trajectories(
-  param = ihr$ihr,
-  infection_days,
+  param = ihr_resolved,
+  fit_object$infection_days,
   fit_object$fit,
   nsim = 1000,
   jurisdictions)
@@ -146,14 +153,14 @@ write_csv(car_output, file = "outputs/car_fixed_timeseries.csv")
 # infections_out <- epiwave.pipelines::generate_long_estimates(
 #   fit_object$infection_model$infection_timeseries,
 #   fit_object$fit,
-#   infection_days,
+#   fit_object$infection_days,
 #   jurisdictions)
 
 library(ggplot2)
 
 infection_traj <- epiwave.pipelines::build_trajectories(
   param = fit_object$infection_model,
-  infection_days,
+  fit_object$infection_days,
   fit_object$fit,
   nsim = 1000,
   jurisdictions)
@@ -174,7 +181,7 @@ write_csv(infection_traj, file = "outputs/estimated_infections_flat_prior.csv")
 # epiwave.pipelines::plot_reff_interval_curves(
 #   'gp_both_reff_9Oct.pdf',
 #   fitted_reff,
-#   dates = infection_days,
+#   dates = fit_object$infection_days,
 #   start_date = min(study_seq),
 #   end_date = max(study_seq),
 #   jurisdictions = jurisdictions)
@@ -188,7 +195,7 @@ epiwave.pipelines::plot_timeseries_sims(
   'outputs/infections_flat_prior.png',
   infection_sims[[1]],
   type = "infection",
-  dates = infection_days,
+  dates = fit_object$infection_days,
   states = jurisdictions,
   start_date = study_seq[1],
   end_date = study_seq[length(study_seq)] - 14,

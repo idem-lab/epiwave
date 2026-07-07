@@ -5,11 +5,14 @@
 ##   - jurisdiction is only ever a dimension at the stack_jurisdictions()
 ##     step: each jurisdiction's data is prepared independently via
 ##     define_observation_data()/define_observation_model() (exactly like the
-##     single-jurisdiction workflow), then combined via stack_jurisdictions(),
-##     named by jurisdiction, before being passed to fit_waves()
-##   - jurisdictions can have different/staggered date coverage -- every
-##     per-jurisdiction vector is aligned to the same shared
-##     target_infection_dates axis, so this is safe
+##     single-jurisdiction workflow, and just as emergent -- no
+##     target_infection_dates supplied anywhere), then combined via
+##     stack_jurisdictions(), named by jurisdiction, before being passed to
+##     fit_waves()
+##   - the combined date axis is the emergent union of every jurisdiction's
+##     own implied range; jurisdictions can have different/staggered date
+##     coverage, and every stream is aligned to the shared axis by matching
+##     real dates (not by positional assumption), so this is safe
 ##   - partial pooling: create_infection_timeseries() shares GP kernel
 ##     hyperparameters across jurisdictions (independent draws, shared
 ##     lengthscale/variance), and create_dow_priors() shares a hierarchical
@@ -24,14 +27,15 @@ library(distributional)
 
 set.seed(7)
 
-target_infection_dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
+# a date range purely for fabricating synthetic data, not target_infection_dates
+dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
 cases_delay <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
 
 make_jurisdiction_cases <- function(start, end, lambda, dow_model) {
-  dates <- target_infection_dates[start:end]
-  counts <- rpois(length(dates), lambda = lambda)
+  obs_dates <- dates[start:end]
+  counts <- rpois(length(obs_dates), lambda = lambda)
   define_observation_data(
-    timeseries_data = data.frame(date = dates, value = counts),
+    timeseries_data = data.frame(date = obs_dates, value = counts),
     delay_from_infection = cases_delay,
     proportion_infections = 0.5,
     dow_model = dow_model)
@@ -42,16 +46,16 @@ make_jurisdiction_cases <- function(start, end, lambda, dow_model) {
 # Deliberately staggered/non-identical coverage, to exercise the
 # master-date-axis alignment that makes joint fitting safe.
 observation_model_A <- define_observation_model(
-  target_infection_dates = target_infection_dates,
   cases = make_jurisdiction_cases(10, 90, lambda = 50, dow_model = TRUE)
 )
 observation_model_B <- define_observation_model(
-  target_infection_dates = target_infection_dates,
   cases = make_jurisdiction_cases(60, 140, lambda = 30, dow_model = TRUE)
 )
 
 # named arguments to stack_jurisdictions(), named by jurisdiction -- this is
-# the only place jurisdiction becomes a dimension
+# the only place jurisdiction becomes a dimension, and where the emergent
+# target_infection_dates axis (the union of both jurisdictions' implied
+# ranges) is actually derived
 stacked <- stack_jurisdictions(
   jurisdiction_a = observation_model_A,
   jurisdiction_b = observation_model_B
@@ -65,22 +69,29 @@ fit_object <- fit_waves(
   n_samples = 200
 )
 
-stopifnot(identical(dim(fit_object$infection_model), c(150L, 2L)))
+stopifnot(ncol(fit_object$infection_model) == 2L)
 stopifnot(identical(fit_object$jurisdictions, c("jurisdiction_a", "jurisdiction_b")))
+
+cat("emergent fitting window:", format(range(fit_object$infection_days)),
+    "(", length(fit_object$infection_days), "days )\n")
 
 ## -- sanity check: staggered coverage stays correctly aligned ---------------
 ##
 ## A date only jurisdiction A has data for should show up as non-NA for A and
-## NA for B in the underlying case matrix, and vice versa -- confirming row i
-## means the same calendar date for every jurisdiction's column.
+## NA for B in the stacked case matrix, and vice versa -- confirming row i
+## means the same calendar date for every jurisdiction's column, found by
+## matching real dates rather than assuming fixed row numbers (the emergent
+## axis's start depends on the delay distribution's reach, not just the
+## fabrication window above).
 
-row_only_a <- 20   # within A's 10-90 window, outside B's 60-140 window
-row_only_b <- 135  # within B's window, outside A's
+case_mat <- stacked$observation_model_data$cases$case_mat
+row_only_a <- match(dates[20], stacked$target_infection_dates)   # within A's 10-90 window, outside B's 60-140 window
+row_only_b <- match(dates[135], stacked$target_infection_dates)  # within B's window, outside A's
 
-stopifnot(!is.na(observation_model_A$observation_model_data$cases$case_vec[row_only_a]))
-stopifnot(is.na(observation_model_B$observation_model_data$cases$case_vec[row_only_a]))
-stopifnot(is.na(observation_model_A$observation_model_data$cases$case_vec[row_only_b]))
-stopifnot(!is.na(observation_model_B$observation_model_data$cases$case_vec[row_only_b]))
+stopifnot(!is.na(case_mat[row_only_a, "jurisdiction_a"]))
+stopifnot(is.na(case_mat[row_only_a, "jurisdiction_b"]))
+stopifnot(is.na(case_mat[row_only_b, "jurisdiction_a"]))
+stopifnot(!is.na(case_mat[row_only_b, "jurisdiction_b"]))
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 cat("max rhat:", max(rhats$psrf[, 1], na.rm = TRUE), "\n")
