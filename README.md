@@ -120,7 +120,7 @@ contributing to this project, you agree to abide by its terms.
 
 ## Support
 
-This project was supported by ???? BDSS??? \[the Australia-Aotearoa
-Consortium for Epidemic Forecasting and Analytics.\]
+This project was supported by the Australia-Aotearoa
+Consortium for Epidemic Forecasting and Analytics.
 
 <a href="https://acefa-hubs.github.io/"><img src="man/figures/ACEFA.png" align = "center" height="150" alt="EpiStrainDynamics website" /></a>
