@@ -12,9 +12,13 @@ define_observation_data(
 )
 }
 \arguments{
-\item{timeseries_data}{timeseries data for data of interest}
+\item{timeseries_data}{timeseries data for data of interest, for one
+jurisdiction. A plain data.frame/tibble with \code{date} and \code{value} columns
+is fine (gaps in date coverage are fine too) -- it's coerced
+automatically, no need to pre-class it}
 
-\item{delay_from_infection}{delay data}
+\item{delay_from_infection}{a \code{discrete_pmf} object (replicated across
+dates), or an already time-varying \code{discrete_pmf_series} object}
 
 \item{proportion_infections}{proportion data}
 
@@ -24,5 +28,7 @@ define_observation_data(
 list of observation data for one data type
 }
 \description{
-Define observation data
+Bundle one jurisdiction's data for a single observation
+stream (e.g. cases). Call this once per jurisdiction per stream; combine
+multiple jurisdictions later via \code{stack_jurisdictions()}.
 }

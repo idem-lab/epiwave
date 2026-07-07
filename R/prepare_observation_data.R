@@ -1,121 +1,74 @@
 #' Prepare observation data
 #'
-#' @description Prepare list of data objects needed for observation model.
+#' @description Prepare the data objects needed for one jurisdiction's
+#'  observation model for a single data stream (e.g. cases), called
+#'  internally by `define_observation_model()` once per stream. Multiple
+#'  jurisdictions are combined later, by `stack_jurisdictions()`.
 #'
-#' @param observation_data long form data of counts of notifications
-#' @param target_infection_dates full date sequence of infection timeseries
-#' @param target_jurisdictions jurisdictions
+#' @param observation_data data for one jurisdiction, one stream, as
+#'  returned by `define_observation_data()`.
+#'  `timeseries_data` may be a plain data.frame/tibble with `date` and
+#'  `value` columns -- it doesn't need to be pre-classed as
+#'  `epiwave_timeseries`, see `as_epiwave_timeseries()`.
+#'  `delay_from_infection` may be a single `discrete_pmf` object (replicated
+#'  across `target_infection_dates`), or an already time-varying
+#'  `discrete_pmf_series` (aligned to `target_infection_dates`)
+#' @param target_infection_dates full date sequence of infection timeseries,
+#'  shared across all jurisdictions in a fit
 #'
-#' @importFrom greta %*% as_data negative_binomial normal sweep zeros
-#'
-#' @return greta arrays of observation model
-#' @export
+#' @return a list describing this jurisdiction's stream: `convolution_matrix`,
+#'  `case_vec`, `prop_vec`, `delays`, `dow_model`. Does not include GAM-based
+#'  initial values -- those are only needed for `infection_model_type =
+#'  'flat_prior'`, so they're computed lazily by `compute_flat_prior_inits()`
+#'  when `fit_waves()` actually needs them, rather than unconditionally here.
+#' @noRd
 prepare_observation_data <- function (observation_data,
-                                      target_infection_dates,
-                                      target_jurisdictions) {
-
-
-  # check the data is a valid timeseries object (or can be coerced to one) and
-  # that it contains data consistent with the observation model type
-
-  # add if statements to check that infection_days is long enough to cover
-  # the right period
-
-  # can check for juris and dates for all input data
+                                      target_infection_dates) {
 
   delays <- observation_data$delay_from_infection
-  if (!('epiwave_massfun_timeseries' %in% class(delays))) {
-    delays <- create_epiwave_massfun_timeseries(
-      dates = target_infection_dates,
-      jurisdictions = target_jurisdictions,
-      value = delays)
+  if (inherits(delays, 'discrete_pmf_series')) {
+    delays <- delays[as.Date(target_infection_dates)]
+    if (!identical(as.Date(delays$index), as.Date(target_infection_dates))) {
+      stop('`delay_from_infection` dates must match `target_infection_dates`')
+    }
+  } else if (inherits(delays, 'discrete_pmf')) {
+    delays <- epiwave.params::new_discrete_series(
+      values = delays,
+      index = target_infection_dates)
+  } else {
+    stop('`delay_from_infection` must be a discrete_pmf or ',
+         'discrete_pmf_series object')
   }
 
+  # a bare numeric prop (scalar or a vector already in date order) needs no
+  # coercion at all -- as_matrix.numeric() recycles/validates it directly.
+  # Only already-classed epiwave_timeseries objects (including
+  # greta_timeseries) need their dates checked against target_infection_dates
+  # first.
   prop <- observation_data$proportion_infections
-  if (!('epiwave_timeseries' %in% class(prop))) {
-    prop <- create_epiwave_timeseries(
-      dates = target_infection_dates,
-      jurisdictions = target_jurisdictions,
-      value = prop)
+  if (inherits(prop, 'epiwave_timeseries')) {
+    # greta_timeseries stores dates nested under $timeseries$date (it wraps
+    # a greta array alongside the date tibble), rather than a flat $date
+    # column like epiwave_timeseries/epiwave_fixed_timeseries
+    prop_dates <- if (inherits(prop, 'greta_timeseries')) {
+      prop$timeseries$date
+    } else {
+      prop$date
+    }
+    if (!identical(as.Date(prop_dates), as.Date(target_infection_dates))) {
+      stop('`proportion_infections` dates must match `target_infection_dates`')
+    }
   }
 
-  case_mat <- as_matrix(observation_data$timeseries_data)
+  timeseries_data <- as_epiwave_timeseries(observation_data$timeseries_data)
+  case_vec <- as_matrix(timeseries_data, target_infection_dates)
+  prop_vec <- as_matrix(prop, target_infection_dates)
 
-  prop_mat <- as_matrix(prop)
+  convolution_matrix <- new_convolution_matrix(delays)
 
-  # check jurisdictions
-  jurisdictions_cases_mismatch <- !setequal(colnames(case_mat), target_jurisdictions)
-  # jurisdictions_prop_mismatch <- !setequal(colnames(prop_mat), target_jurisdictions)
-  if (jurisdictions_cases_mismatch){ # | jurisdictions_prop_mismatch) {
-    stop('Jurisdictions in data do not match specified jurisdictions')
-  }
-
-  # reorder columns if necessary
-  case_mat <- as.matrix(as.data.frame(case_mat[, target_jurisdictions]))
-  # prop_mat <- as.matrix(as.data.frame(prop_mat[, target_jurisdictions]))
-
-  # check dates
-  # prop_dates <- as.Date(rownames(prop_mat))
-  #
-  # if (!identical(prop_dates, target_infection_dates)) {
-  #   stop('dates supplied in proportion_infections should match target_infection_dates')
-  # }
-
-
-  ## we want to check the case dates are within the infection sequence, and also
-  ## that with delays it covers the right period
-  # if (case_dates ....)
-
-    # check the data is a valid timeseries object (or can be coerced to one) and
-  # that it contains data consistent with the observation model type
-
-  # add if statements to check that infection_days is long enough to cover
-  # the right period
-
-
-
-
-
-  n_jurisdictions <- length(target_jurisdictions)
-  inits_list <- lapply(1:n_jurisdictions,
-                       inits_by_jurisdiction,
-                       case_mat, # obs_mat
-                       delays,
-                       obs_prop = prop_mat,
-                       target_infection_dates)
-
-  inits_values_mat <- matrix(NA,
-                             length(target_infection_dates),
-                             n_jurisdictions)
-  observable_idx_mat <- matrix(FALSE,
-                               length(target_infection_dates),
-                               n_jurisdictions)
-
-  for (juris in 1:n_jurisdictions) {
-
-    idx <- inits_list[[juris]]$observable_idx
-    inits <- inits_list[[juris]]$inits_values
-    inits_values_mat[idx, juris] <- inits
-    observable_idx_mat[idx, juris] <- TRUE
-
-  }
-
-  if (observation_data$dow_model) {
-    dow_priors <- create_dow_priors(length(target_jurisdictions))
-    dow_correction <- implement_day_of_week(target_infection_dates, dow_priors)
-    prop_mat <- prop_mat * dow_correction
-  }
-
-  out <- list(timeseries_data = observation_data$timeseries_data,
-              delays = delays,
-              case_mat = case_mat,
-              prop_mat = prop_mat,
-              inform_inits = observation_data$inform_inits,
-              inits_values_mat = inits_values_mat,
-              observable_idx_mat = observable_idx_mat)
-
-    if('total_pop' %in% names(observation_data)) out$total_pop <- observation_data$total_pop
-    if('size_vec' %in% names(observation_data)) out$size_vec <-  observation_data$size_vec
-  out
-
+  list(convolution_matrix = convolution_matrix,
+       case_vec = case_vec,
+       prop_vec = prop_vec,
+       delays = delays,
+       dow_model = observation_data$dow_model)
 }

@@ -17,7 +17,11 @@
 #'  gp_growth_rate_derivative: in now-cast/forecast the infection trajectory
 #'  would follow the most recent growth rate trend.
 #'
-#' @param observations prepared datasets
+#' @param observations either a single jurisdiction's observation model
+#'   (output of `define_observation_model()`), or several jurisdictions
+#'   already combined via `stack_jurisdictions()`. Jurisdictions sharing one
+#'   fit are partially pooled (shared GP kernel hyperparameters, and
+#'   shared/hierarchical DOW priors where requested).
 #' @param infection_model_type options include 'flat_prior', 'infections',
 #'   'growth_rate', 'growth_rate_derivative'. See description for more info.
 #' @param n_chains number of chains to run MCMC
@@ -40,17 +44,26 @@ fit_waves <- function (observations,
                        n_samples = 2000,
                        n_extra_samples = 1000) {
 
+  if (!inherits(observations, 'epiwave_stacked_observations')) {
+    observations <- stack_jurisdictions_list(list(observations))
+  }
 
   # prep the model objects
-  # add check that ncol(infection_timeseries and below yield same. number of juris)
-
   target_infection_dates <- observations$target_infection_dates # Ihat
   n_days_infection <- length(target_infection_dates)
 
   jurisdictions <- observations$target_jurisdictions
   n_jurisdictions <- length(jurisdictions)
 
-  observable_infection <- observations$incidence_observable
+  # GAM-based inits/observable window are only meaningful for flat_prior --
+  # GP-based infection models never reference them -- so this is computed
+  # lazily, only when actually needed (see compute_flat_prior_inits()).
+  if (infection_model_type == 'flat_prior') {
+    flat_prior_inits <- compute_flat_prior_inits(observations)
+    observable_infection <- flat_prior_inits$incidence_observable
+  } else {
+    observable_infection <- NULL
+  }
 
   # set up the greta model
   # infection timeseries model
@@ -66,18 +79,7 @@ fit_waves <- function (observations,
   observation_models <- lapply(names(observation_model_data),
                                create_observation_model,
                                observation_model_data,
-                               target_infection_dates,
                                incidence)
-
-  # case_obs_model <-   create_observation_model( 'cases',
-  #                                               observation_model_data,
-  #                                               target_infection_dates,
-  #                                               incidence)
-  # sero_obs_model <-   create_small_sero_model( 'sero',
-  #                                               observation_model_data,
-  #                                               target_infection_dates,
-  #                                               incidence)
-  # observation_models <- list(case_obs_model, sero_obs_model)
   names(observation_models) <- names(observation_model_data)
 
   # greta model fit
@@ -85,7 +87,7 @@ fit_waves <- function (observations,
 
   if (infection_model_type == 'flat_prior') {
 
-    incidence_observable_inits <- observations$incidence_observable_inits
+    incidence_observable_inits <- flat_prior_inits$incidence_observable_inits
 
     indexed_incidence_observable_inits <-
       incidence_observable_inits[observable_infection]
@@ -100,7 +102,7 @@ fit_waves <- function (observations,
     gp_lengthscale <- incidence_greta_arrays$gp_lengthscale
 
     inits <- greta::initials(
-      gp_lengthscale = rep(0.5, n_jurisdictions))
+      gp_lengthscale = 0.5)
 
   }
 

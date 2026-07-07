@@ -1,10 +1,11 @@
----
-editor_options: 
-  markdown: 
-    wrap: sentence
----
 
 # epiwave
+
+This package is the first implementation of a novel algorithm to
+estimate infection incidence timeseries. It relies underneath on
+existing sampling algorithms from the `greta` software. we get infection
+incidence, no other package does this. estimating r effective. we could
+benchmark but pred accuracy not super important for users.
 
 ## Package to estimate epidemiological parameters using a Gaussian Process for infection timeseries
 
@@ -12,14 +13,114 @@ editor_options:
 [![wip](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![v.0.1.0-alpha](https://zenodo.org/badge/720975798.svg)](https://zenodo.org/doi/10.5281/zenodo.10398079)
 
-`epiwave` estimates a time-series of the daily number of new infections, using a time-series of daily reported case numbers and an estimated distribution of the time delay between the onset of infection and case notification.
-This model is unique because it integrates multiple data sources to estimate the underlying infection dynamics.
-Besides case, hospitalisation, and death notification data, these data sources could include wastewater data and serological data.
-From the estimated time-series of daily new infections we can then estimate useful epidemic parameters such as the effective reproduction number over time.
-This package will be especially useful when case incidence data, the most commonly used source of information for estimating effective reproduction number, is unreliable or challenging to use, but other data sources are available.
+`epiwave` estimates a time-series of the daily number of new infections,
+using a time-series of daily reported case numbers and an estimated
+distribution of the time delay between the onset of infection and case
+notification. This model is unique because it integrates multiple data
+sources to estimate the underlying infection dynamics. Besides case,
+hospitalisation, and death notification data, these data sources could
+include wastewater data and serological data. From the estimated
+time-series of daily new infections we can then estimate useful epidemic
+parameters such as the effective reproduction number over time. This
+package will be especially useful when case incidence data, the most
+commonly used source of information for estimating effective
+reproduction number, is unreliable or challenging to use, but other data
+sources are available.
 
-`epiwave` can be installed with GitHub, as follows:
+## Installation
+
+`epiwave` can be installed from [GitHub](https://github.com/) with:
 
 ``` r
 remotes::install_github('idem-lab/epiwave')
 ```
+
+## Usage
+
+Each jurisdiction’s data is prepared the same way:
+`define_observation_data()` per stream (e.g. `cases`,
+`hospitalisations`), bundled into one `define_observation_model()` call
+per jurisdiction. Jurisdictions are then combined explicitly, named by
+jurisdiction, via `stack_jurisdictions()`. Jurisdictions sharing one fit
+are partially pooled (shared GP kernel hyperparameters, and a shared
+hierarchical day-of-week prior where requested).
+
+``` r
+library(epiwave)
+library(epiwave.params)
+library(distributional)
+
+dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
+
+# delay distributions, shared across jurisdictions
+cases_delay <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
+hosp_delay <- as_discrete_pmf(distributional::dist_weibull(shape = 2.51, scale = 10.17))
+
+# jurisdiction A: cases and hospitalisations, observed days 10-90
+observation_model_a <- define_observation_model(
+  target_infection_dates = dates,
+  cases = define_observation_data(
+    timeseries_data = data.frame(date = dates[10:90], value = rpois(81, lambda = 50)),
+    delay_from_infection = cases_delay,
+    proportion_infections = 0.5,
+    dow_model = TRUE),
+  hospitalisations = define_observation_data(
+    timeseries_data = data.frame(date = dates[10:90], value = rpois(81, lambda = 5)),
+    delay_from_infection = hosp_delay,
+    proportion_infections = 0.05)
+)
+
+# jurisdiction B: same two streams, observed days 60-140 -- coverage doesn't
+# need to match jurisdiction A
+observation_model_b <- define_observation_model(
+  target_infection_dates = dates,
+  cases = define_observation_data(
+    timeseries_data = data.frame(date = dates[60:140], value = rpois(81, lambda = 30)),
+    delay_from_infection = cases_delay,
+    proportion_infections = 0.5,
+    dow_model = TRUE),
+  hospitalisations = define_observation_data(
+    timeseries_data = data.frame(date = dates[60:140], value = rpois(81, lambda = 3)),
+    delay_from_infection = hosp_delay,
+    proportion_infections = 0.05)
+)
+
+# jurisdictions are combined explicitly, named by jurisdiction
+stacked <- stack_jurisdictions(
+  jurisdiction_a = observation_model_a,
+  jurisdiction_b = observation_model_b
+)
+
+fit_object <- fit_waves(
+  observations = stacked,
+  infection_model_type = "gp_growth_rate"
+)
+```
+
+For a single jurisdiction, skip `stack_jurisdictions()` entirely and
+pass `define_observation_model()`’s output straight to `fit_waves()`.
+
+## Citation
+
+When using this package, please cite the underlying statistical
+software, `greta` as well as the package itself:
+
+## Contribution
+
+This is a work in progress. If you see any mistakes in the package
+(branch `main`), let us know by logging a bug on the
+[issues](https://github.com/idem-lab/epiwave/issues) page.
+
+## Code of Conduct
+
+Please note that the `epiwave` project is released with a [Contributor
+Code of
+Conduct](https://idem-lab.github.io/epiwave/CODE_OF_CONDUCT.html). By
+contributing to this project, you agree to abide by its terms.
+
+## Support
+
+This project was supported by ???? BDSS??? \[the Australia-Aotearoa
+Consortium for Epidemic Forecasting and Analytics.\]
+
+<a href="https://acefa-hubs.github.io/"><img src="man/figures/ACEFA.png" align = "center" height="150" alt="EpiStrainDynamics website" /></a>

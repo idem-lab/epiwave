@@ -23,9 +23,8 @@ notif_dat$date <- study_seq
 colnames(notif_dat) <- c('study_area', 'date')
 notif_dat <- notif_dat |>
   tidyr::pivot_longer(!date, names_to = "jurisdiction", values_to = "value")
-class(notif_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(notif_dat))
+# no manual class(notif_dat) <- c(...) needed -- define_observation_data()
+# accepts a plain date/value data.frame directly (no need to pre-class)
 
 # hospitalisation counts
 hosp_dat <- 'simdata/sim_study_hosp.csv' |>
@@ -36,9 +35,6 @@ hosp_dat$date <- study_seq
 colnames(hosp_dat) <- c('study_area', 'date')
 hosp_dat <- hosp_dat |>
   tidyr::pivot_longer(!date, names_to = "jurisdiction", values_to = "value")
-class(hosp_dat) <- c('epiwave_fixed_timeseries',
-                      'epiwave_timeseries',
-                      class(hosp_dat))
 
 # jurisdictions
 jurisdictions <- unique(notif_dat$jurisdiction)
@@ -51,9 +47,8 @@ car <- 0.42 # minimum viable product scenario
 chr <- greta::uniform(0, 1)
 # ihr <- chr * car
 # wrapper for ihr specific flow
-ihr <- create_epiwave_greta_timeseries(
+ihr <- as_greta_timeseries(
   dates = infection_days,
-  jurisdictions = jurisdictions,
   car = car,
   chr_prior = chr)
 
@@ -69,15 +64,14 @@ onset_to_hospitalisation <- distributional::dist_gamma(shape = 5, rate = 1) |>
   parametric_dist_to_distribution()
 # Gamma(shape = 5, scale = 1)
 
-observation_models <- define_observation_model(
+jurisdiction_observation_models <- define_observation_model(
 
   target_infection_dates = infection_days,
-  target_jurisdictions = jurisdictions,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation,
         onset_to_notification),
     proportion_infections = car,
@@ -86,15 +80,18 @@ observation_models <- define_observation_model(
   hospitalisations = define_observation_data(
     timeseries_data = hosp_dat,
     delay_from_infection =
-      epiwave.params::add_distributions(
+      epiwave.params::add_discrete(
         incubation, onset_to_hospitalisation),
     proportion_infections = ihr)
 )
+
 # set seed for DSE so we can reproduce
 set.seed(20250512)
 
+# a single jurisdiction's define_observation_model() output goes straight to
+# fit_waves() -- no list()/naming step needed
 fit_object <- fit_waves(
-  observations = observation_models,
+  observations = jurisdiction_observation_models,
   infection_model_type = 'flat_prior',#,# define_infection_model()'gp_growth_rate' #
   n_chains = 10,
   max_convergence_tries = 2,

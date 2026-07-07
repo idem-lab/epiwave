@@ -16,7 +16,11 @@ fit_waves(
 )
 }
 \arguments{
-\item{observations}{prepared datasets}
+\item{observations}{either a single jurisdiction's observation model
+(output of \code{define_observation_model()}), or several jurisdictions
+already combined via \code{stack_jurisdictions()}. Jurisdictions sharing one
+fit are partially pooled (shared GP kernel hyperparameters, and
+shared/hierarchical DOW priors where requested).}
 
 \item{infection_model_type}{options include 'flat_prior', 'infections',
 'growth_rate', 'growth_rate_derivative'. See description for more info.}
