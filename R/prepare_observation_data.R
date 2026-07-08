@@ -45,6 +45,18 @@ prepare_observation_data <- function (observation_data) {
   }
   observed_dates <- as.Date(timeseries_data$date)
 
+  # proportion_infections' *date-alignment* can't be checked yet -- that
+  # needs target_infection_dates, which isn't decided until
+  # stack_jurisdictions() (see align_stream_to_axis()) -- but a basic type
+  # check doesn't need the axis, so it can and should still happen here,
+  # rather than only surfacing once fit_waves()/stack_jurisdictions() runs
+  prop <- observation_data$proportion_infections
+  if (!is.numeric(prop) &&
+      !inherits(prop, c('epiwave_timeseries', 'greta_proportion'))) {
+    stop('`proportion_infections` must be numeric, an epiwave_timeseries ',
+         'object, or a greta_proportion object (see as_greta_timeseries())')
+  }
+
   max_delay <- if (inherits(delays, 'discrete_pmf_series')) {
     max(vapply(delays$values, function(x) max(x$step), numeric(1)))
   } else {
