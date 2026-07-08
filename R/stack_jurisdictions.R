@@ -171,10 +171,33 @@ align_stream_to_axis <- function (stream, target_infection_dates) {
 
   delays <- stream$delays
   if (inherits(delays, 'discrete_pmf_series')) {
+    # a discrete_pmf_series' own index was fixed by the caller before this
+    # axis existed to build it against -- prepare_observation_data() already
+    # checked it covers this stream's own implied range, but combining with
+    # other streams/jurisdictions (or forecast_horizon) can still widen the
+    # final axis beyond that. Check explicitly and fail with an actionable
+    # message before subsetting -- otherwise this hits discrete_pmf_series'
+    # own subsetting error ("Some index values were not found in the
+    # series."), which doesn't say which stream or what range is missing.
+    series_range <- range(as.Date(delays$index))
+    axis_range <- range(as.Date(target_infection_dates))
+    if (axis_range[1] < series_range[1] || axis_range[2] > series_range[2]) {
+      stop(sprintf(
+        paste0(
+          "`delay_from_infection`'s discrete_pmf_series only covers %s to ",
+          "%s, but the derived target_infection_dates axis (combining every ",
+          "stream and jurisdiction in this fit) is %s to %s. Extend the ",
+          "series' index to cover the wider range."),
+        format(series_range[1]), format(series_range[2]),
+        format(axis_range[1]), format(axis_range[2])))
+    }
     delays <- delays[as.Date(target_infection_dates)]
     if (!identical(as.Date(delays$index), as.Date(target_infection_dates))) {
-      stop('`delay_from_infection` dates must cover the derived ',
-           'target_infection_dates axis')
+      # the range check above passed but this still doesn't match exactly --
+      # e.g. a gap inside the series' own index -- a defensive fallback,
+      # since the range check only compares endpoints
+      stop('`delay_from_infection`\'s discrete_pmf_series has gaps and does ',
+           'not fully cover the derived target_infection_dates axis')
     }
   } else {
     delays <- epiwave.params::new_discrete_series(

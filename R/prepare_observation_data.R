@@ -68,6 +68,31 @@ prepare_observation_data <- function (observation_data) {
     max(observed_dates)
   )
 
+  # a discrete_pmf_series was built by the caller with its own fixed index,
+  # before target_infection_dates existed to build it against -- if that
+  # index doesn't even cover this stream's own implied range, stacking will
+  # fail later regardless of what any other stream/jurisdiction needs, so
+  # fail now with a message that says what's wrong and how to fix it,
+  # rather than surfacing as a cryptic subsetting error deep in fit_waves().
+  # (Combining with other streams/jurisdictions can *still* widen the final
+  # axis beyond what's checked here -- that can only be caught once
+  # everything is known, in stack_jurisdictions()/align_stream_to_axis().)
+  if (inherits(delays, 'discrete_pmf_series')) {
+    series_range <- range(as.Date(delays$index))
+    if (implied_range[1] < series_range[1] || implied_range[2] > series_range[2]) {
+      stop(sprintf(
+        paste0(
+          "`delay_from_infection`'s discrete_pmf_series only covers %s to %s, ",
+          "but this stream's own data implies infections need to be tracked ",
+          "over %s to %s (the earliest/latest observed date, adjusted for the ",
+          "delay distribution's reach). Extend the series' index to cover at ",
+          "least this range -- note the final fitting axis, once combined with ",
+          "any other streams/jurisdictions, may need to extend further still."),
+        format(series_range[1]), format(series_range[2]),
+        format(implied_range[1]), format(implied_range[2])))
+    }
+  }
+
   list(
     timeseries_data = timeseries_data,
     delays = delays,
