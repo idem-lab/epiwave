@@ -31,25 +31,28 @@ set.seed(7)
 dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
 cases_delay <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
 
-make_jurisdiction_cases <- function(start, end, lambda, dow_model) {
-  obs_dates <- dates[start:end]
-  counts <- rpois(length(obs_dates), lambda = lambda)
-  define_observation_data(
-    timeseries_data = data.frame(date = obs_dates, value = counts),
-    delay_from_infection = cases_delay,
-    proportion_infections = 0.5,
-    dow_model = dow_model)
-}
-
 # Jurisdiction A: cases observed days 10-90.
 # Jurisdiction B: cases observed days 60-140.
 # Deliberately staggered/non-identical coverage, to exercise the
 # master-date-axis alignment that makes joint fitting safe.
+case_dates_a <- dates[10:90]
+case_counts_a <- rpois(length(case_dates_a), lambda = 50)
 observation_model_A <- define_observation_model(
-  cases = make_jurisdiction_cases(10, 90, lambda = 50, dow_model = TRUE)
+  cases = define_observation_data(
+    timeseries_data = data.frame(date = case_dates_a, value = case_counts_a),
+    delay_from_infection = cases_delay,
+    proportion_infections = 0.5,
+    dow_model = TRUE)
 )
+
+case_dates_b <- dates[60:140]
+case_counts_b <- rpois(length(case_dates_b), lambda = 30)
 observation_model_B <- define_observation_model(
-  cases = make_jurisdiction_cases(60, 140, lambda = 30, dow_model = TRUE)
+  cases = define_observation_data(
+    timeseries_data = data.frame(date = case_dates_b, value = case_counts_b),
+    delay_from_infection = cases_delay,
+    proportion_infections = 0.5,
+    dow_model = TRUE)
 )
 
 # named arguments to stack_jurisdictions(), named by jurisdiction -- this is
