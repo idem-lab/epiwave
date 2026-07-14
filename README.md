@@ -45,11 +45,22 @@ jurisdiction, via `stack_jurisdictions()`. Jurisdictions sharing one fit
 are partially pooled (shared GP kernel hyperparameters, and a shared
 hierarchical day-of-week prior where requested).
 
+There’s no `target_infection_dates` argument to set anywhere – the
+fitting date axis is emergent, derived from the data and delay
+distributions (earliest date = the earliest observation across every
+stream and jurisdiction, minus the longest delay’s reach; latest date =
+the latest observation). It’s available afterwards as
+`fit_object$infection_days`. To nowcast/forecast beyond the last
+observation, pass `forecast_horizon` (a number of days) to
+`stack_jurisdictions()`.
+
 ``` r
 library(epiwave)
 library(epiwave.params)
 library(distributional)
 
+# a plain date range for fabricating example data below -- not
+# target_infection_dates, which is derived, not supplied
 dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
 
 # delay distributions, shared across jurisdictions
@@ -58,7 +69,6 @@ hosp_delay <- as_discrete_pmf(distributional::dist_weibull(shape = 2.51, scale =
 
 # jurisdiction A: cases and hospitalisations, observed days 10-90
 observation_model_a <- define_observation_model(
-  target_infection_dates = dates,
   cases = define_observation_data(
     timeseries_data = data.frame(date = dates[10:90], value = rpois(81, lambda = 50)),
     delay_from_infection = cases_delay,
@@ -73,7 +83,6 @@ observation_model_a <- define_observation_model(
 # jurisdiction B: same two streams, observed days 60-140 -- coverage doesn't
 # need to match jurisdiction A
 observation_model_b <- define_observation_model(
-  target_infection_dates = dates,
   cases = define_observation_data(
     timeseries_data = data.frame(date = dates[60:140], value = rpois(81, lambda = 30)),
     delay_from_infection = cases_delay,
@@ -95,6 +104,9 @@ fit_object <- fit_waves(
   observations = stacked,
   infection_model_type = "gp_growth_rate"
 )
+
+# the emergent fitting axis
+range(fit_object$infection_days)
 ```
 
 For a single jurisdiction, skip `stack_jurisdictions()` entirely and
@@ -120,7 +132,7 @@ contributing to this project, you agree to abide by its terms.
 
 ## Support
 
-This project was supported by the Australia-Aotearoa
-Consortium for Epidemic Forecasting and Analytics.
+This project was supported by the Australia-Aotearoa Consortium for
+Epidemic Forecasting and Analytics.
 
 <a href="https://acefa-hubs.github.io/"><img src="man/figures/ACEFA.png" align = "center" height="150" alt="EpiStrainDynamics website" /></a>
