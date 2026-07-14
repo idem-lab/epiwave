@@ -64,6 +64,12 @@ stacked <- stack_jurisdictions(
   jurisdiction_b = observation_model_B
 )
 
+# worth inspecting the derived axis and alignment before committing to a
+# (potentially slow) fit -- print() for a quick text summary,
+# plot_observation_coverage() to see it
+print(stacked)
+plot_observation_coverage(stacked)
+
 fit_object <- fit_waves(
   observations = stacked,
   infection_model_type = "gp_growth_rate",
