@@ -10,6 +10,10 @@
 ##   - proportion_infections as both a fixed value and a greta-array-derived
 ##     value (the IHR-from-CHR pattern)
 ##   - define_observation_data() -> define_observation_model() -> fit_waves()
+##   - target_infection_dates is emergent: it's never supplied anywhere in
+##     this script -- fit_waves() derives it from the data and the delay
+##     distributions (earliest = first observed date minus the longest
+##     delay's reach; latest = last observed date)
 ##
 ## For a multi-jurisdiction (hierarchical/partially-pooled) example, see
 ## multi_jurisdiction_workflow.R.
@@ -20,9 +24,14 @@ library(distributional)
 
 set.seed(42)
 
-## -- date range -----------------------------------------------------------
+## -- a date range purely for fabricating synthetic data ---------------------
+##
+## This is NOT target_infection_dates -- it's just a convenient window to
+## generate example data over. The actual fitting date axis is derived later,
+## and will typically extend a bit earlier than any of this (to cover the
+## delay distributions' reach).
 
-target_infection_dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
+dates <- seq(as.Date("2024-01-01"), by = "day", length.out = 150)
 
 ## -- delay distributions ----------------------------------------------------
 
@@ -40,12 +49,12 @@ hosp_delay <- as_discrete_pmf(distributional::dist_weibull(shape = 2.51, scale =
 
 # case counts: a plain date/value data.frame -- no epiwave_timeseries class
 # needed, define_observation_data() coerces it automatically
-case_dates <- target_infection_dates[20:130]
+case_dates <- dates[20:130]
 case_counts <- rpois(length(case_dates), lambda = 50 + 20 * sin(seq_along(case_dates) / 10))
 notif_dat <- data.frame(date = case_dates, value = case_counts)
 
 # hospitalisation counts, a subset of infections some days later
-hosp_dates <- target_infection_dates[30:120]
+hosp_dates <- dates[30:120]
 hosp_counts <- rpois(length(hosp_dates), lambda = 5)
 hosp_dat <- data.frame(date = hosp_dates, value = hosp_counts)
 
@@ -56,17 +65,15 @@ car <- 0.5
 
 # hospitalisation proportion: derived from CHR (case-hospitalisation rate)
 # and CAR via a greta array, so it can be estimated jointly with the rest of
-# the model rather than fixed
+# the model rather than fixed. No dates needed here -- the greta array can
+# only be dimensioned once the fitting axis is known, so that's deferred
+# until fit_waves()/stack_jurisdictions() actually needs it.
 chr <- greta::uniform(0, 1)
-ihr <- as_greta_timeseries(
-  dates = target_infection_dates,
-  car = car,
-  chr_prior = chr)
+ihr <- as_greta_timeseries(car = car, chr_prior = chr)
 
 ## -- observation model, one jurisdiction -------------------------------------
 
 observation_model <- define_observation_model(
-  target_infection_dates = target_infection_dates,
 
   cases = define_observation_data(
     timeseries_data = notif_dat,
@@ -99,7 +106,12 @@ fit_object <- fit_waves(
   n_samples = 200
 )
 
-stopifnot(identical(dim(fit_object$infection_model), c(150L, 1L)))
+stopifnot(ncol(fit_object$infection_model) == 1L)
+
+cat("emergent fitting window:", format(range(fit_object$infection_days)),
+    "(", length(fit_object$infection_days), "days )\n")
+cat("earliest observed data: cases", format(min(case_dates)),
+    ", hospitalisations", format(min(hosp_dates)), "\n")
 
 rhats <- coda::gelman.diag(fit_object$fit, autoburnin = FALSE, multivariate = FALSE)
 cat("max rhat:", max(rhats$psrf[, 1], na.rm = TRUE), "\n")
@@ -115,7 +127,10 @@ cat("posterior median infections range:",
 ##
 ## delay_from_infection can also be an already time-varying
 ## discrete_pmf_series, e.g. representing a change in testing/reporting
-## delay partway through the study period.
+## delay partway through the study period. Since the fitting axis is
+## emergent, a time-varying series' own index needs to cover whatever that
+## axis turns out to be -- build it over a generously wide range (here, the
+## same window used to fabricate data above comfortably covers it).
 
 notification_delay_early <- as_discrete_pmf(distributional::dist_gamma(shape = 3, rate = 0.5))
 notification_delay_late <- as_discrete_pmf(distributional::dist_gamma(shape = 2, rate = 0.6))
@@ -125,11 +140,10 @@ time_varying_cases_delay <- new_discrete_series(
     rep(list(notification_delay_early), 75),
     rep(list(notification_delay_late), 75)
   ),
-  index = target_infection_dates
+  index = dates
 )
 
 observation_model_time_varying <- define_observation_model(
-  target_infection_dates = target_infection_dates,
   cases = define_observation_data(
     timeseries_data = notif_dat,
     delay_from_infection = time_varying_cases_delay,

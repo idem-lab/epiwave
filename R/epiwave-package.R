@@ -11,6 +11,8 @@ if (getRversion() >= "2.15.1") {
 globalVariables(
   c(
     "x",
-    "z"
+    "z",
+    "jurisdiction",
+    "observed"
   )
 )

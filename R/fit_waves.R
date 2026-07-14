@@ -30,7 +30,13 @@
 #' @param n_samples number of samples after warmup
 #' @param n_extra_samples number of extra samples if original run didn't converge
 #'
-#' @return list of infection_model, fit, infection_days, and jurisdictions
+#' @return list of infection_model, fit, infection_days, jurisdictions,
+#'   observation_models, incidence_greta_arrays, and observation_model_data
+#'   (the resolved, axis-aligned per-stream data -- e.g. `prop_mat` for a
+#'   stream with a greta-backed `proportion_infections` like IHR-from-CHR is
+#'   only ever computed once the emergent axis is known, so it's exposed
+#'   here rather than remaining accessible on the object originally passed
+#'   to `as_greta_timeseries()`)
 #' @export
 #'
 fit_waves <- function (observations,
@@ -123,7 +129,8 @@ fit_waves <- function (observations,
     infection_days = target_infection_dates,
     jurisdictions = jurisdictions,
     observation_models = observation_models,
-    incidence_greta_arrays = incidence_greta_arrays)
+    incidence_greta_arrays = incidence_greta_arrays,
+    observation_model_data = observation_model_data)
 
   return(fit_output)
 
